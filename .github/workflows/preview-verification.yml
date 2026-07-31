@@ -1,0 +1,57 @@
+name: Preview Verification
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+  deployments: read
+  pull-requests: write
+
+jobs:
+  verify-preview:
+    name: Verify Vercel Preview
+    runs-on: ubuntu-latest
+    if: >
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment != 'Production'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Preview belongs to correct project
+        env:
+          PREVIEW_URL: ${{ github.event.deployment_status.target_url }}
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
+        run: |
+          echo "Preview URL: $PREVIEW_URL"
+          echo "Expected SHA: $DEPLOY_SHA"
+          echo "Environment: ${{ github.event.deployment.environment }}"
+
+          # Verify it's not Production
+          if [[ "${{ github.event.deployment.environment }}" == "Production" ]]; then
+            echo "✗ BLOCKED: This check must not run on Production deployments"
+            exit 1
+          fi
+
+          echo "✓ Preview environment confirmed"
+
+      - name: Smoke-test critical routes
+        env:
+          PREVIEW_URL: ${{ github.event.deployment_status.target_url }}
+        run: |
+          check_route() {
+            local route=$1
+            local url="${PREVIEW_URL}${route}"
+            local status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$url")
+            if [[ "$status" == "200" ]] || [[ "$status" == "308" ]] || [[ "$status" == "307" ]]; then
+              echo "✓ $route → $status"
+            else
+              echo "✗ $route → $status (expected 200/3xx)"
+              exit 1
+            fi
+          }
+
+          check_route "/"
+          check_route "/residential"
+          check_route "/commercial"
+          check_route "/estimate"

@@ -1,0 +1,65 @@
+name: Release Verification
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: read
+
+jobs:
+  release-gate:
+    name: Release Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify release source is dev or hotfix
+        run: |
+          BASE="${{ github.base_ref }}"
+          HEAD="${{ github.head_ref }}"
+          echo "PR: $HEAD → $BASE"
+
+          if [[ "$BASE" != "main" ]]; then
+            echo "✗ This check only applies to PRs targeting main"
+            exit 1
+          fi
+
+          if [[ "$HEAD" == "dev" ]] || [[ "$HEAD" == hotfix/* ]]; then
+            echo "✓ Release source is valid: $HEAD"
+          else
+            echo "✗ BLOCKED: Production releases must come from 'dev' or 'hotfix/*'"
+            echo "  Source branch was: $HEAD"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Full verification suite
+        run: |
+          npm run verify:skills
+          npm run typecheck
+          npm test
+          npm run build
+        env:
+          SKIP_ENV_VALIDATION: "true"
+
+      - name: Confirm human approval gate
+        run: |
+          echo "::warning::Production release requires explicit owner approval."
+          echo "::warning::Do NOT merge this PR without confirming:"
+          echo "::warning::  1. Vercel Preview is READY for exact head SHA"
+          echo "::warning::  2. CI and Security checks are green on exact head SHA"
+          echo "::warning::  3. No production domain is being moved in this release"
+          echo "::warning::  4. Owner has explicitly approved the release"
