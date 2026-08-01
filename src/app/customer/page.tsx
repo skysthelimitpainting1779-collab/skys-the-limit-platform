@@ -14,7 +14,7 @@ export default function CustomerPage() {
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
-            <Badge variant="brand">Customer Portal</Badge>
+            <Badge variant="default">Customer Portal</Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Project Dashboard & Communication
             </h1>
@@ -29,3 +29,4 @@ export default function CustomerPage() {
     </div>
   );
 }
+

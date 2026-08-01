@@ -13,7 +13,7 @@ export default function EstimatePage() {
     <main className="min-h-screen bg-background px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-3xl flex-col gap-8">
         <header className="flex flex-col gap-4">
-          <Badge variant="brand" className="w-fit">
+          <Badge variant="default" className="w-fit">
             Twin Cities estimate intake
           </Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
@@ -44,3 +44,4 @@ export default function EstimatePage() {
     </main>
   );
 }
+

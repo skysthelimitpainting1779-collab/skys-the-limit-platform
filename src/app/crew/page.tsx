@@ -14,7 +14,7 @@ export default function CrewPage() {
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
-            <Badge variant="brand">Crew Workspace</Badge>
+            <Badge variant="default">Crew Workspace</Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Field Execution & Daily Operations
             </h1>
@@ -29,3 +29,4 @@ export default function CrewPage() {
     </div>
   );
 }
+

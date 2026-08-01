@@ -14,7 +14,7 @@ export default function OperationsPage() {
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
-            <Badge variant="brand">Operations Control Center</Badge>
+            <Badge variant="default">Operations Control Center</Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Platform Operations Management
             </h1>
@@ -29,3 +29,4 @@ export default function OperationsPage() {
     </div>
   );
 }
+

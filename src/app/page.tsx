@@ -39,7 +39,7 @@ export default function HomePage() {
       <section className="border-b px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
           <div className="flex flex-col gap-6">
-            <Badge variant="brand" className="w-fit">
+            <Badge variant="default" className="w-fit">
               Owner-led Twin Cities painting
             </Badge>
             <h1 className="max-w-4xl text-5xl font-bold tracking-tight sm:text-6xl">
@@ -107,3 +107,4 @@ export default function HomePage() {
     </main>
   );
 }
+
