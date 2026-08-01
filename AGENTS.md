@@ -57,6 +57,17 @@ Context docs are cached in: `docs/context/*.md`
 
 ---
 
+## 1.5. MANDATORY GRAPHIFY KNOWLEDGE GRAPH PROTOCOL — STRICT TOKEN REDUCTION
+
+**Every subagent MUST query Graphify knowledge graph (`graphify-out/graph.json`) before reading or scanning raw files.**
+
+To drastically reduce token usage and avoid blind file scanning:
+1. **Query Graph First**: Always use `query_graph`, `get_node`, or `shortest_path` (via MCP or CLI `graphify query`) to traverse component relationships before making changes.
+2. **Never Raw-Scan**: Do NOT run broad `grep`, `glob`, or read entire directories when looking for codebase architecture context.
+3. **Graph Maintenance**: Automatic updates are handled via Git hooks (`.husky/post-commit`, `.husky/post-checkout`). Ensure `graphify-out/graph.json` is kept current.
+
+---
+
 ## 2. Architecture Authority
 
 | System | Owner |
@@ -193,3 +204,16 @@ Never delete rollback references.
 ---
 
 *See thin host adapters: `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/00-agents-kernel.mdc`*
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
