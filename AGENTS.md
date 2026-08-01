@@ -106,6 +106,21 @@ To drastically reduce token usage and avoid blind file scanning:
 
 ---
 
+## 1.10. AUTOMATED DISCOVERY & EXECUTION ENGINE (`/autoloop`)
+
+**When `/autoloop` or "discover and fix" is invoked, agents MUST run the multi-source task discovery workflow and automatically pipe items through the closed-loop execution engine.**
+
+1. **Multi-Source Discovery**:
+   - Query Graphify knowledge graph (`graphify god-nodes` & `LESSONS.md`) for structural friction & unhandled errors.
+   - Scan codebase for `TODO:`, `FIXME:`, `HACK:`, and `OPTIMIZE:` annotations.
+   - Query open GitHub issues (`gh issue list`) and security alerts (`gh api repos/:owner/:repo/dependabot/alerts`).
+   - Check pending spec requirements in `docs/decisions/` and `.agents/ORIGINAL_REQUEST.md`.
+2. **Compile Work Graph**: Aggregate all discovered items into `.agent/graph/foundation.graph.json` with bounded node contracts.
+3. **Automated Closed-Loop Execution**: Execute each node through the exact 13-step lifecycle:
+   `DISCOVER → CONTRACT → FAIL_TEST → IMPLEMENT → VERIFY → REGRESSION_TEST → DUAL_AGENT_EVALUATE → RECORD_EVIDENCE → COMMIT → PUSH → VERIFY_CI → VERIFY_VERCEL → ADVANCE`.
+
+---
+
 ## 2. Architecture Authority
 
 | System | Owner |
