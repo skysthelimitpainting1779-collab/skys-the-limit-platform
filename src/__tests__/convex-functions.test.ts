@@ -60,9 +60,9 @@ function createMockDb() {
                 rangeMin = val;
                 return qMock;
               },
-              lte: (_field: string, _val: any) => qMock,
-              gt:  (_field: string, _val: any) => qMock,
-              lt:  (_field: string, _val: any) => qMock,
+              lte: () => qMock,
+              gt:  () => qMock,
+              lt:  () => qMock,
             };
             cb(qMock);
           }
