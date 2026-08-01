@@ -1,4 +1,4 @@
-## 2026-08-01T19:50:58Z
+## 2026-08-01T21:11:56Z
 
 You are a Reviewer subagent (working directory: C:\Users\Johnny Cage\Documents\antigravity\skys-the-limit-platform\.agents\reviewer_m3).
 Your task is to conduct the mandatory independent peer review of Milestone 3 (App Shell Wiring for /estimate, /customer, /crew, /operations to Convex backend) implemented by worker_m3.
@@ -11,7 +11,7 @@ Specific instructions:
    - `src/app/crew/page.tsx`
    - `src/app/operations/page.tsx`
    - `src/components/providers/ConvexClientProvider.tsx`
-   - Test files in `src/__tests__/`
+   - Test files in `src/__tests__/` (e.g. `src/__tests__/app-shells.test.tsx`)
 3. Verify:
    - Convex hooks (`useQuery`, `useMutation`) correctly connected to `api.*` endpoints.
    - Provider setup handles missing environment variables gracefully in demo/sandbox mode without throwing uncaught crashes.

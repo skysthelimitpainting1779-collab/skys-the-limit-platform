@@ -42,12 +42,13 @@ Orchestrate the development of Sky's the Limit Platform across Milestones 1-4 wi
 | worker_m2 | teamwork_preview_worker | Convex Backend (M2) | completed | 84bdc3a7-20b2-45c4-b464-14fb7ea8d463 |
 | reviewer_m2 | teamwork_preview_reviewer | Convex Peer Review (M2) | completed | 649b8c1b-d08a-4db7-837f-21d265ab7178 |
 | worker_m3 | teamwork_preview_worker | App Shell Wiring (M3) | completed | 71594830-7c75-4c78-99c3-1ff81cb194e9 |
-| reviewer_m3 | teamwork_preview_reviewer | App Shell Peer Review (M3) | in-progress | 16e191c4-e8ea-42de-bcab-c986c6837c55 |
+| reviewer_m3 | teamwork_preview_reviewer | App Shell Peer Review (M3) | failed | 16e191c4-e8ea-42de-bcab-c986c6837c55 |
+| reviewer_m3_v2 | teamwork_preview_reviewer | App Shell Peer Review v2 (M3) | in-progress | af50c85f-47eb-4afc-85cc-e20fdf21644a |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 5 / 16
-- Pending subagents: 16e191c4-e8ea-42de-bcab-c986c6837c55
+- Spawn count: 6 / 16
+- Pending subagents: af50c85f-47eb-4afc-85cc-e20fdf21644a
 - Predecessor: none
 - Successor: not yet spawned
 
