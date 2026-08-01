@@ -17,7 +17,7 @@ describe("Convex schema verification", () => {
     }
   });
 
-  it("gives lead intake the indexes required for idempotency and rate limiting", () => {
+  it("gives lead intake the indexes required for idempotency and abuse control", () => {
     const indexes = schema.tables.leads[" indexes"]();
     const byName = (name: string) =>
       indexes.find((index) => index.indexDescriptor === name)?.fields;
@@ -25,6 +25,7 @@ describe("Convex schema verification", () => {
     expect(byName("by_status")).toEqual(["status"]);
     expect(byName("by_idempotency_key")).toEqual(["idempotencyKey"]);
     expect(byName("by_email_and_created_at")).toEqual(["email", "createdAt"]);
+    expect(byName("by_phone_and_created_at")).toEqual(["phone", "createdAt"]);
     expect(byName("by_created_at")).toEqual(["createdAt"]);
   });
 
