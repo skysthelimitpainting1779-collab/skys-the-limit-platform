@@ -87,11 +87,18 @@ Preview deployments must never use Production Convex databases, send real email,
 
 ## Verification Resources
 
-The team has access to:
-- GitHub CLI (gh) authenticated as skysthelimitpainting1779-collab
-- Vercel CLI (vercel) authenticated as skysthelimitpainting1779-4125
-- Node 24.18.0, npm 11.16.0, Git 2.55.0
-- Context7 MCP server for official documentation lookups
-- Existing foundation files in C:\Users\Johnny Cage\Documents\antigravity\skys-the-limit-platform
 
+
+## 2026-08-01T19:22:31Z
+
+<USER_REQUEST>
+Target Workspace: C:\Users\Johnny Cage\Documents\antigravity\skys-the-limit-platform
+Repository: skysthelimitpainting1779-collab/skys-the-limit-platform
+Branch: infra/initial-foundation
+
+Task: Execute autoloop discovery and development on Sky's the Limit Platform.
+1. Run codebase discovery (`graphify`, TODO/FIXME annotations, Convex backend schema `convex/schema.ts`).
+2. Implement backend database mutations & queries in `convex/` for leads, estimates, jobs, users, and audit logs.
+3. Wire backend endpoints to Next.js 16 app shells: `/estimate`, `/customer`, `/crew`, and `/operations`.
+4. Ensure all changes pass `npm run verify` (typecheck, tests, Turbopack build).
 </USER_REQUEST>

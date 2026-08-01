@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { MotionReveal } from "@/design/motion/Reveal";
-import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { OperationsDashboard } from "@/components/operations/OperationsDashboard";
 
 export const metadata: Metadata = {
   title: "Operations Control Center | Sky's the Limit Painting",
@@ -25,43 +24,7 @@ export default function OperationsPage() {
           </div>
         </MotionReveal>
 
-        <MotionStagger className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Estimating Pipeline</CardTitle>
-                <CardDescription>Inbound leads & active proposals</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Track pending estimates, hit rates, project scopes, and follow-up schedules.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Resource Allocation</CardTitle>
-                <CardDescription>Crew assignments & equipment</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Manage crew leader assignments, spray rig availability, and ladder/scaffolding inventory.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Financial Overview</CardTitle>
-                <CardDescription>Gross margins & prevailing wage logs</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Monitor job costing vs estimate baseline, certified payroll reports, and material spend.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-        </MotionStagger>
+        <OperationsDashboard />
       </div>
     </div>
   );

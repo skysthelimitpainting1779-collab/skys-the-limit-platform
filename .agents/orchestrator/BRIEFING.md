@@ -1,66 +1,61 @@
-# BRIEFING — 2026-08-01T10:58:00-07:00
+# BRIEFING — 2026-08-01T12:23:03-07:00
 
 ## Mission
-Orchestrate the Sky's the Limit Painting LLC platform foundation setup on `infra/initial-foundation` branch following dual-agent peer review (AGENTS.md), Context7 MCP research, and zero production side-effects.
+Orchestrate the development of Sky's the Limit Platform across Milestones 1-4 with mandatory dual-agent peer review and full verification.
 
 ## 🔒 My Identity
-- Archetype: Project Orchestrator
+- Archetype: teamwork_orchestrator
 - Roles: orchestrator, user_liaison, human_reporter, successor
 - Working directory: C:\Users\Johnny Cage\Documents\antigravity\skys-the-limit-platform\.agents\orchestrator
-- Original parent: top-level (Sentinel)
-- Original parent conversation ID: 26e2080c-5fa0-492a-b1ee-77041c948ce3
+- Original parent: parent
+- Original parent conversation ID: cd97b26a-6d33-46ea-8a37-fdbc6cbd4387
 
 ## 🔒 My Workflow
-- **Pattern**: Project Pattern (Orchestrator → Explorer / Worker / Reviewer / Challenger / Auditor)
+- **Pattern**: Project Orchestration Pattern
 - **Scope document**: C:\Users\Johnny Cage\Documents\antigravity\skys-the-limit-platform\.agents\orchestrator\plan.md
-1. **Decompose**: Split foundation into 5 milestones (M1: Environment & Infra Config, M2: Route Shells & Motion & UI, M3: Convex Database Schema, M4: Branch Rulesets & Vercel Linkage, M5: Full Verification & E2E Audit).
-2. **Dispatch & Execute**: For each work node, Worker implements → Reviewer evaluates & writes `.agent/state/nodes/<node-id>.json` verdict → Challenger/Auditor checks integrity → Gate check.
-3. **On failure**: Retry with feedback → Replace stuck agent → Skip/Redistribute.
-4. **Succession**: At 16 subagent spawns, write soft handoff, spawn successor.
+1. **Decompose**: Split scope into Milestones 1 to 4.
+2. **Dispatch & Execute**:
+   - Milestone 1: Codebase discovery
+   - Milestone 2: Backend Convex database mutations & queries in `convex/`
+   - Milestone 3: Wire Convex endpoints to Next.js 16 app shells (`/estimate`, `/customer`, `/crew`, `/operations`)
+   - Milestone 4: Verification and testing (`npm run verify`)
+3. **Dual-Agent Peer Review**: For implementation milestones, spawn Worker to implement and Reviewer to verify.
+4. **Succession**: At 16 spawns, write handoff.md, spawn successor.
 
 ## 🔒 Key Constraints
 - NEVER write, modify, or create source code files directly.
-- NEVER run build/test commands directly.
-- Enforce Context7 documentation research for third-party library API calls.
-- Enforce mandatory dual-agent peer review recorded in `.agent/state/nodes/<node-id>.json`.
-- Enforce motion/react exclusively (no framer-motion).
-- No production domain attached to Vercel.
+- NEVER run build/test commands directly — delegate to subagents.
+- Direct file edits allowed ONLY in `.agents/orchestrator/`.
+- Dual-agent peer review mandatory before advancing any implementation milestone.
 
 ## Current Parent
-- Conversation ID: 26e2080c-5fa0-492a-b1ee-77041c948ce3
-- **Current focus**: Project Foundation Complete — Reporting Victory to Sentinel
+- Conversation ID: cd97b26a-6d33-46ea-8a37-fdbc6cbd4387
+- Updated: not yet
 
 ## Key Decisions Made
-- Established 5-milestone pipeline matching user requirements R1-R5.
-- Required every worker implementation to be reviewed by a reviewer writing `.agent/state/nodes/<node-id>.json`.
-- All milestones M0-M5 completed. All 4 work nodes evaluated with `pass` verdicts recorded in `.agent/state/nodes/`. Forensic Audit verdict: `CLEAN`.
+- Decomposed work into 4 sequential milestones with dual-agent peer review gates.
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| Explorer M0 | teamwork_preview_explorer | Reconnaissance of codebase state | COMPLETED | 11da6d65-2c81-4054-9468-d141a5277a1f |
-| Worker 1 | teamwork_preview_worker | Implement Node 1 (motion, routes, shadcn) | COMPLETED | 61350b03-acfc-4674-9651-f637c90326d3 |
-| Reviewer 1 | teamwork_preview_reviewer | Peer evaluation of Node 1 | COMPLETED (PASS) | 8b653482-6d25-4688-9298-b06787ebc43c |
-| Worker 2 | teamwork_preview_worker | Implement Node 2 (Convex schema, env, CI) | COMPLETED | 2e738afe-0992-42eb-bfbb-403978cd1c97 |
-| Reviewer 2 | teamwork_preview_reviewer | Peer evaluation of Node 2 | COMPLETED (PASS) | 2294cd0b-fd3e-44c4-8917-29e094d5674c |
-| Worker 3 | teamwork_preview_worker | Implement Node 3 (DevOps, Rulesets, Vercel) | COMPLETED | 8d11cf82-e707-465e-9c90-f06cfe32cb75 |
-| Reviewer 3 | teamwork_preview_reviewer | Peer evaluation of Node 3 | COMPLETED (PASS) | 857b1de4-a964-4fd3-adbb-2e96db33030a |
-| Worker 4 | teamwork_preview_worker | Implement Node 4 (Full Verification) | COMPLETED | fa954bda-d5f6-4b13-80d5-ddcabd4eba52 |
-| Auditor 5 | teamwork_preview_auditor | Forensic Integrity Audit | COMPLETED (CLEAN) | 725da74f-2234-40a6-831d-41979e96b1c9 |
-| Reviewer 4 | teamwork_preview_reviewer | Peer evaluation of Node 4 | COMPLETED (PASS) | 9712fecb-14d5-43f6-8f02-900b73f96a37 |
+| explorer_m1 | teamwork_preview_explorer | Codebase Discovery (M1) | completed | 692f6984-5647-48cc-99b7-11ab17f766fd |
+| worker_m2 | teamwork_preview_worker | Convex Backend (M2) | completed | 84bdc3a7-20b2-45c4-b464-14fb7ea8d463 |
+| reviewer_m2 | teamwork_preview_reviewer | Convex Peer Review (M2) | completed | 649b8c1b-d08a-4db7-837f-21d265ab7178 |
+| worker_m3 | teamwork_preview_worker | App Shell Wiring (M3) | completed | 71594830-7c75-4c78-99c3-1ff81cb194e9 |
+| reviewer_m3 | teamwork_preview_reviewer | App Shell Peer Review (M3) | in-progress | 16e191c4-e8ea-42de-bcab-c986c6837c55 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 10 / 16
-- Pending subagents: none
+- Spawn count: 5 / 16
+- Pending subagents: 16e191c4-e8ea-42de-bcab-c986c6837c55
 - Predecessor: none
 - Successor: not yet spawned
 
 ## Active Timers
-- Heartbeat cron: task-15 (active every 10 min)
+- Heartbeat cron: not started
 - Safety timer: none
 
 ## Artifact Index
-- `.agents/orchestrator/BRIEFING.md` — Active briefing state
-- `.agents/orchestrator/plan.md` — Project plan & milestone tracking
-- `.agents/orchestrator/progress.md` — Liveness & progress tracking
+- `.agents/orchestrator/plan.md` — Decomposition & Roadmap
+- `.agents/orchestrator/progress.md` — Milestone tracking & heartbeat
+- `.agents/orchestrator/context.md` — Architecture context & findings

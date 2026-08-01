@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { MotionReveal } from "@/design/motion/Reveal";
-import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CrewDashboard } from "@/components/crew/CrewDashboard";
 
 export const metadata: Metadata = {
   title: "Crew Workspace | Sky's the Limit Painting",
@@ -25,43 +24,7 @@ export default function CrewPage() {
           </div>
         </MotionReveal>
 
-        <MotionStagger className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Daily Schedule</CardTitle>
-                <CardDescription>Assigned jobsites & crew dispatch</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Check-in to assigned site, view client special instructions, and confirm site lead contacts.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Prep Checklist</CardTitle>
-                <CardDescription>Surface preparation audit</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Mandatory prep verification (masking, scraping, priming, moisture test) prior to topcoat application.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Safety & Compliance</CardTitle>
-                <CardDescription>OSHA 30 & PPE compliance</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Submit daily safety tailgate meetings, ladder/scaffolding inspections, and incident reporting.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-        </MotionStagger>
+        <CrewDashboard />
       </div>
     </div>
   );

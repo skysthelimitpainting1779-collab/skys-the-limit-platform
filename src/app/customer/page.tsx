@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { MotionReveal } from "@/design/motion/Reveal";
-import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CustomerDashboard } from "@/components/customer/CustomerDashboard";
 
 export const metadata: Metadata = {
   title: "Customer Portal | Sky's the Limit Painting",
@@ -25,43 +24,7 @@ export default function CustomerPage() {
           </div>
         </MotionReveal>
 
-        <MotionStagger className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Estimates</CardTitle>
-                <CardDescription>Review and sign digital proposals</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                View detailed line items, paint product specifications, and scope descriptions.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Color Palette</CardTitle>
-                <CardDescription>Approved color selections & sheen</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Confirm your color codes (Sherwin-Williams / Benjamin Moore) for each room and surface.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-
-          <MotionStaggerItem>
-            <Card>
-              <CardHeader>
-                <CardTitle>Invoices & Payments</CardTitle>
-                <CardDescription>Secure online payment processing</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Pay deposits or final balances securely via credit card or bank transfer.
-              </CardContent>
-            </Card>
-          </MotionStaggerItem>
-        </MotionStagger>
+        <CustomerDashboard />
       </div>
     </div>
   );

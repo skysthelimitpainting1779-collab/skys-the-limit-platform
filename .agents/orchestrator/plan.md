@@ -1,23 +1,18 @@
-# Project Plan: Sky's the Limit Platform Foundation Setup
+# Project Plan: Sky's the Limit Platform
 
-## Architecture Overview
-- Next.js 16 App Router foundation
-- Convex operational backend
-- shadcn/ui + motion/react design system primitives
-- GitHub Actions CI/CD workflows
-- Vercel project linkage (preview only, no production domain)
+## Scope Overview
+Complete foundation & feature wiring for Sky's the Limit Platform adhering to Next.js 16 App Router, Convex backend, motion design system, and mandatory peer review protocols.
 
-## Milestones & Peer Review Nodes
+## Milestones
 
-| Milestone | Node ID | Description | Dependencies | Status |
-|-----------|---------|-------------|--------------|--------|
-| M0: Reconnaissance | node-m0-recon | Repository exploration & audit of existing files/scripts | None | COMPLETED |
-| M1: Environment & Safety | node-m1-env | Environment schema, `.env.example`, CI/CD workflows (`ci.yml`, `security.yml`) | node-m0-recon | COMPLETED |
-| M2: UI & Motion Foundation | node-m2-ui | 8 route shells, shadcn components, `src/design/motion/` primitives (`motion/react`) | node-m0-recon | COMPLETED |
-| M3: Convex Backend Schema | node-m3-convex | `convex/schema.ts` with 7 required tables & indexes | node-m0-recon | COMPLETED |
-| M4: DevOps & Vercel Setup | node-m4-devops | `.github/rulesets/` documentation/application, Vercel project linkage | node-m1-env | COMPLETED |
-| M5: Verification & Gate Audit | node-m5-verify | `npm run verify` validation (skills, typecheck, test, build), Forensic Audit | M1, M2, M3, M4 | COMPLETED |
+| Milestone | Description | Strategy & Subagents | Status |
+|---|---|---|---|
+| M1: Discovery | Perform codebase discovery (`graphify`, TODO/FIXME annotations, Convex schema analysis). | Spawn Explorer to index codebase & synthesize discovery report. | DONE |
+| M2: Convex Backend | Implement database mutations & queries in `convex/` for leads, estimates, jobs, users, and audit logs. | Spawn Worker to implement, Reviewer to evaluate. | DONE |
+| M3: App Shell Wiring | Wire Convex endpoints to Next.js 16 app shells (`/estimate`, `/customer`, `/crew`, `/operations`). | Spawn Worker to implement UI integration, Reviewer to evaluate. | IN_PROGRESS |
+| M4: Verification & Testing | Perform full verification (`npm run verify` - typecheck, tests, build) & forensic audit. | Spawn Worker/Challenger/Auditor to verify, Reviewer to sign off. | PLANNED |
 
-## Node Evidence Log Location
-Each completed work node must have an evaluator verdict file written at:
-`.agent/state/nodes/<node-id>.json`
+## Peer Review Protocol
+- Implementer: `teamwork_preview_worker`
+- Reviewer: `teamwork_preview_reviewer`
+- Gate: Implementation requires explicit Reviewer approval ("PASS") before milestone completion.
