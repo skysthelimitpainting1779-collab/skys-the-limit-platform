@@ -13,11 +13,12 @@
     "test:watch": "vitest",
     "test:lead": "vitest run src/__tests__/lead-intake.test.ts src/__tests__/convex-lead-validation.test.ts",
     "test:e2e:lead": "node scripts/verify-lead-intake-e2e.mjs",
-    "verify": "npm run verify:skills && npm run verify:env && npm run verify:assets && npm run lint && npm run typecheck && npm test && npm run build",
+    "verify": "npm run verify:skills && npm run verify:env && npm run verify:assets && npm run verify:content && npm run lint && npm run typecheck && npm test && npm run build",
     "verify:branch": "npm run lint && npm run typecheck && npm test",
     "verify:skills": "node scripts/validate-skills.mjs",
     "verify:env": "node scripts/validate-environment.mjs",
     "verify:assets": "node scripts/validate-assets.mjs",
+    "verify:content": "node scripts/validate-content.mjs",
     "prepare": "husky"
   },
   "dependencies": {

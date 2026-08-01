@@ -9,26 +9,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const metadata: Metadata = {
   title: "Sky's the Limit Painting LLC",
   description:
-    "Prep-first painting estimates for Twin Cities homes, commercial properties, and public assets.",
+    "Structured painting estimate intake for Twin Cities homes, commercial properties, and public opportunities.",
 };
 
 const servicePaths = [
   {
     href: "/residential",
     title: "Residential",
-    description: "Interior and exterior painting scopes for homeowners.",
+    description: "Describe interior, exterior, detail, repair, access, and timing needs.",
     icon: Home,
   },
   {
     href: "/commercial",
     title: "Commercial",
-    description: "Property-focused scopes for offices, facilities, and shared spaces.",
+    description: "Document property context, operating constraints, and the approval path.",
     icon: Building2,
   },
   {
     href: "/public-sector",
     title: "Public sector",
-    description: "Capability and bid-readiness information for public buyers.",
+    description: "Record the solicitation, deadline, documents, and requirements for review.",
     icon: Landmark,
   },
 ] as const;
@@ -40,18 +40,18 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
           <div className="flex flex-col gap-6">
             <Badge variant="brand" className="w-fit">
-              Owner-led Twin Cities painting
+              Twin Cities painting project intake
             </Badge>
             <h1 className="max-w-4xl text-5xl font-bold tracking-tight sm:text-6xl">
-              Clear scope. Careful prep. Documented handoff.
+              Clear scope. Careful review. Documented next step.
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-              Sky&apos;s the Limit Painting LLC helps residential, commercial, and public-sector buyers define the work before it starts and keep the next step clear.
+              Sky&apos;s the Limit Painting LLC uses one structured intake to capture the property, surfaces, condition, access, contacts, and timing before an estimate is prepared.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/estimate" className={buttonVariants({ size: "lg" })}>
                 Request an estimate
-                <ArrowRight aria-hidden="true" />
+                <ArrowRight aria-hidden="true" data-icon="inline-end" />
               </Link>
               <Link href="/commercial" className={buttonVariants({ variant: "outline", size: "lg" })}>
                 Review service paths
@@ -60,7 +60,7 @@ export default function HomePage() {
           </div>
 
           <aside className="rounded-2xl border bg-card p-7 shadow-sm">
-            <div className="rounded-xl bg-white p-2">
+            <div className="rounded-xl bg-background p-2">
               <Image
                 src="/brand/logo-illustrated-badge.webp"
                 alt="Sky's the Limit Painting LLC illustrated badge logo"
@@ -84,7 +84,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-8 flex flex-col gap-2">
             <h2 className="text-3xl font-bold tracking-tight">Choose the closest project path</h2>
-            <p className="text-muted-foreground">Each path leads back to the same structured estimate intake.</p>
+            <p className="text-muted-foreground">Each path explains what information improves the first review.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {servicePaths.map(({ href, title, description, icon: Icon }) => (
