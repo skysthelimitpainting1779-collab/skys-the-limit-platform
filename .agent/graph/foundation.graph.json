@@ -1,10 +1,34 @@
 {
-  "schema_version": 2,
-  "generated_at": "2026-08-01T20:30:00Z",
+  "schema_version": 3,
+  "generated_at": "2026-08-01T21:03:00Z",
+  "repository": "skysthelimitpainting1779-collab/skys-the-limit-platform",
+  "branch": "feature/estimate-lead-intake-e2e",
+  "verification_model": {
+    "source_commit": "b82a40d8c07b9e301fee54dc396ad5bd4cf25005",
+    "exact_head_receipt_location": "GitHub PR #1 body and external operator ledger",
+    "reason": "A commit cannot truthfully contain proof that its own remote CI and deployment checks have already completed."
+  },
   "legacy_foundation_claims": {
     "status": "reconciled_as_stale",
     "recorded_commit": "22d69db",
     "reason": "Subsequent commits and BLOCKED Vercel deployments invalidated the prior terminal claim."
+  },
+  "drive_provenance": {
+    "status": "verified",
+    "verified_at": "2026-08-01T21:02:00Z",
+    "index_file": "docs/sources/DRIVE_SOURCE_INDEX.md",
+    "canonical_sources": [
+      "1Pqvw4MG7Bnn7hP7hfSMz8AVGTpVP84TQcn0O_9jHAps",
+      "1jKa3Qu1kzq7X1ZzcpVzuCbkburiJ1UYZ5_ZKhTRwa9Y",
+      "1rlqQRkVuz7MSyWxyncSrLnDPs2cTougOKbZ9IHVTTtY",
+      "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG"
+    ],
+    "approved_public_asset": {
+      "asset_id": "BRAND-001",
+      "drive_file_id": "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
+      "repository_path": "public/brand/logo-illustrated-badge.webp",
+      "manifest_sha256": "031ee7ef36b2c773a3806a0ed4ec331276e4c30c81373e378eef6f099f88fbe0"
+    }
   },
   "nodes": [
     {
@@ -17,36 +41,52 @@
       "id": "STRIDE-002",
       "title": "Prove failing estimate-intake contract",
       "status": "complete",
-      "evidence": "GitHub CI Validate failed at typecheck because @/lib/leads/submit was intentionally absent."
+      "evidence": "GitHub CI failed on the intentionally absent intake boundary before implementation."
     },
     {
       "id": "STRIDE-003",
       "title": "Implement validated HTTP intake boundary",
-      "status": "active"
+      "status": "complete",
+      "evidence": "Route validation, normalization, honeypot handling, recoverable failure behavior, and receipt responses passed exact-source verification at b82a40d8."
     },
     {
       "id": "STRIDE-004",
       "title": "Implement idempotent Convex lead persistence and abuse control",
-      "status": "ready",
-      "dependencies": ["STRIDE-003"]
+      "status": "complete",
+      "dependencies": ["STRIDE-003"],
+      "evidence": "Direct mutation validation, idempotency, email/phone throttling, and server-authoritative fields passed Security run 16 and Lead Intake E2E run 8."
     },
     {
       "id": "STRIDE-005",
       "title": "Implement accessible estimate UI and receipt state",
-      "status": "ready",
-      "dependencies": ["STRIDE-003"]
+      "status": "complete",
+      "dependencies": ["STRIDE-003"],
+      "evidence": "Estimate route, form, content-integrity checks, and route metadata contract passed CI run 37 at b82a40d8."
     },
     {
       "id": "STRIDE-006",
-      "title": "Pass exact-head GitHub CI and Security",
-      "status": "pending",
-      "dependencies": ["STRIDE-003", "STRIDE-004", "STRIDE-005"]
+      "title": "Pass exact-source GitHub CI, Security, and lead-intake E2E",
+      "status": "complete",
+      "dependencies": ["STRIDE-003", "STRIDE-004", "STRIDE-005"],
+      "evidence": {
+        "commit": "b82a40d8c07b9e301fee54dc396ad5bd4cf25005",
+        "ci_run": 37,
+        "security_run": 16,
+        "lead_intake_e2e_run": 8,
+        "conclusion": "success"
+      }
     },
     {
       "id": "STRIDE-007",
-      "title": "Prove exact-head READY Vercel Preview",
-      "status": "pending",
-      "dependencies": ["STRIDE-006"]
+      "title": "Prove READY Vercel Preview for verified source commit",
+      "status": "complete",
+      "dependencies": ["STRIDE-006"],
+      "evidence": {
+        "commit": "b82a40d8c07b9e301fee54dc396ad5bd4cf25005",
+        "deployment_id": "dpl_8XQiqWczEZqdYHAeakG94FygBvXh",
+        "state": "READY",
+        "url": "https://sky-s-the-limit-platform-28dfh9azm-skys-35411c00.vercel.app"
+      }
     }
   ]
 }
