@@ -17,7 +17,7 @@ export default function CommercialPage() {
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
-            <Badge variant="brand">Commercial Division</Badge>
+            <Badge variant="default">Commercial Division</Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Commercial & Industrial Coating Solutions
             </h1>
@@ -68,7 +68,7 @@ export default function CommercialPage() {
         <MotionReveal direction="up" delay={0.2}>
           <div className="flex items-center gap-4">
             <MotionPressable>
-              <Button size="lg" variant="brand">
+              <Button size="lg" variant="default">
                 Schedule Commercial Consultation
               </Button>
             </MotionPressable>
@@ -78,3 +78,4 @@ export default function CommercialPage() {
     </div>
   );
 }
+

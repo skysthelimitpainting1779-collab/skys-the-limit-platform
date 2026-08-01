@@ -149,7 +149,7 @@ export const search = query({
     }
     return leads.filter(
       (lead) =>
-        (lead.fullName ?? lead.customerName ?? "").toLowerCase().includes(q) ||
+        (lead.fullName ?? "").toLowerCase().includes(q) ||
         lead.email.toLowerCase().includes(q) ||
         lead.phone.toLowerCase().includes(q) ||
         (lead.serviceAddress && lead.serviceAddress.toLowerCase().includes(q)) ||

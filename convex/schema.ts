@@ -53,11 +53,11 @@ export default defineSchema({
 
   leads: defineTable({
     idempotencyKey: v.string(),
-    customerName: v.string(),
+    fullName: v.string(),
     email: v.string(),
     phone: v.string(),
-    address: v.string(),
-    projectType,
+    serviceAddress: v.string(),
+    segment: projectType,
     projectDetails: v.string(),
     desiredTimeframe: v.optional(v.string()),
     sourcePath: v.string(),

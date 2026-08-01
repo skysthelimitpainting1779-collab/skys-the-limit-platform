@@ -17,7 +17,7 @@ export default function ResidentialPage() {
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
-            <Badge variant="brand">Residential Division</Badge>
+            <Badge variant="default">Residential Division</Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Transforming Homes with Prep-First Precision
             </h1>
@@ -68,7 +68,7 @@ export default function ResidentialPage() {
         <MotionReveal direction="up" delay={0.2}>
           <div className="flex items-center gap-4">
             <MotionPressable>
-              <Button size="lg" variant="brand">
+              <Button size="lg" variant="default">
                 Request Residential Estimate
               </Button>
             </MotionPressable>
@@ -78,3 +78,4 @@ export default function ResidentialPage() {
     </div>
   );
 }
+

@@ -144,32 +144,32 @@ export function OperationsDashboard() {
             </Card>
           ) : (
             <MotionStagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(leads as Array<{ _id: Id<"leads">; customerName: string; email: string; phone: string; address?: string; notes?: string; projectType: string; status: string }>).map((lead) => (
+              {(leads as Array<{ _id: Id<"leads">; fullName: string; email: string; phone: string; serviceAddress?: string; notes?: string; segment: string; status: string }>).map((lead) => (
                 <MotionStaggerItem key={lead._id}>
                   <Card data-testid={`lead-card-${lead._id}`} className="flex flex-col justify-between">
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between">
-                        <CardTitle className="text-base font-semibold">{lead.customerName}</CardTitle>
-                        <Badge variant={getProjectTypeBadge(lead.projectType)}>
-                          {lead.projectType}
+                        <CardTitle className="text-base font-semibold">{lead.fullName}</CardTitle>
+                        <Badge variant={getProjectTypeBadge(lead.segment)}>
+                          {lead.segment}
                         </Badge>
                       </div>
                       <CardDescription className="text-xs font-mono">ID: {lead._id}</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-slate-600 dark:text-slate-400 pb-3">
+                    <CardContent className="space-y-2 text-sm text-muted-foreground pb-3">
                       <div>
-                        <span className="font-medium text-slate-900 dark:text-slate-200">Email:</span> {lead.email}
+                        <span className="font-medium text-foreground">Email:</span> {lead.email}
                       </div>
                       <div>
-                        <span className="font-medium text-slate-900 dark:text-slate-200">Phone:</span> {lead.phone}
+                        <span className="font-medium text-foreground">Phone:</span> {lead.phone}
                       </div>
-                      {lead.address && (
+                      {lead.serviceAddress && (
                         <div>
-                          <span className="font-medium text-slate-900 dark:text-slate-200">Address:</span> {lead.address}
+                          <span className="font-medium text-foreground">Address:</span> {lead.serviceAddress}
                         </div>
                       )}
                       {lead.notes && (
-                        <div className="text-xs italic bg-slate-50 dark:bg-slate-850 p-2 rounded border border-slate-100 dark:border-slate-800">
+                        <div className="text-xs italic bg-muted p-2 rounded border border-border">
                           &quot;{lead.notes}&quot;
                         </div>
                       )}

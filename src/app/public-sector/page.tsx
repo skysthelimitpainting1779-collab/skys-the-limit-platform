@@ -17,7 +17,7 @@ export default function PublicSectorPage() {
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
-            <Badge variant="brand">Public Sector & Municipal</Badge>
+            <Badge variant="default">Public Sector & Municipal</Badge>
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Certified Public Works Contracting
             </h1>
@@ -68,7 +68,7 @@ export default function PublicSectorPage() {
         <MotionReveal direction="up" delay={0.2}>
           <div className="flex items-center gap-4">
             <MotionPressable>
-              <Button size="lg" variant="brand">
+              <Button size="lg" variant="default">
                 Submit RFP / Public Bid Invite
               </Button>
             </MotionPressable>
@@ -78,6 +78,7 @@ export default function PublicSectorPage() {
     </div>
   );
 }
+
 
 
 
