@@ -1,298 +1,246 @@
-# AGENTS.md — Sky's the Limit Platform | Agent Governance Kernel
+# AGENTS.md — Sky's the Limit Platform
 
-> Portable across: Codex, Claude Code, Cursor, Gemini/Antigravity, GitHub Copilot
+This file is the repository-wide operating contract for Codex, Claude Code, Cursor, Gemini/Antigravity, GitHub Copilot, and human contributors.
 
----
+## 1. Mission
 
-## 0. MANDATORY PEER REVIEW — ZERO EXCEPTIONS
+Build a trustworthy, conversion-focused operating platform for Sky's the Limit Painting LLC while preserving strict separation between public marketing, private business data, Preview resources, and Production effects.
 
-**Every agent that implements a work node MUST have a separate, independent evaluator agent review its output before the node may advance.**
-
-The implementing agent is never the final authority on its own work.
-
-### Peer Review Protocol
+The immediate product path is:
 
 ```text
-IMPLEMENT (Agent A)
-       ↓
-SUBMIT EVIDENCE (code, tests, verification output, commit SHA)
-       ↓
-INDEPENDENTLY EVALUATE (Agent B — no instruction to preserve A's work)
-       ↓
-EVALUATOR VERDICT:
-  pass           → advance to next node
-  remediate      → Agent A fixes, re-evaluates
-  human_review   → escalate to owner
-  rollback       → revert, re-implement from contract
+public service page
+→ structured estimate intake
+→ validated, idempotent Convex lead
+→ protected operations follow-up
 ```
 
-Evaluator must inspect:
-- Contract compliance
-- Architecture violations
-- Security risks (secrets, exposed credentials, environment leakage)
-- Missing or weakened tests
-- False completion claims
-- Unnecessary complexity
-- Legacy contamination
-- Unsafe production-effect boundaries
+Do not expand into unrelated platform breadth before the current vertical slice is verified.
 
-Record evaluator verdict to: `.agent/state/nodes/<node-id>.json` under `"evidence"`.
+## 2. Truth before completion
 
-A node with `remediate`, `human_review`, or `rollback` verdict **may not advance**.
+Repository state, provider state, and documentation must agree.
 
----
+- Never mark a node complete because files were written.
+- Never record `ci_status=success` until required checks pass for the exact head SHA.
+- Never record `vercel_status=ready` until the canonical Vercel project has a READY Preview for the exact head SHA.
+- Never describe a provider integration as active when only an interface or decision document exists.
+- Preserve failed attempts and reconciliation evidence; do not rewrite history to make a run look successful.
 
-## 1. MANDATORY CONTEXT7 PROTOCOL
+## 3. Tool availability
 
-**Every subagent MUST use Context7 MCP for third-party library documentation. Training data is considered stale and unreliable.**
+The workflow must remain executable even when optional plugins are unavailable.
 
-Steps:
-1. `resolve-library-id` — resolve the exact library ID (never guess format `/org/project`).
-2. `query-docs` — fetch authoritative, versioned API documentation.
-3. Base all implementation decisions on fetched documentation, not memorized patterns.
+### Required behavior
 
-**No exceptions.** If Context7 is unavailable, stop and report the blocker.
+- Use current first-party documentation before changing an external library or provider contract.
+- Use Context7 when available; otherwise use the provider's official docs and record the fallback.
+- Use connected GitHub, Vercel, Convex, and Google Drive tools when the task depends on their remote state.
+- Use an isolated worktree or equivalent branch workspace for implementation.
 
-Context docs are cached in: `docs/context/*.md`
+### Optional accelerators
 
----
+Graphify, gstack, Antigravity skills, Sequential Thinking, Vercel plugin skills, and local memory tools may be used when installed and relevant. Their absence must not block deterministic repository work.
 
-## 1.5. MANDATORY GRAPHIFY KNOWLEDGE GRAPH PROTOCOL — STRICT TOKEN REDUCTION
+If `graphify-out/graph.json` is current and Graphify is available, query it before broad source scanning. After code changes, update the graph when the tool is available. Never treat a stale graph as stronger evidence than source code or Git history.
 
-**Every subagent MUST query Graphify knowledge graph (`graphify-out/graph.json`) before reading or scanning raw files.**
+## 4. Architecture authority
 
-To drastically reduce token usage and avoid blind file scanning:
-1. **Query Graph First**: Always use `query_graph`, `get_node`, or `shortest_path` (via MCP or CLI `graphify query`) to traverse component relationships before making changes.
-2. **GREP & GLOB ARE STRICT LAST RESORTS**: Do NOT use broad `grep`, `grep_search`, `glob`, or directory scanning unless Graphify tools completely fail to return context or when searching raw unindexed text configs.
-3. **Graph Maintenance**: Automatic updates are handled via Git hooks (`.husky/post-commit`, `.husky/post-checkout`). Ensure `graphify-out/graph.json` is kept current.
-
----
-
-## 1.6. MANDATORY ANTIGRAVITY SKILL MANDATE
-
-**Every agent MUST leverage the `antigravity-guide` skill whenever operating, configuring, or resolving issues within Google Antigravity (AGY).**
-
-1. Read `antigravity_guide/SKILL.md` before executing or altering Antigravity CLI commands, slash commands, customizations, or sidecars.
-2. Do not attempt unguided configuration changes without checking official Antigravity patterns.
-
----
-
-## 1.7. MANDATORY SEQUENTIAL THINKING PROTOCOL
-
-**For complex architectural decisions, multi-file refactors, or debugging ambiguous errors, agents MUST use Sequential Thinking (`sequentialthinking`).**
-
-1. Deconstruct complex problems into step-by-step hypothesis testing.
-2. Validate assumptions explicitly before mutating codebase state.
-3. Revise intermediate reasoning when new evidence or error tracebacks emerge.
-
----
-
-## 1.8. MANDATORY CONTINUOUS LEARNING & ERROR MEMORY SYSTEM
-
-**Agents MUST record corrected tool errors, tool misuse, and dead ends to `graphify-out/memory/` and check `graphify-out/reflections/LESSONS.md` to avoid repeating mistakes.**
-
-1. **Check Lessons First**: Read `graphify-out/reflections/LESSONS.md` during discovery to learn from past session errors.
-2. **Record Mistakes**: When a tool call or implementation strategy fails (e.g. invalid artifact path in `write_to_file`, trigger strings in pre-commit hooks, syntax mismatches), record it using `graphify save-result --outcome corrected`.
-3. **Compile Reflections**: Run `graphify reflect` to update `graphify-out/reflections/LESSONS.md`.
-4. **Local Tracking**: Learning memory is stored in `graphify-out/memory/` (unpushed local workspace memory) so it persists locally without polluting git commits.
-
----
-
-## 1.9. TOOL USAGE & PRE-COMMIT INVARIANTS
-
-1. **Artifact Path Scoping**: Only pass `ArtifactMetadata` to `write_to_file` when creating user-facing artifact files in `<appDataDir>\brain\<conversation-id>\`. For project workspace files (e.g. `.agents/`, `src/`), use `write_to_file` without `ArtifactMetadata`.
-2. **Secret Regex Avoidance in Source Code**: Never hardcode literal secret pattern strings (e.g. `"sk_live_"`, `"pk_live_"`, `"ghp_"`) in source code or schema files. Use dynamic concatenation, character codes, or environment variables to avoid false-positive Husky pre-commit secret regex triggers.
-3. **Track `.env.example` Contract**: Ensure `.gitignore` explicitly includes `!.env.example` so environment contracts remain tracked in Git while real `.env` files remain ignored.
-
----
-
-## 1.10. AUTOMATED DISCOVERY & EXECUTION ENGINE (`/autoloop`)
-
-**When `/autoloop` or "discover and fix" is invoked, agents MUST run the multi-source task discovery workflow and automatically pipe items through the closed-loop execution engine.**
-
-1. **Multi-Source Discovery**:
-   - Query Graphify knowledge graph (`graphify god-nodes` & `LESSONS.md`) for structural friction & unhandled errors.
-   - Scan codebase for `TODO:`, `FIXME:`, `HACK:`, and `OPTIMIZE:` annotations.
-   - Query open GitHub issues (`gh issue list`) and security alerts (`gh api repos/:owner/:repo/dependabot/alerts`).
-   - Check pending spec requirements in `docs/decisions/` and `.agents/ORIGINAL_REQUEST.md`.
-2. **Compile Work Graph**: Aggregate all discovered items into `.agent/graph/foundation.graph.json` with bounded node contracts.
-3. **Automated Closed-Loop Execution**: Execute each node through the exact 13-step lifecycle:
-   `DISCOVER → CONTRACT → FAIL_TEST → IMPLEMENT → VERIFY → REGRESSION_TEST → DUAL_AGENT_EVALUATE → RECORD_EVIDENCE → COMMIT → PUSH → VERIFY_CI → VERIFY_VERCEL → ADVANCE`.
-
----
-
-## 1.11. MANDATORY MAKE-NO-MISTAKES (M-STACK) PROTOCOL
-
-**Every subagent MUST activate `make-no-mistakes-max` for enterprise stakeholder alignment, zero-mistake technical execution, and risk de-risking.**
-
-1. **Alignment Loop**: Before substantive execution, state the single-sentence North Star, scope hygiene, dependencies, and green metrics.
-2. **Zero-Mistake Invariant**: Verify all system assumptions empirically before mutating files. No cargo-culting or silent unverified changes.
-3. **Repeatable Narrative**: Provide outcome-first summaries with clear "what happens next" milestones.
-
----
-
-## 1.12. LEAN SKILL ROUTING & VERCEL PLUGIN MANDATE
-
-**Agents MUST use the lean `gstack` skill suite + `vercel-plugin` ecosystem for Vercel platform operations and QA workflows.**
-
-1. **Vercel Platform Stack (`vercel-plugin`)**:
-   - **`nextjs`**: App Router architecture, Server Actions, PPR.
-   - **`workflow`**: Vercel Workflow DevKit for crash-safe background jobs.
-   - **`shadcn`**: UI component composition with Tailwind CSS.
-   - **`deployments-cicd`**: Preview URL verification, promotions, and environment sync.
-2. **Lean `gstack` Skill Routing**:
-   - **`/qa`**: Browser page verification & visual layout smoke tests.
-   - **`/ship`**: Pre-landing code reviews, changelogs, and branch promotions.
-   - **`/cso`**: OWASP security audits & environment isolation checks.
-   - **`/investigate`**: Deep root-cause debugging for unhandled errors.
-
----
-
-## 2. Architecture Authority
-
-| System | Owner |
-|--------|-------|
+| Concern | Authority |
+| --- | --- |
+| Web UI and explicit HTTP boundaries | Next.js App Router |
 | Operational business state | Convex |
-| Identity & session tokens | WorkOS AuthKit |
-| App authorization & resource grants | Convex |
-| UI rendering & HTTP API boundaries | Next.js App Router |
-| Durable multi-step external effects | Vercel Workflow |
-| Transactional email | Resend |
-| Payment processing | Stripe |
-| File storage (public/private) | Vercel Blob |
-| AI model routing | Vercel AI Gateway |
+| Identity and sessions | WorkOS AuthKit, once Staging is provisioned |
+| Resource authorization | Convex functions and stored grants |
+| Deployment and Preview execution | Vercel Git integration |
+| Durable external workflows | Vercel Workflow, deferred until a real feature requires it |
+| Transactional email | Resend, deferred |
+| Payments | Stripe, deferred |
+| Runtime file storage | Vercel Blob, deferred |
+| AI model routing | Vercel AI Gateway, deferred |
 
-Do NOT create a second database, parallel auth system, or generic Express backend.
+Do not introduce a second database, parallel authentication system, generic Express backend, or competing workflow engine without an accepted architecture decision.
 
----
+## 5. Bootstrap cost boundary
 
-## 3. Required Discovery Before Any Edit — Token-Efficient Flow
+Upfront operation must remain within GitHub included usage, Convex free development resources, and the active Vercel Pro trial.
 
-1. Read `AGENTS.md` (this file).
-2. **Query Graphify First**: Run `query_graph` or `graphify query` to map relevant components. Do NOT read raw files broadly.
-3. Check `docs/context/` for relevant research contracts if third-party libraries are involved.
-4. Run `npm run verify:branch` from a clean checkout if running tests.
-5. Only read specific target files surfaced by Graphify.
-6. Write surgical, minimal code edits.
+Do not activate or call the following without explicit owner approval and a shipped feature that requires them:
 
----
+- Vercel AI Gateway
+- Vercel Workflow runtime
+- Vercel Queues
+- Vercel Blob
+- live Stripe
+- Resend customer email
+- customer SMS or phone automation
+- Production WorkOS
+- Production Convex
+- billable marketplace integrations
 
-## 4. Branch & Worktree Isolation
+## 6. Branch and release model
 
-```
-feature/* / fix/* / infra/* / docs/* / agent/*
-         ↓ PR
-        dev        (Preview only — never Production credentials)
-         ↓ Release PR (requires owner approval)
-        main       (Vercel Production)
-```
-
-- **Never develop directly on `main` or `dev`.**
-- One branch per feature/node. Isolated worktrees for parallel work.
-- Never force-push shared branches.
-- Merging `dev → main` requires explicit owner approval.
-
----
-
-## 5. Test-First Work Sequence
-
-```
-1. Write failing test / contract
-2. Implement minimum change
-3. Run focused verification
-4. Run broader regression suite
-5. Peer evaluator review (separate agent)
-6. Record evidence + commit SHA
-7. Commit with Conventional Commit message
-8. Push + verify CI
+```text
+feature/* | fix/* | infra/* | docs/* | agent/* | chore/*
+                         ↓ pull request
+                        dev
+                         ↓ release pull request
+                        main
 ```
 
-Conventional Commit types: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `perf:`, `build:`, `ci:`, `chore:`, `revert:`
+- Never develop directly on `main` or `dev`.
+- One branch per bounded change.
+- Never force-push a shared branch.
+- Feature and integration branches deploy only to Vercel Preview.
+- `main` is the Vercel Production branch.
+- Merging `dev` into `main`, deploying Production, or moving a domain requires explicit owner approval.
 
----
+## 7. Discovery before editing
 
-## 6. Production-Effect Boundaries
+1. Confirm repository, remotes, branch, clean-worktree state, and exact head SHA.
+2. Read this file and the relevant architecture, decision, context, design, and runbook documents.
+3. Inspect the smallest relevant source and test surface.
+4. Reproduce the current failure or baseline.
+5. Define the acceptance contract and stop conditions.
+6. For third-party work, confirm the installed version and current official API.
 
-**STOP at `human_approval_required` before any of:**
-- Attaching or moving the production domain
-- Deploying to Production environment
-- Enabling live Stripe charges
-- Sending real customer email or SMS
-- Mutating production Convex data
-- Creating billable infrastructure
-- Changing DNS
-- Rotating credentials
-- Deleting repositories, branches, or data
-- Merging `dev → main`
+Do not scan the entire repository when a focused path, diff, graph query, or test identifies the relevant surface.
 
----
+## 8. Test-first implementation
 
-## 7. Secrets & Credentials Policy
+Behavior changes follow this sequence:
 
-- **Never commit secrets, tokens, or credentials to the repository.**
-- Server-only credentials must never appear in client bundles.
-- Browser-exposed variables must use `NEXT_PUBLIC_` prefix and contain no sensitive data.
-- Preview must never use Production credentials. Use separate isolated Preview environments.
-- `.env.example` lists all required variable names with placeholder values only.
+```text
+write failing test
+→ observe the expected failure
+→ implement the smallest fix
+→ pass the focused test
+→ run regression verification
+→ review the diff
+→ commit
+→ push
+→ verify exact-head CI and Vercel
+```
 
----
+Do not weaken a test to accommodate an implementation. Configuration and documentation-only changes may use executable validators instead of unit-test RED/GREEN when no runtime behavior changes.
 
-## 8. Drive Source Policy
+## 9. Review requirements
 
-All assets imported from Google Drive must:
-1. Appear in `docs/sources/DRIVE_SOURCE_INDEX.md` with Drive file ID, classification, and approved uses.
-2. Be classified before use: `public-approved`, `private-business`, `customer-confidential`, `migration-reference`, or `legacy-do-not-use`.
-3. Only `public-approved` assets may be copied to `public/brand/` or `public/images/`.
-4. Provenance recorded in `public/assets-manifest.json`.
-5. Never commit customer data, insurance docs, pricing, or personal info to the public directory.
+For authentication, authorization, secrets, payments, provider routing, customer data, idempotency, destructive actions, branch rules, or Production effects, use an independent reviewer when a separate agent is available.
 
----
+When no subagent is available, perform a separate fresh review pass after implementation, state that limitation in the evidence, and require automated contract, regression, security, and remote checks. The implementer is never allowed to substitute an unsupported completion claim for missing review evidence.
 
-## 9. UI & Design Routing
+## 10. Verification contract
 
-- All design changes must reference `DESIGN.md` and `docs/design/FOUNDATIONS.md`.
-- Motion: import from `"motion/react"` only. Never `framer-motion`.
-- Respect `useReducedMotion()` in all animation components.
-- No animation may block content availability, delay conversion, or hijack scroll.
-- WCAG 2.2 AA contrast required on all interactive elements.
-- Keyboard operability required on all interactive elements.
+The canonical local command is:
 
----
+```bash
+npm run verify
+```
 
-## 10. Stop Conditions
+It must cover governance, skills, environment, asset provenance, content integrity, lint, TypeScript, tests, and production build.
 
-**Stop immediately and escalate to owner if:**
-- A secret or credential is detected in the working tree.
-- CI fails with a security-class error.
-- A production domain is at risk of attachment.
-- The peer evaluator returns `rollback` on a committed node.
-- The working tree becomes dirty with unknown changes.
-- Any required check (CI, Security, Vercel Preview) fails and cannot be remediated within retry limits.
+Lead intake additionally requires the `Lead Intake E2E` GitHub Actions job, which boots an anonymous Convex backend, starts the production-built Next.js server, creates a lead, and proves duplicate idempotency.
 
----
+Remote completion requires:
 
-## 11. Rollback Protocol
+- exact-head `Validate`
+- exact-head `Branch Policy`
+- exact-head `Security Policy`
+- exact-head `npm Audit`
+- exact-head `Lead Intake E2E` when the lead path changes
+- a READY Vercel Preview in project `prj_qeRoLVJmBAP5GilcbiyyQ2SAsEMY` for the exact head SHA
 
-Every work node must document:
-- The last known-good commit SHA
-- The rollback command (`git revert <sha>` or `git reset`)
-- Whether the rollback requires human approval (production effects)
+An older green SHA is not evidence for a newer commit.
 
-Never delete rollback references.
+## 11. Secrets and environment isolation
 
----
+- Never commit tokens, passwords, private keys, cookies, or provider credentials.
+- Real `.env` files are prohibited; `.env.example` contains names and inert placeholders only.
+- Server credentials must not use `NEXT_PUBLIC_`.
+- Preview must not use Production WorkOS, Convex, Stripe, Resend, or storage resources.
+- External effects remain disabled unless both the Production tier and the explicit feature gate permit them.
+- Do not log raw lead or customer PII.
 
-*See thin host adapters: `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/00-agents-kernel.mdc`*
+## 12. Convex rules
 
-## graphify
+- Public functions require argument and return validators.
+- Validate again inside a public Convex mutation; do not trust the Next.js boundary alone.
+- Server code owns authoritative timestamps, statuses, actor identity, and audit records.
+- Use indexes for portal access, idempotency, and bounded abuse controls.
+- Never scan an unbounded business table from a public function.
+- Preview and test data must remain isolated from Production.
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+## 13. Drive and public asset policy
 
-When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+Every public asset must have:
 
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- a real Google Drive file ID or other authoritative source;
+- classification and content owner;
+- approved and prohibited uses;
+- review date;
+- a real SHA-256 digest;
+- a matching entry in `public/assets-manifest.json`.
+
+Only `public-approved` assets may live under `public/brand` or `public/images`. Project photography, testimonials, municipal proof, certifications, insurance claims, warranties, and awards require approval in the Proof & Permission Ledger before publication.
+
+## 14. Content and UI policy
+
+- Follow `DESIGN.md` and `docs/design/CONTENT_STYLE.md`.
+- Use semantic design tokens instead of raw palette classes or hex colors in components.
+- Prefer Server Components; add client boundaries only for real interaction.
+- Motion imports come from `motion/react` and must respect reduced motion.
+- Motion may clarify hierarchy or state but may not block content, delay conversion, or hijack scrolling.
+- Interactive elements require keyboard operation, visible focus, semantic HTML, and WCAG 2.2 AA contrast.
+- Never display a fake portal, fabricated business metric, unsupported capability, or placeholder private record.
+
+## 15. Production-effect gates
+
+Stop at `human_approval_required` before:
+
+- merging `dev` into `main`;
+- deploying or promoting Production;
+- attaching or moving a Production domain;
+- enabling live payments, customer messaging, or AI usage;
+- mutating Production Convex data;
+- changing DNS or credentials;
+- creating billable infrastructure;
+- deleting a repository, branch, deployment, domain, or business record;
+- weakening branch protection or required checks.
+
+## 16. Commits, pull requests, and evidence
+
+Use Conventional Commits. Keep commits bounded and reviewable.
+
+Every substantive PR must state:
+
+- goal and scope;
+- architecture and environment impact;
+- failing-test or validator evidence;
+- exact verification commands;
+- exact head SHA and GitHub check conclusions;
+- immutable Vercel Preview identity;
+- Drive provenance for new assets;
+- external-effect declaration;
+- rollback command;
+- deferred work and genuine blockers.
+
+Keep foundation and feature PRs in draft until their exact head is green. Do not merge without owner approval.
+
+## 17. Stop conditions
+
+Stop and report a blocker when:
+
+- a secret is detected;
+- repository or provider identity cannot be proven;
+- the worktree contains unexplained changes;
+- a security-class failure cannot be resolved within bounded attempts;
+- a provider operation would create cost or Production impact without approval;
+- the architecture would require a second source of truth;
+- required exact-head evidence cannot be obtained.
+
+## 18. Rollback
+
+Record the last known-good SHA before each risky change. Prefer `git revert <sha>` for shared history. Do not delete rollback references. Production rollback always requires explicit owner coordination.
+
+Thin host adapters may point here, but they must not duplicate or contradict this contract.

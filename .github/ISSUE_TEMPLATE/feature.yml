@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose one bounded, measurable product outcome
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What user or business problem should be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Acceptance outcome
+      description: What observable result proves this is complete?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope boundaries
+      description: What is explicitly included and excluded?
+    validations:
+      required: true
+  - type: dropdown
+    id: effects
+    attributes:
+      label: Production or billable effects
+      options:
+        - None expected
+        - Requires provider provisioning
+        - Requires Production approval
+        - Unknown; investigate first
+    validations:
+      required: true
