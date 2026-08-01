@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Building2, Home, Landmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +60,17 @@ export default function HomePage() {
           </div>
 
           <aside className="rounded-2xl border bg-card p-7 shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary">What the intake captures</p>
+            <div className="rounded-xl bg-white p-2">
+              <Image
+                src="/brand/logo-illustrated-badge.webp"
+                alt="Sky's the Limit Painting LLC illustrated badge logo"
+                width={320}
+                height={282}
+                className="mx-auto h-auto w-full max-w-80"
+                priority
+              />
+            </div>
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.16em] text-primary">What the intake captures</p>
             <ul className="mt-5 flex flex-col gap-4 text-sm text-muted-foreground">
               <li><span className="font-medium text-foreground">Property and buyer type</span><br />Residential, commercial, or public-sector context.</li>
               <li><span className="font-medium text-foreground">Project scope</span><br />Areas, condition, timing, and access details.</li>

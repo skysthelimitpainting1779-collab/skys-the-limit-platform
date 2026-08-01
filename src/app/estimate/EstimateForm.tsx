@@ -93,7 +93,7 @@ export function EstimateForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <label htmlFor="fullName" className="text-sm font-medium">

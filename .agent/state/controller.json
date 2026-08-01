@@ -2,17 +2,17 @@
   "schema_version": 2,
   "repository": "skysthelimitpainting1779-collab/skys-the-limit-platform",
   "branch": "feature/estimate-lead-intake-e2e",
-  "active_node": "STRIDE-003",
-  "last_completed_node": "STRIDE-002",
-  "last_verified_commit": null,
-  "ci_status": "pending_implementation_verification",
-  "vercel_status": "ready_on_red_test_commit_6ed7fa7",
+  "active_node": "STRIDE-006",
+  "last_completed_node": "STRIDE-005",
+  "last_verified_commit": "076ebcdac0926942ad41570fa402a3fcf0ebd7f3",
+  "ci_status": "pending_exact_head",
+  "vercel_status": "pending_exact_head",
   "production_effects_enabled": false,
   "paused": false,
   "pause_reason": null,
   "reconciliation": {
     "previous_claim": "All foundation nodes complete at 22d69db with CI success and Vercel ready",
     "observed_reality": "Later commits existed; their Vercel deployments were BLOCKED. The claim was stale.",
-    "correction": "Verification state reset. Completion requires exact-head GitHub and Vercel evidence."
+    "correction": "The last verified source commit is recorded explicitly. Current-head truth must be resolved from GitHub and Vercel remote checks."
   }
 }

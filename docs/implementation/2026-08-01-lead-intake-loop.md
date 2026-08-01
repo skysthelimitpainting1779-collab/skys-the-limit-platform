@@ -11,14 +11,16 @@ EstimateForm
   -> POST /api/estimate
   -> Zod validation and normalization
   -> Convex leads.create mutation
+  -> independent mutation validation and normalization
   -> idempotency lookup
-  -> per-email bootstrap rate check
+  -> per-email and per-phone bootstrap rate checks
   -> lead insert
   -> receipt response
 ```
 
 ## Safety boundaries
 
+- Direct calls to the public Convex mutation receive the same structural and length validation as the HTTP boundary.
 - No email, SMS, payment, AI model, Vercel Workflow, Queue, or Blob call occurs.
 - The Route Handler returns a recoverable 503 when Convex is not configured.
 - Browser input never controls authoritative timestamps or lead status.
