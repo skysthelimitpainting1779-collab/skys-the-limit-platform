@@ -3,49 +3,59 @@ name: peer-evaluator
 description: >
   Spawn an independent peer evaluator agent to review a completed work node.
   Use this after implementing any feature, fix, or refactor — before committing or pushing.
-  Triggered by: "evaluate this", "peer review", "run evaluator", "check my work", or at the end of any node implementation.
+  Triggered by: "evaluate this", "peer review", "run evaluator", "check my work".
+triggers:
+  - peer review
+  - evaluate this
+  - run evaluator
+  - check my work
 ---
 
-# Peer Evaluator Skill
+# Skill: peer-evaluator
 
-## When to Use
-After completing any work node — before the commit lands. This is the §0 mandate from AGENTS.md.
+## Trigger
+Triggered after completing a work node before commit.
 
-## How to Execute
+## Purpose
+Independent verification of code artifacts and test results to guarantee zero regression and strict adherence to governance constraints before pushing.
 
-Invoke a `self` subagent with this exact framing:
+## Required Inputs
+- Node ID
+- Commit SHA
+- List of changed files
+- Output of test run
 
+## Allowed Files
+- `.agent/state/nodes/*.json`
+- `src/**`
+- `convex/**`
+
+## Discovery Steps
+1. Locate changed files.
+2. Check for presence of tests.
+3. Validate that no hex or raw Tailwind colors exist in modified frontend files.
+4. Ensure no unapproved operational claims exist in modified pages.
+
+## Current-Doc Requirement
+Verify library usages against Context7 fetched cache files if present.
+
+## Test-First Sequence
+1. Check that unit tests cover all modified logic.
+2. Run full test suite.
+
+## Verification Commands
+```bash
+npm run typecheck
+npm test
+npm run lint
 ```
-Role: "Peer Evaluator — Independent Review"
 
-You are an independent evaluator. You did NOT implement this work.
-Your job is to find problems, not preserve the implementor's choices.
+## Evidence Format
+Verdict saved to `.agent/state/nodes/<node-id>.json`.
 
-Review the following node implementation:
+## Stop Conditions
+- Evaluator returns `rollback` or `remediate`.
+- Failed test suite.
 
-COMMIT SHA: <sha>
-CHANGED FILES: <list>
-TEST OUTPUT: <paste>
-CONTRACT: <paste the node contract from .agents/ or AGENTS.md>
-
-Evaluate for:
-1. Contract compliance — does the implementation match what was promised?
-2. Architecture violations — does anything violate AGENTS.md §2 Architecture Authority?
-3. Security risks — secrets, exposed credentials, environment leakage, PII in logs
-4. Test integrity — were tests weakened, skipped, or mocked in ways that hide real failures?
-5. False completion — does the code actually do what the commit message claims?
-6. Unnecessary complexity — is there a simpler implementation?
-7. Legacy contamination — does it re-introduce banned patterns (raw colors, banned claims, old field names)?
-
-Return a structured verdict:
-  pass | remediate | human_review | rollback
-
-With specific line-level evidence for any non-pass verdict.
-Record your verdict to .agent/state/nodes/<node-id>.json.
-```
-
-## Verdict Actions
-- `pass` → advance to commit + push
-- `remediate` → implementor fixes specific issues, re-evaluates
-- `human_review` → escalate to owner with evidence
-- `rollback` → revert to last known-good SHA, re-implement from contract
+## Handoff Format
+Verdict report back to implementer.
