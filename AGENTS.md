@@ -131,6 +131,23 @@ To drastically reduce token usage and avoid blind file scanning:
 
 ---
 
+## 1.12. LEAN SKILL ROUTING & VERCEL PLUGIN MANDATE
+
+**Agents MUST use the lean `gstack` skill suite + `vercel-plugin` ecosystem for Vercel platform operations and QA workflows.**
+
+1. **Vercel Platform Stack (`vercel-plugin`)**:
+   - **`nextjs`**: App Router architecture, Server Actions, PPR.
+   - **`workflow`**: Vercel Workflow DevKit for crash-safe background jobs.
+   - **`shadcn`**: UI component composition with Tailwind CSS.
+   - **`deployments-cicd`**: Preview URL verification, promotions, and environment sync.
+2. **Lean `gstack` Skill Routing**:
+   - **`/qa`**: Browser page verification & visual layout smoke tests.
+   - **`/ship`**: Pre-landing code reviews, changelogs, and branch promotions.
+   - **`/cso`**: OWASP security audits & environment isolation checks.
+   - **`/investigate`**: Deep root-cause debugging for unhandled errors.
+
+---
+
 ## 2. Architecture Authority
 
 | System | Owner |
