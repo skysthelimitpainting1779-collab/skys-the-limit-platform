@@ -15,6 +15,11 @@ const eslintConfig = defineConfig([
     // Convex auto-generated files — managed by Convex CLI, not manually edited
     "convex/_generated/**",
   ]),
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

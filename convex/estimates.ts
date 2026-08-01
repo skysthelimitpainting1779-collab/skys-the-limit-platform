@@ -100,7 +100,7 @@ export const update = mutation({
     }
     const updates: {
       scope?: string;
-      pricing?: number | Record<string, any>;
+      pricing?: number | Record<string, unknown>;
       status?: "draft" | "sent" | "accepted" | "declined" | "expired";
     } = {};
     if (args.scope !== undefined) updates.scope = args.scope;
@@ -113,23 +113,27 @@ export const update = mutation({
 });
 
 export function computeTotalFromPricing(
-  pricing: number | Record<string, any>
+  pricing: number | Record<string, unknown>
 ): number {
   if (typeof pricing === "number") {
     return pricing;
   }
   if (typeof pricing === "object" && pricing !== null) {
-    if (typeof pricing.total === "number") {
-      return pricing.total;
+    if (typeof (pricing as Record<string, unknown>).total === "number") {
+      return (pricing as Record<string, number>).total;
     }
-    if (Array.isArray(pricing.items)) {
+    if (Array.isArray((pricing as Record<string, unknown>).items)) {
       let sum = 0;
-      for (const item of pricing.items) {
+      for (const item of (pricing as Record<string, unknown[]>).items) {
         if (typeof item === "number") {
           sum += item;
         } else if (typeof item === "object" && item !== null) {
           const val =
-            item.total ?? item.amount ?? item.price ?? item.cost ?? 0;
+            (item as Record<string, unknown>).total ??
+            (item as Record<string, unknown>).amount ??
+            (item as Record<string, unknown>).price ??
+            (item as Record<string, unknown>).cost ??
+            0;
           if (typeof val === "number") {
             sum += val;
           }
@@ -139,7 +143,7 @@ export function computeTotalFromPricing(
     }
     let totalSum = 0;
     for (const key of Object.keys(pricing)) {
-      const val = pricing[key];
+      const val = (pricing as Record<string, unknown>)[key];
       if (typeof val === "number") {
         totalSum += val;
       }
@@ -155,11 +159,11 @@ export const calculateTotal = query({
     pricing: v.optional(pricingValidator),
   },
   handler: async (ctx, args) => {
-    let rawPricing: number | Record<string, any> | undefined = args.pricing;
+    let rawPricing: number | Record<string, unknown> | undefined = args.pricing as number | Record<string, unknown> | undefined;
     if (args.estimateId) {
       const estimate = await ctx.db.get(args.estimateId);
       if (estimate) {
-        rawPricing = estimate.pricing;
+        rawPricing = estimate.pricing as number | Record<string, unknown>;
       }
     }
     if (rawPricing === undefined) {
