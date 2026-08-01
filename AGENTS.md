@@ -63,7 +63,7 @@ Context docs are cached in: `docs/context/*.md`
 
 To drastically reduce token usage and avoid blind file scanning:
 1. **Query Graph First**: Always use `query_graph`, `get_node`, or `shortest_path` (via MCP or CLI `graphify query`) to traverse component relationships before making changes.
-2. **Never Raw-Scan**: Do NOT run broad `grep`, `glob`, or read entire directories when looking for codebase architecture context.
+2. **GREP & GLOB ARE STRICT LAST RESORTS**: Do NOT use broad `grep`, `grep_search`, `glob`, or directory scanning unless Graphify tools completely fail to return context or when searching raw unindexed text configs.
 3. **Graph Maintenance**: Automatic updates are handled via Git hooks (`.husky/post-commit`, `.husky/post-checkout`). Ensure `graphify-out/graph.json` is kept current.
 
 ---
