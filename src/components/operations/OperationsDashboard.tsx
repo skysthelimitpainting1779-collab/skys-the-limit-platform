@@ -59,7 +59,7 @@ export function OperationsDashboard() {
       case "residential":
         return "secondary";
       case "commercial":
-        return "brand";
+        return "default";
       case "public-sector":
         return "default";
       default:
@@ -70,7 +70,7 @@ export function OperationsDashboard() {
   const getLeadStatusBadge = (status: string) => {
     switch (status) {
       case "new":
-        return "brand";
+        return "default";
       case "contacted":
       case "qualified":
       case "scheduled":
