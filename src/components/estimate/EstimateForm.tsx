@@ -7,6 +7,8 @@ import { Id } from "@convex/_generated/dataModel";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { MotionPressable } from "@/design/motion/Pressable";
 
 export interface EstimateFormProps {
@@ -79,7 +81,7 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
 
   if (submittedLeadId) {
     return (
-      <Card data-testid="estimate-success-card">
+      <Card data-testid="estimate-success-card" className="border-emerald-500/30 bg-emerald-500/5">
         <CardHeader>
           <CardTitle className="text-emerald-700 dark:text-emerald-400">Request Submitted!</CardTitle>
           <CardDescription>
@@ -104,121 +106,103 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
   }
 
   return (
-    <Card data-testid="estimate-form-card">
-      <CardHeader>
-        <CardTitle>Project Information</CardTitle>
-        <CardDescription>Tell us about your painting project needs</CardDescription>
+    <form onSubmit={handleSubmit} className="space-y-6" data-testid="estimate-form">
+      <CardHeader className="p-0">
+        <CardTitle className="text-2xl font-bold">Estimate Request Form</CardTitle>
+        <CardDescription>
+          Provide your project scope details to receive a fixed-scope proposal.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        {error && (
-          <div
-            data-testid="estimate-error-alert"
-            role="alert"
-            className="mb-4 p-3 text-sm rounded-md bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300 border border-red-200 dark:border-red-800"
+
+      {error && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive font-medium">
+          {error}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="fullName">Full Name</Label>
+          <Input
+            id="fullName"
+            type="text"
+            required
+            placeholder="Jane Doe"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email">Email Address</Label>
+          <Input
+            id="email"
+            type="email"
+            required
+            placeholder="jane@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number</Label>
+          <Input
+            id="phone"
+            type="tel"
+            required
+            placeholder="(612) 555-0199"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="segment">Project Segment</Label>
+          <select
+            id="segment"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            value={segment}
+            onChange={(e) => setSegment(e.target.value as "residential" | "commercial" | "public-sector")}
           >
-            {error}
-          </div>
-        )}
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium text-foreground">
-                Full Name
-              </label>
-              <Input
-                id="fullName"
-                placeholder="Jane Doe"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
-                Email Address
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="jane@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
+            <option value="residential">Residential (Home/Condo)</option>
+            <option value="commercial">Commercial (Office/Facility)</option>
+            <option value="public-sector">Public Sector (Municipal/Gov)</option>
+          </select>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium text-foreground">
-                Phone Number
-              </label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="segment" className="text-sm font-medium text-foreground">
-                Project Type
-              </label>
-              <select
-                id="segment"
-                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                value={segment}
-                onChange={(e) => setSegment(e.target.value as "residential" | "commercial" | "public-sector")}
-                required
-                disabled={isSubmitting}
-              >
-                <option value="residential">Residential</option>
-                <option value="commercial">Commercial</option>
-                <option value="public-sector">Public Sector</option>
-              </select>
-            </div>
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="serviceAddress">Service Address</Label>
+        <Input
+          id="serviceAddress"
+          type="text"
+          required
+          placeholder="123 Main St, Minneapolis, MN 55401"
+          value={serviceAddress}
+          onChange={(e) => setServiceAddress(e.target.value)}
+        />
+      </div>
 
-          <div className="space-y-2">
-            <label htmlFor="serviceAddress" className="text-sm font-medium text-foreground">
-              Property Address
-            </label>
-            <Input
-              id="serviceAddress"
-              placeholder="123 Main St, City, State ZIP"
-              value={serviceAddress}
-              onChange={(e) => setServiceAddress(e.target.value)}
-              disabled={isSubmitting}
-            />
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="projectDetails">Project Scope &amp; Details</Label>
+        <Textarea
+          id="projectDetails"
+          rows={4}
+          required
+          placeholder="Describe the rooms, surface conditions, timing expectations, or access instructions..."
+          value={projectDetails}
+          onChange={(e) => setProjectDetails(e.target.value)}
+        />
+      </div>
 
-          <div className="space-y-2">
-            <label htmlFor="projectDetails" className="text-sm font-medium text-foreground">
-              Project Details &amp; Scope
-            </label>
-            <Input
-              id="projectDetails"
-              placeholder="Describe the area, square footage, timelines, or color preferences..."
-              value={projectDetails}
-              onChange={(e) => setProjectDetails(e.target.value)}
-              disabled={isSubmitting}
-            />
-          </div>
-
-          <div className="pt-4">
-            <MotionPressable>
-              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting Request..." : "Submit Estimate Request"}
-              </Button>
-            </MotionPressable>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <MotionPressable>
+        <Button type="submit" disabled={isSubmitting} className="w-full text-base font-semibold shadow-lg">
+          {isSubmitting ? "Submitting Estimate Request..." : "Submit Estimate Request"}
+        </Button>
+      </MotionPressable>
+    </form>
   );
 }
