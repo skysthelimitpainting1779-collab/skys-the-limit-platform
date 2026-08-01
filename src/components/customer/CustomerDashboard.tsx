@@ -23,12 +23,12 @@ export function CustomerDashboard({ defaultLeadId = "", defaultOrgId }: Customer
   const [activeLeadId, setActiveLeadId] = useState<string | null>(defaultLeadId || null);
 
   const estimates = useQuery(
-    (api as any).estimates.listByLead,
+    api.estimates.listByLead,
     activeLeadId ? { leadId: activeLeadId as Id<"leads"> } : "skip"
   );
 
   const jobs = useQuery(
-    (api as any).jobs.list,
+    api.jobs.list,
     defaultOrgId ? { orgId: defaultOrgId as Id<"organizations"> } : {}
   );
 
@@ -41,12 +41,12 @@ export function CustomerDashboard({ defaultLeadId = "", defaultOrgId }: Customer
     }
   };
 
-  const formatPricing = (pricing: number | Record<string, any>) => {
+  const formatPricing = (pricing: number | Record<string, unknown>) => {
     const total = computeTotalFromPricing(pricing);
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(total);
   };
 
-  const formatSchedule = (schedule: number | Record<string, any> | string) => {
+  const formatSchedule = (schedule: number | Record<string, unknown> | string) => {
     if (typeof schedule === "number") {
       return new Date(schedule).toLocaleDateString();
     }
@@ -54,7 +54,10 @@ export function CustomerDashboard({ defaultLeadId = "", defaultOrgId }: Customer
       return schedule;
     }
     if (typeof schedule === "object" && schedule !== null) {
-      return schedule.date || schedule.startDate || JSON.stringify(schedule);
+      const s = schedule as Record<string, unknown>;
+      return (typeof s.date === "string" ? s.date : null) ||
+        (typeof s.startDate === "string" ? s.startDate : null) ||
+        JSON.stringify(schedule);
     }
     return "Scheduled";
   };
@@ -147,7 +150,7 @@ export function CustomerDashboard({ defaultLeadId = "", defaultOrgId }: Customer
             </Card>
           ) : (
             <MotionStagger className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {estimates.map((est: any) => (
+              {(estimates as Array<{ _id: string; scope: string; status: string; pricing: number | Record<string, unknown>; createdAt: number }>).map((est) => (
                 <MotionStaggerItem key={est._id}>
                   <Card data-testid={`estimate-card-${est._id}`}>
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
@@ -199,7 +202,7 @@ export function CustomerDashboard({ defaultLeadId = "", defaultOrgId }: Customer
             </Card>
           ) : (
             <MotionStagger className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {jobs.map((job: any) => (
+              {(jobs as Array<{ _id: string; status: string; schedule: number | string | Record<string, unknown>; crewIds: string[]; estimateId: string }>).map((job) => (
                 <MotionStaggerItem key={job._id}>
                   <Card data-testid={`job-card-${job._id}`}>
                     <CardHeader className="pb-2">

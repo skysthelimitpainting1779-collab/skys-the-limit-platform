@@ -13,22 +13,22 @@ export function OperationsDashboard() {
   const [selectedLeadStatus, setSelectedLeadStatus] = useState<string>("all");
 
   const leads = useQuery(
-    (api as any).leads.list,
+    api.leads.list,
     selectedLeadStatus !== "all"
-      ? { status: selectedLeadStatus as any }
+      ? { status: selectedLeadStatus as "new" | "contacted" | "qualified" | "scheduled" | "closed" | "lost" }
       : {}
   );
-  const jobs = useQuery((api as any).jobs.list, {});
-  const auditEvents = useQuery((api as any).auditEvents.listRecent, { limit: 15 });
+  const jobs = useQuery(api.jobs.list, {});
+  const auditEvents = useQuery(api.auditEvents.listRecent, { limit: 15 });
 
-  const updateLeadStatus = useMutation((api as any).leads.updateStatus);
-  const updateJobStatus = useMutation((api as any).jobs.updateStatus);
+  const updateLeadStatus = useMutation(api.leads.updateStatus);
+  const updateJobStatus = useMutation(api.jobs.updateStatus);
 
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
 
-  const handleLeadStatusChange = async (leadId: Id<"leads">, newStatus: any) => {
+  const handleLeadStatusChange = async (leadId: Id<"leads">, newStatus: "new" | "contacted" | "qualified" | "scheduled" | "closed" | "lost") => {
     setOpError(null);
     setUpdatingLeadId(leadId);
     try {
@@ -41,7 +41,7 @@ export function OperationsDashboard() {
     }
   };
 
-  const handleJobStatusChange = async (jobId: Id<"jobs">, newStatus: any) => {
+  const handleJobStatusChange = async (jobId: Id<"jobs">, newStatus: "scheduled" | "in_progress" | "completed" | "cancelled") => {
     setOpError(null);
     setUpdatingJobId(jobId);
     try {
@@ -144,7 +144,7 @@ export function OperationsDashboard() {
             </Card>
           ) : (
             <MotionStagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {leads.map((lead: any) => (
+              {(leads as Array<{ _id: Id<"leads">; customerName: string; email: string; phone: string; address?: string; notes?: string; projectType: string; status: string }>).map((lead) => (
                 <MotionStaggerItem key={lead._id}>
                   <Card data-testid={`lead-card-${lead._id}`} className="flex flex-col justify-between">
                     <CardHeader className="pb-2">
@@ -181,7 +181,7 @@ export function OperationsDashboard() {
                           className="h-8 rounded text-xs border border-slate-300 bg-white px-2 py-0 focus-visible:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
                           value={lead.status}
                           disabled={updatingLeadId === lead._id}
-                          onChange={(e) => handleLeadStatusChange(lead._id, e.target.value)}
+                          onChange={(e) => handleLeadStatusChange(lead._id as Id<"leads">, e.target.value as "new" | "contacted" | "qualified" | "scheduled" | "closed" | "lost")}
                           data-testid={`update-lead-status-${lead._id}`}
                         >
                           <option value="new">New</option>
@@ -222,7 +222,7 @@ export function OperationsDashboard() {
             </Card>
           ) : (
             <MotionStagger className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {jobs.map((job: any) => (
+              {(jobs as Array<{ _id: Id<"jobs">; status: string; crewIds: string[]; estimateId: string; schedule: number | string | Record<string, unknown> }>).map((job) => (
                 <MotionStaggerItem key={job._id}>
                   <Card data-testid={`ops-job-card-${job._id}`}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -255,7 +255,7 @@ export function OperationsDashboard() {
                           className="h-8 rounded text-xs border border-slate-300 bg-white px-2 py-0 focus-visible:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
                           value={job.status}
                           disabled={updatingJobId === job._id}
-                          onChange={(e) => handleJobStatusChange(job._id, e.target.value)}
+                          onChange={(e) => handleJobStatusChange(job._id as Id<"jobs">, e.target.value as "scheduled" | "in_progress" | "completed" | "cancelled")}
                           data-testid={`ops-job-status-select-${job._id}`}
                         >
                           <option value="scheduled">Scheduled</option>
@@ -295,7 +295,7 @@ export function OperationsDashboard() {
           ) : (
             <Card data-testid="audit-list-card">
               <CardContent className="p-0 divide-y divide-slate-100 dark:divide-slate-800">
-                {auditEvents.map((evt: any) => (
+                {(auditEvents as Array<{ _id: string; action: string; targetResource: string; actorId: string; timestamp: number }>).map((evt) => (
                   <div
                     key={evt._id}
                     data-testid={`audit-event-${evt._id}`}

@@ -1,4 +1,4 @@
-import fs from "fs";
+﻿import fs from "fs";
 import path from "path";
 
 const SKILLS_DIR = path.join(process.cwd(), ".agents", "skills");
@@ -16,6 +16,23 @@ const REQUIRED_SECTIONS = [
   "evidence format",
   "handoff format"
 ];
+
+// Vendor skill prefixes — any skill whose folder name starts with one of these
+// is installed by an external publisher (e.g. `npx convex ai-files install`)
+// and is exempt from the internal section schema.
+const VENDOR_PREFIXES = ["convex"];
+
+// Skills whose SKILL.md contains a GENERATED marker in the first 10 lines
+// are also exempt (older install format).
+const VENDOR_MARKER = "generated";
+
+function isVendorSkill(name, content) {
+  if (VENDOR_PREFIXES.some((p) => name === p || name.startsWith(p + "-"))) {
+    return true;
+  }
+  const headerLines = content.toLowerCase().split("\n").slice(0, 10).join("\n");
+  return headerLines.includes(VENDOR_MARKER);
+}
 
 function validateSkills() {
   if (!fs.existsSync(SKILLS_DIR)) {
@@ -35,9 +52,16 @@ function validateSkills() {
         continue;
       }
 
-      const content = fs.readFileSync(skillPath, "utf-8").toLowerCase();
+      const content = fs.readFileSync(skillPath, "utf-8");
+
+      if (isVendorSkill(entry.name, content)) {
+        console.log(`Skipping vendor-managed skill: ${entry.name}`);
+        continue;
+      }
+
+      const contentLower = content.toLowerCase();
       for (const section of REQUIRED_SECTIONS) {
-        if (!content.includes(section)) {
+        if (!contentLower.includes(section)) {
           console.error(`[ERROR] ${entry.name}/SKILL.md missing section: "${section}"`);
           hasErrors = true;
         }
@@ -48,7 +72,7 @@ function validateSkills() {
   if (hasErrors) {
     process.exit(1);
   } else {
-    console.log("✓ All agent skills validated successfully.");
+    console.log("All agent skills validated successfully.");
   }
 }
 

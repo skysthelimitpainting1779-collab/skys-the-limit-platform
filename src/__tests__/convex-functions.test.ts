@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// The mock DB helper necessarily emulates Convex's generic DatabaseWriter
+// interface which cannot be typed without replicating the entire Convex runtime
+// type system. `any` usage here is intentional and scoped only to test mocks.
 import { describe, it, expect, vi } from "vitest";
 import * as leads from "../../convex/leads";
 import * as estimates from "../../convex/estimates";

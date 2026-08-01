@@ -12,8 +12,8 @@ import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
 import { MotionPressable } from "@/design/motion/Pressable";
 
 export function CrewDashboard() {
-  const jobs = useQuery((api as any).jobs.list, {});
-  const updateStatus = useMutation((api as any).jobs.updateStatus);
+  const jobs = useQuery(api.jobs.list, {});
+  const updateStatus = useMutation(api.jobs.updateStatus);
 
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function CrewDashboard() {
     }
   };
 
-  const formatSchedule = (schedule: number | Record<string, any> | string) => {
+  const formatSchedule = (schedule: number | Record<string, unknown> | string) => {
     if (typeof schedule === "number") {
       return new Date(schedule).toLocaleString();
     }
@@ -42,7 +42,10 @@ export function CrewDashboard() {
       return schedule;
     }
     if (typeof schedule === "object" && schedule !== null) {
-      return schedule.date || schedule.startDate || JSON.stringify(schedule);
+      const s = schedule as Record<string, unknown>;
+      return (typeof s.date === "string" ? s.date : null) ||
+        (typeof s.startDate === "string" ? s.startDate : null) ||
+        JSON.stringify(schedule);
     }
     return "Scheduled";
   };
@@ -100,7 +103,7 @@ export function CrewDashboard() {
             </Card>
           ) : (
             <MotionStagger className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {jobs.map((job: any) => (
+              {(jobs as Array<{ _id: string; status: string; schedule: number | string | Record<string, unknown>; crewIds: string[]; estimateId: string }>).map((job) => (
                 <MotionStaggerItem key={job._id}>
                   <Card data-testid={`crew-job-card-${job._id}`} className="flex flex-col justify-between">
                     <div>
@@ -138,7 +141,7 @@ export function CrewDashboard() {
                               variant="default"
                               className="w-full bg-[#E65100] hover:bg-[#CC4400]"
                               disabled={updatingJobId === job._id}
-                              onClick={() => handleUpdateStatus(job._id, "in_progress")}
+                              onClick={() => handleUpdateStatus(job._id as Id<"jobs">, "in_progress")}
                               data-testid={`start-job-btn-${job._id}`}
                             >
                               {updatingJobId === job._id ? "Updating..." : "Start Job"}
@@ -152,7 +155,7 @@ export function CrewDashboard() {
                               variant="secondary"
                               className="w-full"
                               disabled={updatingJobId === job._id}
-                              onClick={() => handleUpdateStatus(job._id, "completed")}
+                              onClick={() => handleUpdateStatus(job._id as Id<"jobs">, "completed")}
                               data-testid={`complete-job-btn-${job._id}`}
                             >
                               {updatingJobId === job._id ? "Updating..." : "Mark Complete"}
@@ -166,7 +169,7 @@ export function CrewDashboard() {
                               variant="outline"
                               className="w-full"
                               disabled={updatingJobId === job._id}
-                              onClick={() => handleUpdateStatus(job._id, "scheduled")}
+                              onClick={() => handleUpdateStatus(job._id as Id<"jobs">, "scheduled")}
                               data-testid={`schedule-job-btn-${job._id}`}
                             >
                               Reset

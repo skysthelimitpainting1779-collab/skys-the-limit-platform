@@ -17,7 +17,7 @@ vi.mock("convex/react", () => ({
   ConvexReactClient: vi.fn().mockImplementation((url: string) => ({
     url,
   })),
-  useQuery: vi.fn((queryFn: any, args: any) => {
+  useQuery: vi.fn((queryFn: unknown, args: unknown) => {
     if (args === "skip") return undefined;
     return [];
   }),

@@ -15,8 +15,8 @@ export interface EstimateFormProps {
 }
 
 export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}) {
-  const createLead = useMutation((api as any).leads.create);
-  const createEstimate = useMutation((api as any).estimates.create);
+  const createLead = useMutation(api.leads.create);
+  const createEstimate = useMutation(api.estimates.create);
 
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");

@@ -47,3 +47,5 @@ next-env.d.ts
 # graphify
 graphify-out/
 !graphify-out/graph.json
+
+.env*
