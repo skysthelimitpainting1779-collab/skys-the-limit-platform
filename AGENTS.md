@@ -121,6 +121,16 @@ To drastically reduce token usage and avoid blind file scanning:
 
 ---
 
+## 1.11. MANDATORY MAKE-NO-MISTAKES (M-STACK) PROTOCOL
+
+**Every subagent MUST activate `make-no-mistakes-max` for enterprise stakeholder alignment, zero-mistake technical execution, and risk de-risking.**
+
+1. **Alignment Loop**: Before substantive execution, state the single-sentence North Star, scope hygiene, dependencies, and green metrics.
+2. **Zero-Mistake Invariant**: Verify all system assumptions empirically before mutating files. No cargo-culting or silent unverified changes.
+3. **Repeatable Narrative**: Provide outcome-first summaries with clear "what happens next" milestones.
+
+---
+
 ## 2. Architecture Authority
 
 | System | Owner |
