@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import React from "react";
 import { motionStaggers } from "./tokens";
-import { staggerContainerVariants, staggerItemVariants } from "./variants";
+import { staggerItemVariants } from "./variants";
 
 export interface MotionStaggerProps {
   children: React.ReactNode;

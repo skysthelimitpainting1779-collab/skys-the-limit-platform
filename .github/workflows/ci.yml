@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, dev]
   push:
-    branches: [dev, 'infra/**', 'feature/**', 'fix/**', 'docs/**', 'agent/**']
+    branches: [dev, "infra/**", "feature/**", "fix/**", "docs/**", "agent/**"]
 
 permissions:
   contents: read
@@ -15,10 +15,10 @@ jobs:
     name: Validate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -26,23 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate skills schema
-        run: npm run verify:skills
-
-      - name: Validate environment contract
-        run: npm run verify:env
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type-check
-        run: npm run typecheck
-
-      - name: Unit & contract tests
-        run: npm test
-
-      - name: Build
-        run: npm run build
+      - name: Run exact foundation verification
+        run: npm run verify
         env:
           SKIP_ENV_VALIDATION: "true"
 
@@ -50,18 +35,18 @@ jobs:
     name: Branch Policy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
 
       - name: Verify branch naming convention
+        shell: bash
         run: |
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
           echo "Branch: $BRANCH"
-          if [[ "$BRANCH" =~ ^(main|dev|infra/|feature/|fix/|docs/|agent/|hotfix/|release/) ]]; then
-            echo "✓ Branch name follows convention"
+          if [[ "$BRANCH" =~ ^(main|dev)$ ]] || [[ "$BRANCH" =~ ^(infra|feature|fix|docs|agent|chore|hotfix|release)/[a-z0-9][a-z0-9/-]*$ ]]; then
+            echo "Branch name follows convention"
           else
-            echo "✗ Branch '$BRANCH' does not follow naming convention"
-            echo "  Allowed prefixes: main, dev, infra/, feature/, fix/, docs/, agent/, hotfix/, release/"
+            echo "Branch '$BRANCH' does not follow the governed convention"
             exit 1
           fi
