@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { badgeVariants } from "@/components/ui/badge";
 
-describe("UI & Utility Verification Suite", () => {
-  it("merges tailwind class names correctly with cn helper", () => {
+describe("UI and utility verification", () => {
+  it("merges Tailwind classes without retaining overridden spacing", () => {
     const result = cn("px-2 py-1", "bg-red-500", "px-4");
     expect(result).toContain("px-4");
     expect(result).toContain("py-1");
@@ -12,20 +12,22 @@ describe("UI & Utility Verification Suite", () => {
     expect(result).not.toContain("px-2");
   });
 
-  it("generates correct button variant class names", () => {
-    const defaultBtn = buttonVariants({ variant: "default" });
-    expect(defaultBtn).toContain("bg-[#E65100]");
+  it("uses semantic design tokens for button variants", () => {
+    const defaultButton = buttonVariants({ variant: "default" });
+    const secondaryButton = buttonVariants({ variant: "secondary" });
+    const largeButton = buttonVariants({ size: "lg" });
 
-    const secondaryBtn = buttonVariants({ variant: "secondary" });
-    expect(secondaryBtn).toContain("bg-slate-100");
-
-    const lgBtn = buttonVariants({ size: "lg" });
-    expect(lgBtn).toContain("h-12");
+    expect(defaultButton).toContain("bg-primary");
+    expect(defaultButton).toContain("text-primary-foreground");
+    expect(defaultButton).not.toMatch(/#[0-9a-f]{3,8}/i);
+    expect(secondaryButton).toContain("bg-secondary");
+    expect(largeButton).toContain("h-12");
   });
 
-  it("generates correct badge variant class names", () => {
+  it("uses semantic brand tokens for badges", () => {
     const brandBadge = badgeVariants({ variant: "brand" });
-    expect(brandBadge).toContain("bg-[#E65100]");
-    expect(brandBadge).toContain("text-white");
+    expect(brandBadge).toContain("bg-primary");
+    expect(brandBadge).toContain("text-primary-foreground");
+    expect(brandBadge).not.toMatch(/#[0-9a-f]{3,8}/i);
   });
 });

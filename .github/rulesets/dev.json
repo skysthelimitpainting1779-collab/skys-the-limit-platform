@@ -9,12 +9,8 @@
     }
   },
   "rules": [
-    {
-      "type": "deletion"
-    },
-    {
-      "type": "non_fast_forward"
-    },
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
     {
       "type": "pull_request",
       "parameters": {
@@ -32,10 +28,11 @@
         "required_status_checks": [
           { "context": "Validate" },
           { "context": "Branch Policy" },
-          { "context": "CodeQL Analysis" }
+          { "context": "Security Policy" },
+          { "context": "npm Audit" }
         ]
       }
     }
   ],
-  "_notes": "Apply via: gh api repos/skysthelimitpainting1779-collab/skys-the-limit-platform/rulesets --method POST --input .github/rulesets/dev.json"
+  "_notes": "Free-bootstrap policy: paid GitHub Advanced Security checks are deferred. Apply only after all listed contexts have emitted successfully."
 }
