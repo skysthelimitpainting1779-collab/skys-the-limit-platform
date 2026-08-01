@@ -30,7 +30,7 @@ jobs:
         run: npm run verify:skills
 
       - name: Validate environment contract
-        run: node scripts/validate-environment.mjs || echo "::warning::validate-environment not yet created"
+        run: npm run verify:env
 
       - name: Lint
         run: npm run lint

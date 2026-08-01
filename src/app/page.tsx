@@ -1,65 +1,86 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { MotionReveal } from "@/design/motion/Reveal";
+import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
+import { MotionPressable } from "@/design/motion/Pressable";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = {
+  title: "Sky's the Limit Painting LLC | Premium Contractor Platform",
+  description: "Established local painting contractor for Residential, Commercial, and Public-Sector projects.",
+};
+
+const navigationRoutes = [
+  { href: "/residential", title: "Residential", desc: "Interior, exterior, & cabinet refinishing" },
+  { href: "/commercial", title: "Commercial", desc: "Retail, offices, HOAs, & epoxy coatings" },
+  { href: "/public-sector", title: "Public Sector", desc: "Prevailing wage, schools, & municipal" },
+  { href: "/estimate", title: "Request Estimate", desc: "Transparent quotes with prep specs" },
+  { href: "/customer", title: "Customer Portal", desc: "Color choices, schedules, & invoices" },
+  { href: "/crew", title: "Crew Workspace", desc: "Daily logs, prep audits, & safety" },
+  { href: "/operations", title: "Operations", desc: "Control center & resource management" },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-12">
+        <MotionReveal direction="down" className="text-center space-y-4">
+          <Badge variant="brand" className="px-3 py-1 text-sm">
+            Prep-First Quality & Clean Execution
+          </Badge>
+          <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+            Sky&apos;s the Limit Painting LLC
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
+            Premier owner-led painting contractor serving Residential, Commercial, and Public-Sector clients with unmatched craft and structural durability.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          <div className="pt-4 flex justify-center gap-4">
+            <MotionPressable>
+              <Link href="/estimate">
+                <Button size="lg" className="bg-[#E65100] hover:bg-[#CC4400] text-white">
+                  Get Free Estimate
+                </Button>
+              </Link>
+            </MotionPressable>
+            <MotionPressable>
+              <Link href="/residential">
+                <Button size="lg" variant="outline">
+                  Explore Services
+                </Button>
+              </Link>
+            </MotionPressable>
+          </div>
+        </MotionReveal>
+
+        <MotionReveal direction="up" delay={0.1}>
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-10">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-6 text-center sm:text-left">
+              Platform Navigation
+            </h2>
+            <MotionStagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {navigationRoutes.map((route) => (
+                <MotionStaggerItem key={route.href}>
+                  <Link href={route.href} className="block group h-full">
+                    <Card className="h-full transition-shadow duration-200 group-hover:shadow-md group-hover:border-slate-300 dark:group-hover:border-slate-700">
+                      <CardHeader>
+                        <CardTitle className="group-hover:text-[#E65100] transition-colors">
+                          {route.title}
+                        </CardTitle>
+                        <CardDescription>{route.desc}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="text-xs font-semibold text-[#E65100]">
+                        View Route &rarr;
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </MotionStaggerItem>
+              ))}
+            </MotionStagger>
+          </div>
+        </MotionReveal>
+      </div>
     </div>
   );
 }
