@@ -10,84 +10,53 @@ triggers:
 
 # Skill: autoloop (Automated Closed-Loop Task Discovery & Execution)
 
-This skill scans the project for backlog items, open GitHub issues, TODO comments, code health/Lighthouse opportunities, and unhandled errors, compiles them into bounded work nodes in `.agent/graph/foundation.graph.json`, and executes them through the mandatory closed-loop execution engine.
+## Purpose
+Automates the discovery of backlog tasks, open GitHub issues, TODO/FIXME annotations, and code health opportunities, compiles them into `.agent/graph/foundation.graph.json`, and pipes each item through the mandatory closed-loop execution engine.
 
----
+## Required Inputs
+- Repository root path
+- Open GitHub issues (`gh issue list`)
+- Codebase TODO/FIXME annotations
+- Graphify knowledge graph (`graphify-out/graph.json`)
 
-## 1. Discovery Phase (Multi-Source Scanner)
+## Allowed Files
+- `.agent/graph/foundation.graph.json`
+- `.agent/state/controller.json`
+- `.agent/state/nodes/*.json`
+- `src/**`
+- `convex/**`
+- `docs/**`
 
-When `/autoloop` is triggered, scan all of the following sources in order:
+## Discovery Steps
+1. **Graphify & Code Health**: Query `graphify god-nodes` and `LESSONS.md` to identify structural friction or error patterns.
+2. **Code Annotations**: Scan codebase for `TODO:`, `FIXME:`, `HACK:`, and `OPTIMIZE:`.
+3. **GitHub Issues & Dependabot**: Query open issues (`gh issue list`) and security alerts (`gh api repos/:owner/:repo/dependabot/alerts`).
+4. **Pending ADR Specs**: Inspect `docs/decisions/` and `.agents/ORIGINAL_REQUEST.md` for pending requirements.
 
-### A. Source 1: Local Knowledge Graph & Code Health (`graphify`)
-- Query `graphify-out/graph.json` or run `graphify god-nodes` to detect structural friction, unlinked modules, or missing test coverage across core architectural hubs.
-- Run `graphify reflect` to inspect `graphify-out/reflections/LESSONS.md` for unhandled error patterns.
+## Current-Doc Requirement
+Every subagent dispatched by `/autoloop` must perform Context7 documentation lookups via `resolve-library-id` and `query-docs` before implementing third-party library code.
 
-### B. Source 2: Codebase TODOs / FIXMEs / HACKs
-- Run AST / static check for code annotations:
-  - `TODO:`
-  - `FIXME:`
-  - `HACK:`
-  - `OPTIMIZE:`
+## Test-First Sequence
+1. Write or confirm failing test before writing implementation logic.
+2. Run focused test verification (`npm test`).
 
-### C. Source 3: Open GitHub Issues & Security Vulnerabilities
-- Fetch open GitHub issues via `gh issue list --repo <repo> --json number,title,body,labels`.
-- Fetch dependabot vulnerabilities: `gh api repos/<repo>/dependabot/alerts`.
-
-### D. Source 4: User-Prompted Backlog & Custom Directives
-- Scan `.agents/ORIGINAL_REQUEST.md` and `docs/decisions/` for incomplete feature requirements or pending ADR implementations.
-
----
-
-## 2. Compilation Phase (Work Graph Builder)
-
-1. Aggregate all discovered items into bounded work nodes.
-2. Deduplicate against completed nodes in `.agent/state/controller.json`.
-3. Format each item into `.agent/graph/foundation.graph.json` with node schema:
-   ```json
-   {
-     "id": "AUTO-001",
-     "title": "Short descriptive title of discovery",
-     "status": "pending",
-     "risk": "medium",
-     "dependencies": [],
-     "allowed_paths": ["src/..."],
-     "expected_outputs": ["src/..."],
-     "tests": ["src/__tests__/auto-001.test.ts"],
-     "verification_commands": ["npm run typecheck", "npm test"],
-     "external_effects": [],
-     "retry_count": 0,
-     "max_retries": 2
-   }
-   ```
-4. Validate dependencies, risk levels, and stop conditions.
-
----
-
-## 3. Closed-Loop Execution Lifecycle
-
-For every compiled node, execute the exact closed-loop engine lifecycle:
-
-```text
-DISCOVER
-→ DEFINE CONTRACT
-→ WRITE OR CONFIRM FAILING TEST
-→ IMPLEMENT MINIMUM CHANGE
-→ RUN FOCUSED VERIFICATION (npm run typecheck && npm test)
-→ RUN BROADER REGRESSION VERIFICATION (npm run verify)
-→ INDEPENDENTLY EVALUATE (Dual-agent peer review)
-→ RECORD EVIDENCE (.agent/state/nodes/<node-id>.json)
-→ COMMIT (git commit)
-→ PUSH (git push)
-→ VERIFY GITHUB CI (node scripts/verify-ci.mjs)
-→ VERIFY VERCEL PREVIEW
-→ REMEDIATE OR ADVANCE
+## Verification Commands
+```bash
+npm run verify:skills
+npm run verify:env
+npm run typecheck
+npm test
+npm run build
+node scripts/verify-ci.mjs
 ```
 
----
+## Evidence Format
+Persist evidence for each node to `.agent/state/nodes/<node-id>.json` including commit SHA, focused test output, regression test output, and independent evaluator verdict (`pass`).
 
-## 4. Governance & Safety Rules
+## Stop Conditions
+- Evaluator returns `remediate`, `human_review`, or `rollback`.
+- Node requires production-effect actions (live Stripe, live Email, DNS changes, database mutations).
+- Verification commands fail after maximum allowed retries.
 
-- **Zero-Bypass**: No node may skip from implementation to completion without independent evaluator review (`pass`).
-- **Production Gate**: Stop at `human_approval_required` if a node impacts production data, live Stripe, or customer email.
-- **Graph Maintenance**: Run `graphify update .` after each node completion.
-- **Traceability**: Record execution telemetry in `.agent/logs/execution.jsonl`.
+## Handoff Format
+Summarize execution telemetry in `.agent/logs/execution.jsonl` and post completion status (`DONE`, `BLOCKED`, `HUMAN_APPROVAL_REQUIRED`).
