@@ -40,8 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# env files
 .env*
+!.env.example
 
 # graphify
 graphify-out/
