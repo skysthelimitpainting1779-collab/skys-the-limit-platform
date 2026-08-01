@@ -1,18 +1,49 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "repository": "skysthelimitpainting1779-collab/skys-the-limit-platform",
   "branch": "feature/estimate-lead-intake-e2e",
-  "active_node": "STRIDE-006",
-  "last_completed_node": "STRIDE-005",
-  "last_verified_commit": "076ebcdac0926942ad41570fa402a3fcf0ebd7f3",
-  "ci_status": "pending_exact_head",
-  "vercel_status": "pending_exact_head",
+  "active_node": null,
+  "last_completed_node": "STRIDE-007",
+  "control_plane_status": "reconciled",
+  "last_verified_source_commit": "b82a40d8c07b9e301fee54dc396ad5bd4cf25005",
+  "source_verification": {
+    "ci": {
+      "run": 37,
+      "conclusion": "success"
+    },
+    "security": {
+      "run": 16,
+      "conclusion": "success"
+    },
+    "lead_intake_e2e": {
+      "run": 8,
+      "conclusion": "success"
+    },
+    "vercel": {
+      "deployment_id": "dpl_8XQiqWczEZqdYHAeakG94FygBvXh",
+      "state": "READY",
+      "url": "https://sky-s-the-limit-platform-28dfh9azm-skys-35411c00.vercel.app"
+    }
+  },
+  "drive_provenance_status": "verified",
+  "drive_provenance_evidence": {
+    "index": "docs/sources/DRIVE_SOURCE_INDEX.md",
+    "proof_ledger_file_id": "1rlqQRkVuz7MSyWxyncSrLnDPs2cTougOKbZ9IHVTTtY",
+    "approved_logo_asset_id": "BRAND-001",
+    "approved_logo_drive_file_id": "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
+    "manifest_path": "public/assets-manifest.json"
+  },
+  "exact_head_verification": {
+    "authority": "GitHub PR #1 body and external operator ledger",
+    "status": "must_be_resolved_remotely_after_control_plane_writes",
+    "reason": "A repository commit cannot contain proof that its own remote CI and deployment checks have already completed."
+  },
   "production_effects_enabled": false,
   "paused": false,
   "pause_reason": null,
   "reconciliation": {
     "previous_claim": "All foundation nodes complete at 22d69db with CI success and Vercel ready",
-    "observed_reality": "Later commits existed; their Vercel deployments were BLOCKED. The claim was stale.",
-    "correction": "The last verified source commit is recorded explicitly. Current-head truth must be resolved from GitHub and Vercel remote checks."
+    "observed_reality": "The legacy terminal claim was stale, later deployment failures existed, and project state continued evolving.",
+    "correction": "The execution graph now records verified source evidence, Drive provenance is tied to concrete source IDs and approval records, and final exact-head truth is stored externally after remote checks complete."
   }
 }
