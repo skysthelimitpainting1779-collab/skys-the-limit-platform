@@ -9,12 +9,8 @@
     }
   },
   "rules": [
-    {
-      "type": "deletion"
-    },
-    {
-      "type": "non_fast_forward"
-    },
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
     {
       "type": "pull_request",
       "parameters": {
@@ -33,13 +29,12 @@
           { "context": "Validate" },
           { "context": "Branch Policy" },
           { "context": "Release Gate" },
-          { "context": "CodeQL Analysis" }
+          { "context": "Security Policy" },
+          { "context": "npm Audit" }
         ]
       }
     },
-    {
-      "type": "required_linear_history"
-    }
+    { "type": "required_linear_history" }
   ],
-  "_notes": "Apply via: gh api repos/skysthelimitpainting1779-collab/skys-the-limit-platform/rulesets --method POST --input .github/rulesets/main.json"
+  "_notes": "Normal releases originate from dev. Paid GitHub Advanced Security checks are deferred during free bootstrap."
 }
