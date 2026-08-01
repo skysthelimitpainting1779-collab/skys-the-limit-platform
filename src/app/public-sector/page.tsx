@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ServicePathPage } from "@/components/marketing/ServicePathPage";
 
 export const metadata: Metadata = {
-  title: "Public-Sector Opportunity Intake",
+  title: "Public Sector Opportunity Intake",
   description:
     "Share a solicitation identifier, agency, deadline, scope documents, and submission requirements for an initial opportunity review.",
 };
