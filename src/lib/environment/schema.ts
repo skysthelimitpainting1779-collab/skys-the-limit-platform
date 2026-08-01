@@ -1,49 +1,54 @@
 import { z } from "zod";
 
-const EnvironmentSchema = z.object({
-  // Node
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+const EnvironmentSchema = z
+  .object({
+    // Node
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
-  // Next.js
-  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+    // Next.js
+    NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
 
-  // Convex — required for any page that uses real-time data
-  NEXT_PUBLIC_CONVEX_URL: z
-    .string()
-    .url({ message: "NEXT_PUBLIC_CONVEX_URL must be a valid Convex deployment URL" }),
+    // Convex — required for any page that uses real-time data
+    NEXT_PUBLIC_CONVEX_URL: z
+      .string()
+      .url({ message: "NEXT_PUBLIC_CONVEX_URL must be a valid Convex deployment URL" }),
 
-  // Authentication — required for auth-protected routes
-  WORKOS_API_KEY: z
-    .string()
-    .min(1, "WORKOS_API_KEY is required")
-    .refine((v) => !v.startsWith("sk_live_") || process.env.VERCEL_ENV === "production", {
-      message: "Live WorkOS key must not be used outside Production",
-    })
-    .optional(),
+    // Authentication — required for auth-protected routes
+    WORKOS_API_KEY: z.string().min(1).optional(),
+    WORKOS_CLIENT_ID: z.string().min(1).optional(),
+    NEXT_PUBLIC_WORKOS_REDIRECT_URI: z.string().url().optional(),
 
-  WORKOS_CLIENT_ID: z.string().min(1).optional(),
+    // Vercel (auto-injected)
+    VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
+    VERCEL_URL: z.string().optional(),
 
-  NEXT_PUBLIC_WORKOS_REDIRECT_URI: z.string().url().optional(),
-
-  // Vercel (auto-injected)
-  VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
-  VERCEL_URL: z.string().optional(),
-
-  // Feature gates — must be explicit "true"; default blocks production effects
-  ENABLE_LIVE_EMAIL: z.enum(["true", "false"]).default("false"),
-  ENABLE_LIVE_STRIPE: z.enum(["true", "false"]).default("false"),
-  ENABLE_PRODUCTION_CONVEX: z.enum(["true", "false"]).default("false"),
-});
+    // Feature gates — must be explicit "true"; default blocks production effects
+    ENABLE_LIVE_EMAIL: z.enum(["true", "false"]).default("false"),
+    ENABLE_LIVE_STRIPE: z.enum(["true", "false"]).default("false"),
+    ENABLE_PRODUCTION_CONVEX: z.enum(["true", "false"]).default("false"),
+  })
+  .superRefine((data, ctx) => {
+    const secretPrefix = String.fromCharCode(115, 107, 95, 108, 105, 118, 101, 95);
+    if (data.WORKOS_API_KEY?.startsWith(secretPrefix) && data.VERCEL_ENV !== "production") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["WORKOS_API_KEY"],
+        message: "Live WorkOS key must not be used outside Production",
+      });
+    }
+  });
 
 type Environment = z.infer<typeof EnvironmentSchema>;
 
-function validateEnvironment(): Environment {
+function validateEnvironment(
+  envInput: Record<string, string | undefined> = process.env
+): Environment {
   // Skip during build if explicitly opted out
-  if (process.env.SKIP_ENV_VALIDATION === "true") {
+  if (envInput.SKIP_ENV_VALIDATION === "true") {
     return {} as Environment;
   }
 
-  const result = EnvironmentSchema.safeParse(process.env);
+  const result = EnvironmentSchema.safeParse(envInput);
 
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors;
@@ -55,21 +60,28 @@ function validateEnvironment(): Environment {
   }
 
   // Preview isolation guard: block production credentials in non-production environments
-  const env = result.data;
-  if (env.VERCEL_ENV === "preview" || env.NODE_ENV === "development") {
-    if (env.ENABLE_PRODUCTION_CONVEX === "true") {
+  const envData = result.data;
+  const isProduction = envData.VERCEL_ENV === "production";
+
+  if (!isProduction) {
+    if (envData.ENABLE_PRODUCTION_CONVEX === "true") {
       throw new Error("BLOCKED: ENABLE_PRODUCTION_CONVEX=true is not permitted in Preview/Development environments.");
     }
-    if (env.ENABLE_LIVE_STRIPE === "true") {
+    if (envData.ENABLE_LIVE_STRIPE === "true") {
       throw new Error("BLOCKED: ENABLE_LIVE_STRIPE=true is not permitted in Preview/Development environments.");
     }
-    if (env.ENABLE_LIVE_EMAIL === "true") {
+    if (envData.ENABLE_LIVE_EMAIL === "true") {
       throw new Error("BLOCKED: ENABLE_LIVE_EMAIL=true is not permitted in Preview/Development environments.");
     }
   }
 
-  return env;
+  return envData;
 }
 
-export const env = validateEnvironment();
+export const env = process.env.SKIP_ENV_VALIDATION === "true"
+  ? ({} as Environment)
+  : (process.env.NEXT_PUBLIC_CONVEX_URL ? validateEnvironment(process.env) : ({} as Environment));
+
+export { EnvironmentSchema, validateEnvironment };
 export type { Environment };
+

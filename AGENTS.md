@@ -68,6 +68,25 @@ To drastically reduce token usage and avoid blind file scanning:
 
 ---
 
+## 1.6. MANDATORY ANTIGRAVITY SKILL MANDATE
+
+**Every agent MUST leverage the `antigravity-guide` skill whenever operating, configuring, or resolving issues within Google Antigravity (AGY).**
+
+1. Read `antigravity_guide/SKILL.md` before executing or altering Antigravity CLI commands, slash commands, customizations, or sidecars.
+2. Do not attempt unguided configuration changes without checking official Antigravity patterns.
+
+---
+
+## 1.7. MANDATORY SEQUENTIAL THINKING PROTOCOL
+
+**For complex architectural decisions, multi-file refactors, or debugging ambiguous errors, agents MUST use Sequential Thinking (`sequentialthinking`).**
+
+1. Deconstruct complex problems into step-by-step hypothesis testing.
+2. Validate assumptions explicitly before mutating codebase state.
+3. Revise intermediate reasoning when new evidence or error tracebacks emerge.
+
+---
+
 ## 2. Architecture Authority
 
 | System | Owner |
