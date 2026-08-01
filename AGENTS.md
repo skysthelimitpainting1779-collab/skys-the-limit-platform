@@ -86,15 +86,14 @@ Do NOT create a second database, parallel auth system, or generic Express backen
 
 ---
 
-## 3. Required Discovery Before Any Edit
+## 3. Required Discovery Before Any Edit — Token-Efficient Flow
 
 1. Read `AGENTS.md` (this file).
-2. Check `docs/context/` for research contracts.
-3. Read `docs/architecture/ARCHITECTURE.md`.
-4. Read relevant `docs/decisions/` ADRs.
-5. Run `npm run verify:branch` from a clean checkout.
-6. Check `git log --oneline -10` for recent commits.
-7. Only THEN write or propose code.
+2. **Query Graphify First**: Run `query_graph` or `graphify query` to map relevant components. Do NOT read raw files broadly.
+3. Check `docs/context/` for relevant research contracts if third-party libraries are involved.
+4. Run `npm run verify:branch` from a clean checkout if running tests.
+5. Only read specific target files surfaced by Graphify.
+6. Write surgical, minimal code edits.
 
 ---
 
