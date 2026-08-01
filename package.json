@@ -6,21 +6,57 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "verify": "npm run verify:skills && npm run verify:env && npm run typecheck && npm test && npm run build",
+    "verify:branch": "npm run typecheck && npm test",
+    "verify:skills": "node scripts/validate-skills.mjs",
+    "verify:env": "node scripts/validate-environment.mjs",
+    "verify:assets": "node -e \"const m=JSON.parse(require('fs').readFileSync('public/assets-manifest.json','utf8'));if(!m.assets)throw new Error('assets-manifest.json malformed');console.log('✓ assets-manifest.json valid')\"",
+    "prepare": "husky"
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "convex": "^1.42.3",
+    "lucide-react": "^1.28.0",
+    "motion": "^12.43.0",
     "next": "16.2.12",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "postcss": "^8.5.25",
+    "sharp": "^0.35.0"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix"
+    ],
+    "*.{ts,tsx,js,mjs,json,md}": [
+      "prettier --write --ignore-unknown"
+    ]
   }
 }

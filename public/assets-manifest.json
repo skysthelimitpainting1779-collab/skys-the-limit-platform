@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-07-31T18:59:00Z",
+  "assets": [
+    {
+      "id": "logo-primary",
+      "path": "public/brand/logo.svg",
+      "drive_id": "DRIVE-LOGO-01",
+      "classification": "public-approved",
+      "checksum": "sha256-approved-brand-logo"
+    }
+  ]
+}

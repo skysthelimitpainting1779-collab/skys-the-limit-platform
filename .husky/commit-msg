@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# commit-msg: Enforce Conventional Commits format
+
+npx --no-install commitlint --edit "$1"

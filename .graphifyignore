@@ -1,0 +1,36 @@
+# .graphifyignore - Graphify Ignore Rules
+# Exclude build artifacts, generated assets, cache, node_modules, and temporary state
+
+# Dependencies & Build Outputs
+node_modules/
+.next/
+out/
+build/
+dist/
+coverage/
+
+# Convex generated artifacts (tracked in git but heavy for LLM semantic graph)
+convex/_generated/*.js
+convex/_generated/*.d.ts
+
+# Agent State & Logs
+.agent/state/nodes/
+.agent/logs/
+.system_generated/
+*.log
+
+# Git & Cache
+.git/
+.turbo/
+.cache/
+tmp/
+scratch/
+
+# Lockfiles and Binary Media
+package-lock.json
+*.ico
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
