@@ -1,13 +1,14 @@
 {
-  "version": "1.0.0",
-  "updated_at": "2026-07-31T18:59:00Z",
-  "assets": [
+  "version": "2.0.0",
+  "updatedAt": "2026-08-01",
+  "assets": [],
+  "pendingSources": [
     {
-      "id": "logo-primary",
-      "path": "public/brand/logo.svg",
-      "drive_id": "DRIVE-LOGO-01",
+      "driveFileId": "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
+      "title": "Sky's the Limit - Logo - Illustrated Badge.jpg",
       "classification": "public-approved",
-      "checksum": "sha256-approved-brand-logo"
+      "status": "awaiting-binary-import",
+      "reason": "The authenticated Drive source is verified, but binary import and checksum generation require a trusted local workspace. No fabricated file or checksum is committed."
     }
   ]
 }

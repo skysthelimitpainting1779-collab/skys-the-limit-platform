@@ -1,102 +1,77 @@
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-export const leadStatusValidator = v.union(
-  v.literal("new"),
-  v.literal("contacted"),
-  v.literal("qualified"),
-  v.literal("scheduled"),
-  v.literal("closed"),
-  v.literal("lost")
-);
-
-export const projectTypeValidator = v.union(
+const segment = v.union(
   v.literal("residential"),
   v.literal("commercial"),
-  v.literal("public-sector")
+  v.literal("public-sector"),
 );
 
 export const create = mutation({
   args: {
-    customerName: v.string(),
+    idempotencyKey: v.string(),
+    fullName: v.string(),
     email: v.string(),
     phone: v.string(),
-    address: v.optional(v.string()),
-    projectType: projectTypeValidator,
-    status: v.optional(leadStatusValidator),
-    notes: v.optional(v.string()),
+    segment,
+    serviceAddress: v.string(),
+    projectDetails: v.string(),
+    desiredTimeframe: v.optional(v.string()),
+    sourcePath: v.string(),
+    utmSource: v.optional(v.string()),
+    utmMedium: v.optional(v.string()),
+    utmCampaign: v.optional(v.string()),
+    consentAt: v.number(),
+    createdAt: v.number(),
   },
+  returns: v.object({
+    id: v.id("leads"),
+    created: v.boolean(),
+  }),
   handler: async (ctx, args) => {
-    const leadId = await ctx.db.insert("leads", {
-      customerName: args.customerName,
+    const existing = await ctx.db
+      .query("leads")
+      .withIndex("by_idempotency_key", (query) =>
+        query.eq("idempotencyKey", args.idempotencyKey),
+      )
+      .unique();
+
+    if (existing) {
+      return { id: existing._id, created: false };
+    }
+
+    const serverNow = Date.now();
+    const fifteenMinutesAgo = serverNow - 15 * 60 * 1000;
+    const recentFromEmail = await ctx.db
+      .query("leads")
+      .withIndex("by_email_and_created_at", (query) =>
+        query.eq("email", args.email).gte("createdAt", fifteenMinutesAgo),
+      )
+      .take(3);
+
+    if (recentFromEmail.length >= 3) {
+      throw new Error("RATE_LIMITED");
+    }
+
+    const id = await ctx.db.insert("leads", {
+      idempotencyKey: args.idempotencyKey,
+      customerName: args.fullName,
       email: args.email,
       phone: args.phone,
-      address: args.address,
-      projectType: args.projectType,
-      status: args.status ?? "new",
-      notes: args.notes,
-      createdAt: Date.now(),
+      address: args.serviceAddress,
+      projectType: args.segment,
+      projectDetails: args.projectDetails,
+      desiredTimeframe: args.desiredTimeframe,
+      sourcePath: args.sourcePath,
+      utmSource: args.utmSource,
+      utmMedium: args.utmMedium,
+      utmCampaign: args.utmCampaign,
+      contactConsentAt: serverNow,
+      status: "new",
+      createdAt: serverNow,
+      updatedAt: serverNow,
     });
-    return leadId;
-  },
-});
 
-export const get = query({
-  args: {
-    leadId: v.id("leads"),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.leadId);
-  },
-});
-
-export const list = query({
-  args: {
-    status: v.optional(leadStatusValidator),
-  },
-  handler: async (ctx, args) => {
-    if (args.status !== undefined) {
-      return await ctx.db
-        .query("leads")
-        .withIndex("by_status", (q) => q.eq("status", args.status!))
-        .collect();
-    }
-    return await ctx.db.query("leads").collect();
-  },
-});
-
-export const updateStatus = mutation({
-  args: {
-    leadId: v.id("leads"),
-    status: leadStatusValidator,
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db.get(args.leadId);
-    if (!existing) {
-      throw new Error("Lead not found");
-    }
-    await ctx.db.patch(args.leadId, { status: args.status });
-    return await ctx.db.get(args.leadId);
-  },
-});
-
-export const search = query({
-  args: {
-    query: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const leads = await ctx.db.query("leads").collect();
-    const q = args.query.trim().toLowerCase();
-    if (!q) {
-      return leads;
-    }
-    return leads.filter(
-      (lead) =>
-        lead.customerName.toLowerCase().includes(q) ||
-        lead.email.toLowerCase().includes(q) ||
-        lead.phone.toLowerCase().includes(q) ||
-        (lead.address && lead.address.toLowerCase().includes(q)) ||
-        (lead.notes && lead.notes.toLowerCase().includes(q))
-    );
+    return { id, created: true };
   },
 });
