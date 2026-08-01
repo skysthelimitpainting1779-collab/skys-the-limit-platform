@@ -13,16 +13,16 @@ export const metadata: Metadata = {
 
 export default function CommercialPage() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
             <Badge variant="brand">Commercial Division</Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Commercial & Industrial Coating Solutions
             </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
-              Scalable workforce, flexible off-hours scheduling, and high-performance commercial coatings designed for demanding retail, office, and industrial environments.
+            <p className="text-lg text-muted-foreground max-w-2xl">
+              Professional crews, flexible scheduling, and high-performance commercial coatings designed for demanding retail, office, and industrial environments.
             </p>
           </div>
         </MotionReveal>
@@ -34,8 +34,8 @@ export default function CommercialPage() {
                 <CardTitle>Retail & Office</CardTitle>
                 <CardDescription>Tenant buildouts & facility maintenance</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Night and weekend shifts to prevent operational downtime for business owners and property managers.
+              <CardContent className="text-sm text-muted-foreground">
+                Flexible scheduling to minimize operational disruption for business owners and property managers.
               </CardContent>
             </Card>
           </MotionStaggerItem>
@@ -46,7 +46,7 @@ export default function CommercialPage() {
                 <CardTitle>Multi-Family Housing</CardTitle>
                 <CardDescription>HOAs, apartment complexes, & condos</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
+              <CardContent className="text-sm text-muted-foreground">
                 Comprehensive exterior repaint programs with tenant notification coordination and safety controls.
               </CardContent>
             </Card>
@@ -58,7 +58,7 @@ export default function CommercialPage() {
                 <CardTitle>Specialty Coatings</CardTitle>
                 <CardDescription>Epoxy floors & elastomeric wall coatings</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
+              <CardContent className="text-sm text-muted-foreground">
                 Heavy-duty surface protection engineered to withstand high traffic, chemical exposure, and extreme weather.
               </CardContent>
             </Card>
@@ -68,7 +68,7 @@ export default function CommercialPage() {
         <MotionReveal direction="up" delay={0.2}>
           <div className="flex items-center gap-4">
             <MotionPressable>
-              <Button size="lg" className="bg-[#E65100] hover:bg-[#CC4400]">
+              <Button size="lg" variant="brand">
                 Schedule Commercial Consultation
               </Button>
             </MotionPressable>

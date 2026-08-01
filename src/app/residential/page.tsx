@@ -13,15 +13,15 @@ export const metadata: Metadata = {
 
 export default function ResidentialPage() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         <MotionReveal direction="down">
           <div className="space-y-4">
             <Badge variant="brand">Residential Division</Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Transforming Homes with Prep-First Precision
             </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
+            <p className="text-lg text-muted-foreground max-w-2xl">
               From interior detail refinishing to full exterior weatherproofing, our owner-led teams deliver lasting beauty with minimal disruption.
             </p>
           </div>
@@ -34,8 +34,8 @@ export default function ResidentialPage() {
                 <CardTitle>Interior Painting</CardTitle>
                 <CardDescription>Walls, ceilings, trim, & custom cabinetry</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Thorough surface prep, dust isolation, low-VOC premium paints, and immaculate cleanup every evening.
+              <CardContent className="text-sm text-muted-foreground">
+                Thorough surface prep, dust isolation, quality premium paints, and immaculate cleanup every evening.
               </CardContent>
             </Card>
           </MotionStaggerItem>
@@ -46,7 +46,7 @@ export default function ResidentialPage() {
                 <CardTitle>Exterior Weatherproofing</CardTitle>
                 <CardDescription>Siding, fascia, trim, & exterior decks</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
+              <CardContent className="text-sm text-muted-foreground">
                 Power washing, scraping, priming, sealant application, and high-durability topcoats engineered for all weather conditions.
               </CardContent>
             </Card>
@@ -58,8 +58,8 @@ export default function ResidentialPage() {
                 <CardTitle>Cabinet Refinishing</CardTitle>
                 <CardDescription>Kitchen & bathroom woodwork transformation</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm text-slate-600 dark:text-slate-400">
-                Factory-grade smooth enamel finishes that update kitchen spaces at a fraction of full replacement cost.
+              <CardContent className="text-sm text-muted-foreground">
+                Smooth professional enamel finishes that update kitchen spaces at a fraction of full replacement cost.
               </CardContent>
             </Card>
           </MotionStaggerItem>
@@ -68,7 +68,7 @@ export default function ResidentialPage() {
         <MotionReveal direction="up" delay={0.2}>
           <div className="flex items-center gap-4">
             <MotionPressable>
-              <Button size="lg" className="bg-[#E65100] hover:bg-[#CC4400]">
+              <Button size="lg" variant="brand">
                 Request Residential Estimate
               </Button>
             </MotionPressable>

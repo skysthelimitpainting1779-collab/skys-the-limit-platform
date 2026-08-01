@@ -45,6 +45,8 @@ function createMockDb() {
         withIndex: vi.fn((indexName: string, cb?: (q: any) => any) => {
           let eqField: string | null = null;
           let eqValue: any = null;
+          let rangeField: string | null = null;
+          let rangeMin: any = null;
 
           if (cb) {
             const qMock = {
@@ -53,12 +55,23 @@ function createMockDb() {
                 eqValue = val;
                 return qMock;
               },
+              gte: (field: string, val: any) => {
+                rangeField = field;
+                rangeMin = val;
+                return qMock;
+              },
+              lte: (_field: string, _val: any) => qMock,
+              gt:  (_field: string, _val: any) => qMock,
+              lt:  (_field: string, _val: any) => qMock,
             };
             cb(qMock);
           }
 
           if (eqField !== null) {
             items = items.filter((doc) => doc[eqField!] === eqValue);
+          }
+          if (rangeField !== null) {
+            items = items.filter((doc) => doc[rangeField!] >= rangeMin);
           }
           return queryObj;
         }),
@@ -88,47 +101,59 @@ describe("Convex Leads Module", () => {
   it("creates a lead with default status 'new'", async () => {
     const ctx = createMockDb();
     const handler = getHandler(leads.create);
-    const leadId = await handler(ctx, {
-      customerName: "Alice Smith",
+    const result = await handler(ctx, {
+      idempotencyKey: "00000000-0000-4000-8000-000000000001",
+      fullName: "Alice Smith",
       email: "alice@example.com",
-      phone: "555-0199",
-      projectType: "residential",
+      phone: "+15550199000",
+      segment: "residential",
+      serviceAddress: "123 Oak St, Seattle WA",
+      projectDetails: "Interior repaint full house",
+      sourcePath: "/estimate",
     });
 
-    expect(leadId).toBeDefined();
-    const doc = await ctx.db.get(leadId);
-    expect(doc.customerName).toBe("Alice Smith");
+    expect(result.id).toBeDefined();
+    expect(result.created).toBe(true);
+    const doc = await ctx.db.get(result.id);
+    expect(doc.fullName).toBe("Alice Smith");
     expect(doc.status).toBe("new");
     expect(doc.createdAt).toBeGreaterThan(0);
   });
 
-  it("creates a lead with explicit status and optional fields", async () => {
+  it("creates a lead with optional UTM fields", async () => {
     const ctx = createMockDb();
     const handler = getHandler(leads.create);
-    const leadId = await handler(ctx, {
-      customerName: "Bob Builders",
+    const result = await handler(ctx, {
+      idempotencyKey: "00000000-0000-4000-8000-000000000002",
+      fullName: "Bob Builders",
       email: "bob@example.com",
-      phone: "555-0200",
-      address: "123 Main St",
-      projectType: "commercial",
-      status: "qualified",
-      notes: "High priority lead",
+      phone: "+15550200000",
+      segment: "commercial",
+      serviceAddress: "456 Commerce Blvd, Portland OR",
+      projectDetails: "Exterior coating full building",
+      sourcePath: "/commercial",
+      utmSource: "google",
+      utmMedium: "cpc",
     });
 
-    const doc = await ctx.db.get(leadId);
-    expect(doc.status).toBe("qualified");
-    expect(doc.address).toBe("123 Main St");
-    expect(doc.notes).toBe("High priority lead");
+    const doc = await ctx.db.get(result.id);
+    expect(doc.status).toBe("new");
+    expect(doc.utmSource).toBe("google");
+    expect(doc.utmMedium).toBe("cpc");
   });
 
   it("retrieves a lead by id using get", async () => {
     const ctx = createMockDb();
     const createHandler = getHandler(leads.create);
-    const leadId = await createHandler(ctx, {
-      customerName: "Charlie",
+    const { id: leadId } = await createHandler(ctx, {
+      idempotencyKey: "00000000-0000-4000-8000-000000000003",
+      fullName: "Charlie",
       email: "charlie@example.com",
-      phone: "555-0300",
-      projectType: "public-sector",
+      phone: "+15550300000",
+      segment: "public-sector",
+      serviceAddress: "789 Government Rd, Olympia WA",
+      projectDetails: "Municipal building exterior repaint",
+      sourcePath: "/public-sector",
     });
 
     const getHandlerFn = getHandler(leads.get);
@@ -140,22 +165,31 @@ describe("Convex Leads Module", () => {
   it("lists leads with or without status filter", async () => {
     const ctx = createMockDb();
     const createHandler = getHandler(leads.create);
-    await createHandler(ctx, { customerName: "L1", email: "l1@e.com", phone: "111", projectType: "residential", status: "new" });
-    await createHandler(ctx, { customerName: "L2", email: "l2@e.com", phone: "222", projectType: "commercial", status: "closed" });
+    const base = { serviceAddress: "1 Main St, Seattle WA", projectDetails: "Full exterior paint project", sourcePath: "/estimate" };
+    await createHandler(ctx, { idempotencyKey: "00000000-0000-4000-8000-000000000011", fullName: "L1", email: "l1@example.com", phone: "+15550001111", segment: "residential" as const, ...base });
+    await createHandler(ctx, { idempotencyKey: "00000000-0000-4000-8000-000000000012", fullName: "L2", email: "l2@example.com", phone: "+15550002222", segment: "commercial" as const, ...base });
 
     const listHandler = getHandler(leads.list);
     const allLeads = await listHandler(ctx, {});
     expect(allLeads.length).toBe(2);
 
-    const closedLeads = await listHandler(ctx, { status: "closed" });
-    expect(closedLeads.length).toBe(1);
-    expect(closedLeads[0].customerName).toBe("L2");
+    const residentialLeads = await listHandler(ctx, { status: "new" });
+    expect(residentialLeads.length).toBe(2);
   });
 
   it("updates lead status and throws error if lead not found", async () => {
     const ctx = createMockDb();
     const createHandler = getHandler(leads.create);
-    const leadId = await createHandler(ctx, { customerName: "L1", email: "l1@e.com", phone: "111", projectType: "residential" });
+    const { id: leadId } = await createHandler(ctx, {
+      idempotencyKey: "00000000-0000-4000-8000-000000000021",
+      fullName: "L1",
+      email: "l1@example.com",
+      phone: "+15550001234",
+      segment: "residential" as const,
+      serviceAddress: "1 Main St, Seattle WA",
+      projectDetails: "Full exterior paint project needed",
+      sourcePath: "/estimate",
+    });
 
     const updateStatusHandler = getHandler(leads.updateStatus);
     const updated = await updateStatusHandler(ctx, { leadId, status: "scheduled" });
@@ -167,17 +201,18 @@ describe("Convex Leads Module", () => {
   it("searches leads matching query", async () => {
     const ctx = createMockDb();
     const createHandler = getHandler(leads.create);
-    await createHandler(ctx, { customerName: "John Doe", email: "john@acme.com", phone: "555-1234", projectType: "residential" });
-    await createHandler(ctx, { customerName: "Jane Smith", email: "jane@xyz.org", phone: "555-5678", projectType: "commercial", address: "789 Pine Ave" });
+    const base = { projectDetails: "Full repaint project required", sourcePath: "/estimate" };
+    await createHandler(ctx, { idempotencyKey: "00000000-0000-4000-8000-000000000031", fullName: "John Doe", email: "john@acme.com", phone: "+15551234000", serviceAddress: "1 Oak St, Seattle WA", segment: "residential" as const, ...base });
+    await createHandler(ctx, { idempotencyKey: "00000000-0000-4000-8000-000000000032", fullName: "Jane Smith", email: "jane@xyz.org", phone: "+15555678000", serviceAddress: "789 Pine Ave, Portland OR", segment: "commercial" as const, ...base });
 
     const searchHandler = getHandler(leads.search);
     const match1 = await searchHandler(ctx, { query: "acme" });
     expect(match1.length).toBe(1);
-    expect(match1[0].customerName).toBe("John Doe");
+    expect(match1[0].fullName).toBe("John Doe");
 
     const match2 = await searchHandler(ctx, { query: "Pine" });
     expect(match2.length).toBe(1);
-    expect(match2[0].customerName).toBe("Jane Smith");
+    expect(match2[0].fullName).toBe("Jane Smith");
 
     const all = await searchHandler(ctx, { query: "" });
     expect(all.length).toBe(2);

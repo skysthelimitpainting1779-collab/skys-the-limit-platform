@@ -1,13 +1,28 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { normalizeLeadMutationInput } from "./lib/leadValidation";
 
-const segment = v.union(
-  v.literal("residential"),
-  v.literal("commercial"),
-  v.literal("public-sector"),
+export const leadStatusValidator = v.union(
+  v.literal("new"),
+  v.literal("contacted"),
+  v.literal("qualified"),
+  v.literal("scheduled"),
+  v.literal("closed"),
+  v.literal("lost")
 );
 
+export const projectTypeValidator = v.union(
+  v.literal("residential"),
+  v.literal("commercial"),
+  v.literal("public-sector")
+);
+
+const segment = projectTypeValidator;
+
+// Validated, idempotent lead intake — used by the public estimate form.
+// All input is normalized and validated by normalizeLeadMutationInput before
+// any DB read or write. Returns { id, created } so callers can distinguish
+// new leads from duplicate submissions.
 export const create = mutation({
   args: {
     idempotencyKey: v.string(),
@@ -62,11 +77,11 @@ export const create = mutation({
 
     const id = await ctx.db.insert("leads", {
       idempotencyKey: input.idempotencyKey,
-      customerName: input.fullName,
+      fullName: input.fullName,
       email: input.email,
       phone: input.phone,
-      address: input.serviceAddress,
-      projectType: input.segment,
+      serviceAddress: input.serviceAddress,
+      segment: input.segment,
       projectDetails: input.projectDetails,
       desiredTimeframe: input.desiredTimeframe,
       sourcePath: input.sourcePath,
@@ -80,5 +95,65 @@ export const create = mutation({
     });
 
     return { id, created: true };
+  },
+});
+
+export const get = query({
+  args: {
+    leadId: v.id("leads"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.leadId);
+  },
+});
+
+export const list = query({
+  args: {
+    status: v.optional(leadStatusValidator),
+  },
+  handler: async (ctx, args) => {
+    if (args.status !== undefined) {
+      return await ctx.db
+        .query("leads")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .collect();
+    }
+    return await ctx.db.query("leads").collect();
+  },
+});
+
+export const updateStatus = mutation({
+  args: {
+    leadId: v.id("leads"),
+    status: leadStatusValidator,
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.get(args.leadId);
+    if (!existing) {
+      throw new Error("Lead not found");
+    }
+    await ctx.db.patch(args.leadId, { status: args.status, updatedAt: Date.now() });
+    return await ctx.db.get(args.leadId);
+  },
+});
+
+export const search = query({
+  args: {
+    query: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const leads = await ctx.db.query("leads").collect();
+    const q = args.query.trim().toLowerCase();
+    if (!q) {
+      return leads;
+    }
+    return leads.filter(
+      (lead) =>
+        (lead.fullName ?? lead.customerName ?? "").toLowerCase().includes(q) ||
+        lead.email.toLowerCase().includes(q) ||
+        lead.phone.toLowerCase().includes(q) ||
+        (lead.serviceAddress && lead.serviceAddress.toLowerCase().includes(q)) ||
+        (lead.projectDetails && lead.projectDetails.toLowerCase().includes(q))
+    );
   },
 });
