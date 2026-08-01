@@ -1,0 +1,108 @@
+name: Lead Intake E2E
+
+on:
+  pull_request:
+    branches: [dev]
+  push:
+    branches: ["feature/**", "fix/**", "infra/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  lead-intake-e2e:
+    name: Lead Intake E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      NEXT_PUBLIC_DEPLOYMENT_TIER: test
+      ENABLE_EXTERNAL_EFFECTS: "false"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start anonymous Convex backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .env.local /tmp/convex.log /tmp/convex.pid
+          nohup bash -lc 'echo n | CONVEX_AGENT_MODE=anonymous npx convex dev' > /tmp/convex.log 2>&1 &
+          echo $! > /tmp/convex.pid
+
+          ready=false
+          for _ in $(seq 1 120); do
+            if [[ -f .env.local ]] && grep -q 'Convex functions ready' /tmp/convex.log; then
+              ready=true
+              break
+            fi
+            if ! kill -0 "$(cat /tmp/convex.pid)" 2>/dev/null; then
+              cat /tmp/convex.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            cat /tmp/convex.log
+            echo "Convex did not become ready within 120 seconds"
+            exit 1
+          fi
+
+          grep -E '^(CONVEX_DEPLOYMENT|NEXT_PUBLIC_CONVEX_URL)=' .env.local >> "$GITHUB_ENV"
+
+      - name: Build and start Next.js
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run build
+          nohup npm start -- -p 3100 > /tmp/next.log 2>&1 &
+          echo $! > /tmp/next.pid
+
+          ready=false
+          for _ in $(seq 1 60); do
+            status=$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/estimate || true)
+            if [[ "$status" == "200" ]]; then
+              ready=true
+              break
+            fi
+            if ! kill -0 "$(cat /tmp/next.pid)" 2>/dev/null; then
+              cat /tmp/next.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            cat /tmp/next.log
+            echo "Next.js did not become ready within 60 seconds"
+            exit 1
+          fi
+
+      - name: Exercise real lead persistence and idempotency
+        env:
+          BASE_URL: http://127.0.0.1:3100
+        run: node scripts/verify-lead-intake-e2e.mjs
+
+      - name: Print service logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          echo '--- Convex log ---'
+          cat /tmp/convex.log 2>/dev/null || true
+          echo '--- Next.js log ---'
+          cat /tmp/next.log 2>/dev/null || true
+
+      - name: Stop local services
+        if: always()
+        shell: bash
+        run: |
+          [[ -f /tmp/next.pid ]] && kill "$(cat /tmp/next.pid)" 2>/dev/null || true
+          [[ -f /tmp/convex.pid ]] && kill "$(cat /tmp/convex.pid)" 2>/dev/null || true

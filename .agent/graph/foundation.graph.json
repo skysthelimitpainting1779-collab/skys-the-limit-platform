@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-08-01T20:30:00Z",
+  "legacy_foundation_claims": {
+    "status": "reconciled_as_stale",
+    "recorded_commit": "22d69db",
+    "reason": "Subsequent commits and BLOCKED Vercel deployments invalidated the prior terminal claim."
+  },
+  "nodes": [
+    {
+      "id": "STRIDE-001",
+      "title": "Create isolated feature branch and draft PR",
+      "status": "complete",
+      "commit_sha": "6ed7fa7270a14fb3aa5a78d3e1ef28adae91d5f0"
+    },
+    {
+      "id": "STRIDE-002",
+      "title": "Prove failing estimate-intake contract",
+      "status": "complete",
+      "evidence": "GitHub CI Validate failed at typecheck because @/lib/leads/submit was intentionally absent."
+    },
+    {
+      "id": "STRIDE-003",
+      "title": "Implement validated HTTP intake boundary",
+      "status": "active"
+    },
+    {
+      "id": "STRIDE-004",
+      "title": "Implement idempotent Convex lead persistence and abuse control",
+      "status": "ready",
+      "dependencies": ["STRIDE-003"]
+    },
+    {
+      "id": "STRIDE-005",
+      "title": "Implement accessible estimate UI and receipt state",
+      "status": "ready",
+      "dependencies": ["STRIDE-003"]
+    },
+    {
+      "id": "STRIDE-006",
+      "title": "Pass exact-head GitHub CI and Security",
+      "status": "pending",
+      "dependencies": ["STRIDE-003", "STRIDE-004", "STRIDE-005"]
+    },
+    {
+      "id": "STRIDE-007",
+      "title": "Prove exact-head READY Vercel Preview",
+      "status": "pending",
+      "dependencies": ["STRIDE-006"]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+name: Security
+
+on:
+  push:
+    branches: [main, dev, "infra/**", "feature/**", "fix/**"]
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    name: Security Policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Reject tracked environment files
+        shell: bash
+        run: |
+          TRACKED_ENV=$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -vE '(^|/)\.env\.example$' || true)
+          if [[ -n "$TRACKED_ENV" ]]; then
+            echo "Tracked environment files are prohibited:"
+            echo "$TRACKED_ENV"
+            exit 1
+          fi
+
+      - name: Validate environment and asset contracts
+        run: |
+          node scripts/validate-environment.mjs
+          node scripts/validate-assets.mjs
+
+      - name: Confirm bootstrap external-effect boundary
+        shell: bash
+        run: |
+          grep -q '^ENABLE_LIVE_EMAIL=false$' .env.example
+          grep -q '^ENABLE_LIVE_STRIPE=false$' .env.example
+          grep -q '^ENABLE_PRODUCTION_CONVEX=false$' .env.example
+
+  audit:
+    name: npm Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
