@@ -31,7 +31,8 @@
         "strict_required_status_checks_policy": true,
         "required_status_checks": [
           { "context": "Validate" },
-          { "context": "Branch Policy" }
+          { "context": "Branch Policy" },
+          { "context": "CodeQL Analysis" }
         ]
       }
     }

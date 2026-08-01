@@ -87,6 +87,17 @@ To drastically reduce token usage and avoid blind file scanning:
 
 ---
 
+## 1.8. MANDATORY CONTINUOUS LEARNING & ERROR MEMORY SYSTEM
+
+**Agents MUST record corrected tool errors, tool misuse, and dead ends to `graphify-out/memory/` and check `graphify-out/reflections/LESSONS.md` to avoid repeating mistakes.**
+
+1. **Check Lessons First**: Read `graphify-out/reflections/LESSONS.md` during discovery to learn from past session errors.
+2. **Record Mistakes**: When a tool call or implementation strategy fails (e.g. invalid artifact path in `write_to_file`, trigger strings in pre-commit hooks, syntax mismatches), record it using `graphify save-result --outcome corrected`.
+3. **Compile Reflections**: Run `graphify reflect` to update `graphify-out/reflections/LESSONS.md`.
+4. **Local Tracking**: Learning memory is stored in `graphify-out/memory/` (unpushed local workspace memory) so it persists locally without polluting git commits.
+
+---
+
 ## 2. Architecture Authority
 
 | System | Owner |
