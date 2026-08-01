@@ -1,10 +1,14 @@
-# Next.js App Router Context & Contract
+# Next.js App Router implementation contract
 
-- **Research Date**: 2026-07-31
-- **Official Source**: Context7 `/vercel/next.js`
-- **Selected Version / Contract**: Next.js v15 / App Router with React 19 Server Components
-- **Decision Affected**: Route structure (`src/app`), Server Components vs Client Components boundary.
-- **Important Constraints**:
-  - Keep route handlers explicit under HTTP boundaries.
-  - Server components by default for zero client JavaScript bundle bloat.
-  - Use `"use client"` only for interactive UI components or hooks.
+- Research date: 2026-08-01
+- Official Context7 library: `/vercel/next.js/v16.2.9`
+- Installed package: Next.js `16.2.12`
+- Decision: use App Router Route Handlers for explicit public HTTP boundaries.
+
+## Applied constraints
+
+- Parse JSON with `request.json()` inside the Route Handler.
+- Read optional runtime provider environment variables inside request execution, never during module initialization.
+- Return structured JSON and explicit status codes.
+- Use `proxy.ts`, not the deprecated `middleware.ts` convention, when AuthKit is activated.
+- Keep the marketing and estimate pages available when optional authentication is not configured.

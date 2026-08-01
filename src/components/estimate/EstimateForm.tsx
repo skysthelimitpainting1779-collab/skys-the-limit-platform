@@ -18,12 +18,12 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
   const createLead = useMutation(api.leads.create);
   const createEstimate = useMutation(api.estimates.create);
 
-  const [customerName, setCustomerName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [projectType, setProjectType] = useState<"residential" | "commercial" | "public-sector">("residential");
-  const [details, setDetails] = useState("");
+  const [serviceAddress, setServiceAddress] = useState("");
+  const [segment, setSegment] = useState<"residential" | "commercial" | "public-sector">("residential");
+  const [projectDetails, setProjectDetails] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedLeadId, setSubmittedLeadId] = useState<string | null>(null);
@@ -35,27 +35,29 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
     setIsSubmitting(true);
 
     try {
-      const leadId = await createLead({
-        customerName,
+      const result = await createLead({
+        idempotencyKey: crypto.randomUUID(),
+        fullName,
         email,
         phone,
-        address: address || undefined,
-        projectType,
-        notes: details || undefined,
+        segment,
+        serviceAddress,
+        projectDetails,
+        sourcePath: "/estimate",
       });
 
       if (defaultOrgId) {
         await createEstimate({
-          leadId,
+          leadId: result.id,
           orgId: defaultOrgId,
-          scope: details || `Estimate request for ${projectType} project`,
+          scope: projectDetails || `Estimate request for ${segment} project`,
           pricing: 0,
           status: "draft",
         });
       }
 
-      setSubmittedLeadId(leadId);
-      onSuccess?.(leadId);
+      setSubmittedLeadId(result.id);
+      onSuccess?.(result.id);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to submit estimate request. Please try again.";
       setError(msg);
@@ -65,12 +67,12 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
   };
 
   const handleReset = () => {
-    setCustomerName("");
+    setFullName("");
     setEmail("");
     setPhone("");
-    setAddress("");
-    setProjectType("residential");
-    setDetails("");
+    setServiceAddress("");
+    setSegment("residential");
+    setProjectDetails("");
     setSubmittedLeadId(null);
     setError(null);
   };
@@ -81,14 +83,14 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
         <CardHeader>
           <CardTitle className="text-emerald-700 dark:text-emerald-400">Request Submitted!</CardTitle>
           <CardDescription>
-            Thank you, {customerName}. We have received your estimate request for {projectType} painting.
+            Thank you, {fullName}. We have received your estimate request for {segment} painting.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Lead Reference: <span className="font-mono text-slate-900 dark:text-slate-100">{submittedLeadId}</span>
+          <p className="text-sm text-muted-foreground">
+            Lead Reference: <span className="font-mono text-foreground">{submittedLeadId}</span>
           </p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-muted-foreground">
             Our estimating team will review your project details and contact you at <span className="font-medium">{email}</span> or <span className="font-medium">{phone}</span> within 24 hours.
           </p>
           <MotionPressable>
@@ -120,20 +122,20 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label htmlFor="fullName" className="text-sm font-medium text-foreground">
                 Full Name
               </label>
               <Input
                 id="fullName"
                 placeholder="Jane Doe"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={isSubmitting}
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email Address
               </label>
               <Input
@@ -150,13 +152,13 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label htmlFor="phone" className="text-sm font-medium text-foreground">
                 Phone Number
               </label>
               <Input
                 id="phone"
                 type="tel"
-                placeholder="(555) 000-0000"
+                placeholder="+1 (555) 000-0000"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
@@ -164,14 +166,14 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="projectType" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <label htmlFor="segment" className="text-sm font-medium text-foreground">
                 Project Type
               </label>
               <select
-                id="projectType"
-                className="flex h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E65100] disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
-                value={projectType}
-                onChange={(e) => setProjectType(e.target.value as "residential" | "commercial" | "public-sector")}
+                id="segment"
+                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={segment}
+                onChange={(e) => setSegment(e.target.value as "residential" | "commercial" | "public-sector")}
                 required
                 disabled={isSubmitting}
               >
@@ -183,34 +185,34 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="address" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label htmlFor="serviceAddress" className="text-sm font-medium text-foreground">
               Property Address
             </label>
             <Input
-              id="address"
+              id="serviceAddress"
               placeholder="123 Main St, City, State ZIP"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              value={serviceAddress}
+              onChange={(e) => setServiceAddress(e.target.value)}
               disabled={isSubmitting}
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="details" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Project Details & Scope
+            <label htmlFor="projectDetails" className="text-sm font-medium text-foreground">
+              Project Details &amp; Scope
             </label>
             <Input
-              id="details"
+              id="projectDetails"
               placeholder="Describe the area, square footage, timelines, or color preferences..."
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
+              value={projectDetails}
+              onChange={(e) => setProjectDetails(e.target.value)}
               disabled={isSubmitting}
             />
           </div>
 
           <div className="pt-4">
             <MotionPressable>
-              <Button type="submit" size="lg" className="w-full bg-[#E65100] hover:bg-[#CC4400]" disabled={isSubmitting}>
+              <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Submitting Request..." : "Submit Estimate Request"}
               </Button>
             </MotionPressable>

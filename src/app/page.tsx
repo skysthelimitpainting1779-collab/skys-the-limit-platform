@@ -1,86 +1,110 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { MotionReveal } from "@/design/motion/Reveal";
-import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
-import { MotionPressable } from "@/design/motion/Pressable";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { ArrowRight, Building2, Home, Landmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Sky's the Limit Painting LLC | Premium Contractor Platform",
-  description: "Established local painting contractor for Residential, Commercial, and Public-Sector projects.",
+  title: "Sky's the Limit Painting LLC",
+  description:
+    "Prep-first painting estimates for Twin Cities homes, commercial properties, and public assets.",
 };
 
-const navigationRoutes = [
-  { href: "/residential", title: "Residential", desc: "Interior, exterior, & cabinet refinishing" },
-  { href: "/commercial", title: "Commercial", desc: "Retail, offices, HOAs, & epoxy coatings" },
-  { href: "/public-sector", title: "Public Sector", desc: "Prevailing wage, schools, & municipal" },
-  { href: "/estimate", title: "Request Estimate", desc: "Transparent quotes with prep specs" },
-  { href: "/customer", title: "Customer Portal", desc: "Color choices, schedules, & invoices" },
-  { href: "/crew", title: "Crew Workspace", desc: "Daily logs, prep audits, & safety" },
-  { href: "/operations", title: "Operations", desc: "Control center & resource management" },
-];
+const servicePaths = [
+  {
+    href: "/residential",
+    title: "Residential",
+    description: "Interior and exterior painting scopes for homeowners.",
+    icon: Home,
+  },
+  {
+    href: "/commercial",
+    title: "Commercial",
+    description: "Property-focused scopes for offices, facilities, and shared spaces.",
+    icon: Building2,
+  },
+  {
+    href: "/public-sector",
+    title: "Public sector",
+    description: "Capability and bid-readiness information for public buyers.",
+    icon: Landmark,
+  },
+] as const;
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-12">
-        <MotionReveal direction="down" className="text-center space-y-4">
-          <Badge variant="brand" className="px-3 py-1 text-sm">
-            Prep-First Quality & Clean Execution
-          </Badge>
-          <h1 className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
-            Sky&apos;s the Limit Painting LLC
-          </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-            Premier owner-led painting contractor serving Residential, Commercial, and Public-Sector clients with unmatched craft and structural durability.
-          </p>
-          <div className="pt-4 flex justify-center gap-4">
-            <MotionPressable>
-              <Link href="/estimate">
-                <Button size="lg" className="bg-[#E65100] hover:bg-[#CC4400] text-white">
-                  Get Free Estimate
-                </Button>
+    <main className="min-h-screen bg-background">
+      <section className="border-b px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+          <div className="flex flex-col gap-6">
+            <Badge variant="default" className="w-fit">
+              Owner-led Twin Cities painting
+            </Badge>
+            <h1 className="max-w-4xl text-5xl font-bold tracking-tight sm:text-6xl">
+              Clear scope. Careful prep. Documented handoff.
+            </h1>
+            <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
+              Sky&apos;s the Limit Painting LLC helps residential, commercial, and public-sector buyers define the work before it starts and keep the next step clear.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/estimate" className={buttonVariants({ size: "lg" })}>
+                Request an estimate
+                <ArrowRight aria-hidden="true" />
               </Link>
-            </MotionPressable>
-            <MotionPressable>
-              <Link href="/residential">
-                <Button size="lg" variant="outline">
-                  Explore Services
-                </Button>
+              <Link href="/commercial" className={buttonVariants({ variant: "outline", size: "lg" })}>
+                Review service paths
               </Link>
-            </MotionPressable>
+            </div>
           </div>
-        </MotionReveal>
 
-        <MotionReveal direction="up" delay={0.1}>
-          <div className="border-t border-slate-200 dark:border-slate-800 pt-10">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-6 text-center sm:text-left">
-              Platform Navigation
-            </h2>
-            <MotionStagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {navigationRoutes.map((route) => (
-                <MotionStaggerItem key={route.href}>
-                  <Link href={route.href} className="block group h-full">
-                    <Card className="h-full transition-shadow duration-200 group-hover:shadow-md group-hover:border-slate-300 dark:group-hover:border-slate-700">
-                      <CardHeader>
-                        <CardTitle className="group-hover:text-[#E65100] transition-colors">
-                          {route.title}
-                        </CardTitle>
-                        <CardDescription>{route.desc}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="text-xs font-semibold text-[#E65100]">
-                        View Route &rarr;
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </MotionStaggerItem>
-              ))}
-            </MotionStagger>
+          <aside className="rounded-2xl border bg-card p-7 shadow-sm">
+            <div className="rounded-xl bg-white p-2">
+              <Image
+                src="/brand/logo-illustrated-badge.webp"
+                alt="Sky's the Limit Painting LLC illustrated badge logo"
+                width={320}
+                height={282}
+                className="mx-auto h-auto w-full max-w-80"
+                priority
+              />
+            </div>
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.16em] text-primary">What the intake captures</p>
+            <ul className="mt-5 flex flex-col gap-4 text-sm text-muted-foreground">
+              <li><span className="font-medium text-foreground">Property and buyer type</span><br />Residential, commercial, or public-sector context.</li>
+              <li><span className="font-medium text-foreground">Project scope</span><br />Areas, condition, timing, and access details.</li>
+              <li><span className="font-medium text-foreground">A traceable receipt</span><br />One saved request, protected from accidental duplicate submission.</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 flex flex-col gap-2">
+            <h2 className="text-3xl font-bold tracking-tight">Choose the closest project path</h2>
+            <p className="text-muted-foreground">Each path leads back to the same structured estimate intake.</p>
           </div>
-        </MotionReveal>
-      </div>
-    </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {servicePaths.map(({ href, title, description, icon: Icon }) => (
+              <Link key={href} href={href} className="group focus-visible:outline-none">
+                <Card className="h-full transition group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-md group-focus-visible:ring-2 group-focus-visible:ring-ring">
+                  <CardHeader>
+                    <Icon aria-hidden="true" className="size-6 text-primary" />
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription>{description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    View path <ArrowRight aria-hidden="true" />
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
+

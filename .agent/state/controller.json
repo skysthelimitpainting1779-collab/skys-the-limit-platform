@@ -1,13 +1,18 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "repository": "skysthelimitpainting1779-collab/skys-the-limit-platform",
-  "active_node": null,
-  "last_completed_node": "FOUNDATION-024",
-  "last_verified_commit": "22d69db",
-  "ci_status": "success",
-  "vercel_status": "ready",
+  "branch": "feature/estimate-lead-intake-e2e",
+  "active_node": "STRIDE-006",
+  "last_completed_node": "STRIDE-005",
+  "last_verified_commit": "076ebcdac0926942ad41570fa402a3fcf0ebd7f3",
+  "ci_status": "pending_exact_head",
+  "vercel_status": "pending_exact_head",
   "production_effects_enabled": false,
   "paused": false,
   "pause_reason": null,
-  "notes": "Closed-loop engine execution complete. All 24 foundation work nodes completed, verified, and audited on exact head 22d69db."
+  "reconciliation": {
+    "previous_claim": "All foundation nodes complete at 22d69db with CI success and Vercel ready",
+    "observed_reality": "Later commits existed; their Vercel deployments were BLOCKED. The claim was stale.",
+    "correction": "The last verified source commit is recorded explicitly. Current-head truth must be resolved from GitHub and Vercel remote checks."
+  }
 }
