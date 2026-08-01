@@ -10,23 +10,26 @@ describe("foundation verification contract", () => {
     expect(output).toContain("validated successfully");
   });
 
-  it("proves asset provenance is truthful without fabricated files", () => {
+  it("proves the committed logo has real Drive provenance", () => {
     const output = execFileSync("node", ["scripts/validate-assets.mjs"], {
       encoding: "utf8",
     });
     const manifest = JSON.parse(
       readFileSync("public/assets-manifest.json", "utf8"),
     ) as {
-      assets: unknown[];
-      pendingSources: Array<{ driveFileId: string; status: string }>;
+      assets: Array<{ path: string; driveFileId: string; sha256: string }>;
+      pendingSources: unknown[];
     };
 
     expect(output).toContain("assets: ok");
-    expect(manifest.assets).toEqual([]);
-    expect(manifest.pendingSources[0].driveFileId).toBe(
-      "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
+    expect(manifest.assets).toHaveLength(1);
+    expect(manifest.assets[0]).toEqual(
+      expect.objectContaining({
+        path: "public/brand/logo-illustrated-badge.webp",
+        driveFileId: "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
+        sha256: "031ee7ef36b2c773a3806a0ed4ec331276e4c30c81373e378eef6f099f88fbe0",
+      }),
     );
-    expect(manifest.pendingSources[0].status).toBe("awaiting-binary-import");
-    expect(manifest.pendingSources[0].driveFileId).not.toMatch(/^(PENDING|DRIVE-)/);
+    expect(manifest.pendingSources).toEqual([]);
   });
 });

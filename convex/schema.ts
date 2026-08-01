@@ -80,6 +80,7 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_idempotency_key", ["idempotencyKey"])
     .index("by_email_and_created_at", ["email", "createdAt"])
+    .index("by_phone_and_created_at", ["phone", "createdAt"])
     .index("by_created_at", ["createdAt"]),
 
   estimates: defineTable({

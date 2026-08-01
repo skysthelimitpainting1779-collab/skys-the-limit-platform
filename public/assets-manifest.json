@@ -1,14 +1,19 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "updatedAt": "2026-08-01",
-  "assets": [],
-  "pendingSources": [
+  "assets": [
     {
-      "driveFileId": "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
-      "title": "Sky's the Limit - Logo - Illustrated Badge.jpg",
+      "path": "public/brand/logo-illustrated-badge.webp",
+      "title": "Sky's the Limit illustrated badge logo — optimized web derivative",
       "classification": "public-approved",
-      "status": "awaiting-binary-import",
-      "reason": "The authenticated Drive source is verified, but binary import and checksum generation require a trusted local workspace. No fabricated file or checksum is committed."
+      "source": "Google Drive source 'Sky's the Limit - Logo - Illustrated Badge.jpg'; resized to 320x282 WebP for web delivery",
+      "driveFileId": "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
+      "contentOwner": "Sky's the Limit Painting LLC",
+      "approvedUses": ["owned website branding", "navigation", "estimate intake", "social link previews"],
+      "prohibitedUses": ["completed-project proof", "unapproved recoloring", "third-party redistribution"],
+      "lastReviewed": "2026-08-01",
+      "sha256": "031ee7ef36b2c773a3806a0ed4ec331276e4c30c81373e378eef6f099f88fbe0"
     }
-  ]
+  ],
+  "pendingSources": []
 }
