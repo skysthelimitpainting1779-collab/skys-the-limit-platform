@@ -17,6 +17,10 @@ jobs:
     env:
       NEXT_PUBLIC_DEPLOYMENT_TIER: test
       ENABLE_EXTERNAL_EFFECTS: "false"
+      # Convex requires every auth-config environment reference to exist before
+      # starting its local backend. This non-secret placeholder accepts no real
+      # WorkOS tenant tokens and keeps the anonymous E2E deployment fail-closed.
+      WORKOS_CLIENT_ID: client_UNCONFIGURED_FAIL_CLOSED
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
