@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck, ArrowRight, CheckCircle2, Layers, Wrench, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { BeforeAfterSlider } from "@/components/proof/BeforeAfterSlider";
 import { Badge } from "@/components/ui/badge";
 

@@ -153,6 +153,33 @@ export function ProjectFitBuilder() {
           </div>
         </div>
 
+        {/* Step 4: Desired Timing */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
+            4. Desired Timing
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { id: "immediate" as const, label: "< 2 Weeks" },
+              { id: "30-days" as const, label: "Within 30 Days" },
+              { id: "planning" as const, label: "Planning Ahead" }
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setTiming(item.id)}
+                className={`py-2.5 px-3 text-xs font-medium rounded-xl border transition-all ${
+                  timing === item.id
+                    ? "bg-slate-800 text-amber-400 border-amber-500/50 shadow-sm font-semibold"
+                    : "bg-slate-950/80 hover:bg-slate-800 text-slate-400 border-slate-800"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Step 4: Output Box */}
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-4">
           <div className="space-y-1">

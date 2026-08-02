@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Award, ShieldCheck } from "lucide-react";
+import { ArrowRight, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function ConceptOwnersStandard() {
@@ -13,7 +13,7 @@ export default function ConceptOwnersStandard() {
           <div className="lg:col-span-7 space-y-6">
             <Badge variant="secondary" className="bg-amber-500/20 text-amber-300 border-amber-500/30 px-3.5 py-1 text-xs">
               <Award className="size-3.5 mr-1.5 inline text-amber-400" />
-              Owner's Standard — Concept Direction C (Accountability)
+              Owner&apos;s Standard — Concept Direction C (Accountability)
             </Badge>
 
             <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-balance leading-none">

@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Eye, Sparkles } from "lucide-react";
+import { ArrowRight, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function ConceptSurfaceStory() {
