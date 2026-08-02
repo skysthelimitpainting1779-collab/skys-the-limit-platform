@@ -1,14 +1,10 @@
 ---
 name: autoloop
 description: Automated discovery and execution engine for tasks, features, bugs, and improvements via the closed-loop engine.
-triggers:
-  - autoloop
-  - /autoloop
-  - auto loop
-  - discover and fix
 ---
 
-# Skill: autoloop (Automated Closed-Loop Task Discovery & Execution)
+## Trigger
+Use when running automated backlog discovery, scanning for code annotations (TODO/FIXME), checking GitHub issues, or executing closed-loop task iterations.
 
 ## Purpose
 Automates the discovery of backlog tasks, open GitHub issues, TODO/FIXME annotations, and code health opportunities, compiles them into `.agent/graph/foundation.graph.json`, and pipes each item through the mandatory closed-loop execution engine.
@@ -41,22 +37,19 @@ Every subagent dispatched by `/autoloop` must perform Context7 documentation loo
 2. Run focused test verification (`npm test`).
 
 ## Verification Commands
-```bash
-npm run verify:skills
-npm run verify:env
-npm run typecheck
-npm test
-npm run build
-node scripts/verify-ci.mjs
-```
-
-## Evidence Format
-Persist evidence for each node to `.agent/state/nodes/<node-id>.json` including commit SHA, focused test output, regression test output, and independent evaluator verdict (`pass`).
+- `npm run verify:skills`
+- `npm run verify:env`
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
 
 ## Stop Conditions
 - Evaluator returns `remediate`, `human_review`, or `rollback`.
 - Node requires production-effect actions (live Stripe, live Email, DNS changes, database mutations).
 - Verification commands fail after maximum allowed retries.
+
+## Evidence Format
+Persist evidence for each node to `.agent/state/nodes/<node-id>.json` including commit SHA, focused test output, regression test output, and independent evaluator verdict (`pass`).
 
 ## Handoff Format
 Summarize execution telemetry in `.agent/logs/execution.jsonl` and post completion status (`DONE`, `BLOCKED`, `HUMAN_APPROVAL_REQUIRED`).

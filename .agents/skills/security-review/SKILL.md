@@ -1,35 +1,41 @@
-# Security Review Skill
+---
+name: security-review
+description: Audits code changes for secret leaks, hardcoded tokens, OWASP vulnerabilities, and environment schema compliance.
+---
 
-## trigger
-Use before PR creation or sensitive node completion.
+## Trigger
+Use before PR creation, release verification, or completing sensitive feature nodes.
 
-## purpose
-Ensure no secrets, unhandled permissions, or environment leaks exist.
+## Purpose
+Ensure no secrets, unhandled permissions, or environment leaks exist in the codebase.
 
-## required inputs
-Git diff, `.env.example`.
+## Required Inputs
+- Git diff
+- `.env.example` schema
 
-## allowed files
-All codebase files.
+## Allowed Files
+- All codebase files
 
-## discovery steps
+## Discovery Steps
 1. Scan diff for hardcoded tokens, API keys, or private URIs.
-2. Check environment schema validation.
+2. Verify environment schema validation (`scripts/validate-environment.mjs`).
 
-## current-doc requirement
-Follow GitHub Security & OWASP guidelines.
+## Current-Doc Requirement
+Follow OWASP and GitHub security guidelines.
 
-## test-first sequence
-Run security audit scripts.
+## Test-First Sequence
+Run automated security audit scripts.
 
-## verification commands
-`npm run verify:branch`
+## Verification Commands
+- `npm run verify:skills`
+- `npm run verify:env`
+- `npm run verify:assets`
 
-## stop conditions
-Stop immediately if a committed secret is detected.
+## Stop Conditions
+Stop immediately if a committed secret or untracked asset is detected.
 
-## evidence format
+## Evidence Format
 Security audit report summary.
 
-## handoff format
+## Handoff Format
 Passed security clearance to release PR.

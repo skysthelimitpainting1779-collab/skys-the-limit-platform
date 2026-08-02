@@ -1,35 +1,42 @@
-# Project Discovery Skill
+---
+name: project-discovery
+description: Codebase discovery, structural analysis, and baseline state verification before making changes.
+---
 
-## trigger
+## Trigger
 Use when initializing a work session or evaluating codebase requirements.
 
-## purpose
-Ensure current system state is understood before editing files.
+## Purpose
+Ensure current system state, architecture, and baseline tests are understood before editing files.
 
-## required inputs
-Task description, target repository path.
+## Required Inputs
+- Task description
+- Target repository path
 
-## allowed files
-All codebase files in read-only mode.
+## Allowed Files
+- All codebase files in read-only mode
 
-## discovery steps
-1. Check repository structure and package.json.
-2. Read AGENTS.md and relevant docs/context/.
+## Discovery Steps
+1. Check repository structure and `package.json`.
+2. Read `AGENTS.md` and relevant `docs/context/`.
+3. Query `graphify` knowledge graph for node relationships.
 
-## current-doc requirement
-Use Context7 to query official library docs.
+## Current-Doc Requirement
+Use Context7 to query official library docs when researching dependencies.
 
-## test-first sequence
-Run existing test suite to verify baseline.
+## Test-First Sequence
+Run existing test suite to verify baseline health.
 
-## verification commands
-`npm run typecheck`, `npm test`
+## Verification Commands
+- `npm run verify:skills`
+- `npm run typecheck`
+- `npm test`
 
-## stop conditions
+## Stop Conditions
 Stop if build or baseline tests are failing before edit.
 
-## evidence format
-Summary of discovered files and test results.
+## Evidence Format
+Summary of discovered files, dependency graph, and test results.
 
-## handoff format
+## Handoff Format
 Architectural findings passed to implementation step.
