@@ -13,10 +13,6 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@convex": path.resolve(__dirname, "./convex"),
-      // AuthKit imports the extensionless Next.js cache entry. Node-based
-      // Vitest needs the concrete package file, while production Next.js keeps
-      // using its normal package export resolution.
-      "next/cache": path.resolve(__dirname, "./node_modules/next/cache.js"),
     },
   },
 });
