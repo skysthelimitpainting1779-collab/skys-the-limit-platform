@@ -1,4 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("@workos-inc/authkit-nextjs", () => ({
+  getSignInUrl: vi.fn(),
+  getSignUpUrl: vi.fn(),
+  withAuth: vi.fn(),
+}));
 
 import Home, { metadata as homeMeta } from "@/app/page";
 import ResidentialPage, { metadata as resMeta } from "@/app/residential/page";
@@ -27,11 +33,11 @@ describe("App Router Route Shells Suite", () => {
 
     expect(routes.length).toBe(8);
 
-    for (const r of routes) {
-      expect(typeof r.page).toBe("function");
-      expect(r.meta).toBeDefined();
-      expect(r.meta.title).toContain(r.titlePart);
-      expect(r.meta.description).toBeDefined();
+    for (const route of routes) {
+      expect(typeof route.page).toBe("function");
+      expect(route.meta).toBeDefined();
+      expect(route.meta.title).toContain(route.titlePart);
+      expect(route.meta.description).toBeDefined();
     }
   });
 });
