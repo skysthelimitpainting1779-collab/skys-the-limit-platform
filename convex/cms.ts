@@ -1,5 +1,11 @@
-import { query, mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import {
+  CMS_EDITOR_ROLES,
+  CMS_PUBLISHER_ROLES,
+  requireActiveMembership,
+  requireAuthenticatedUser,
+} from "./lib/authorization";
 
 /**
  * Public Query: Fetch published page by slug with pre-rendered section hierarchy.
@@ -32,9 +38,7 @@ export const getPublishedPage = query({
   },
 });
 
-/**
- * Public Query: Fetch active published services.
- */
+/** Public Query: Fetch active published services. */
 export const getPublishedServices = query({
   args: {},
   handler: async (ctx) => {
@@ -45,40 +49,48 @@ export const getPublishedServices = query({
   },
 });
 
-/**
- * Public Query: Fetch published projects with verified public assets.
- */
+/** Public Query: Fetch published projects with verified public assets. */
 export const getPublishedProjects = query({
   args: {},
   handler: async (ctx) => {
     const projects = await ctx.db
       .query("projects")
-      .withIndex("by_publication", (q) => q.eq("publicationStatus", "published"))
+      .withIndex("by_publication", (q) =>
+        q.eq("publicationStatus", "published"),
+      )
       .collect();
 
-    // Verify all attached assets are public_approved
-    const safeProjects = [];
-    for (const proj of projects) {
-      if (proj.permissionStatus === "public_approved") {
-        safeProjects.push(proj);
-      }
-    }
-    return safeProjects;
+    return projects.filter(
+      (project) => project.permissionStatus === "public_approved",
+    );
   },
 });
 
-/**
- * Operations Query: List all CMS pages regardless of status.
- */
+/** Operations Query: list CMS pages only for active organizations of the user. */
 export const listCmsPages = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("cmsPages").collect();
+    const currentUser = await requireAuthenticatedUser(ctx, CMS_EDITOR_ROLES);
+    const memberships = await ctx.db
+      .query("memberships")
+      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
+      .collect();
+    const allowedOrgIds = new Set(
+      memberships
+        .filter((membership) => membership.status === "active")
+        .map((membership) => membership.orgId),
+    );
+
+    if (allowedOrgIds.size === 0) throw new Error("FORBIDDEN");
+
+    const pages = await ctx.db.query("cmsPages").collect();
+    return pages.filter((page) => allowedOrgIds.has(page.orgId));
   },
 });
 
 /**
- * Operations Mutation: Create or update CMS page draft.
+ * Create or update a CMS draft. Authenticated identity is the author and the
+ * page organization must have an active membership for that user.
  */
 export const updateCmsPageDraft = mutation({
   args: {
@@ -89,12 +101,16 @@ export const updateCmsPageDraft = mutation({
     layoutVariant: v.string(),
     seoTitle: v.string(),
     seoDescription: v.string(),
-    authorId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx, CMS_EDITOR_ROLES);
     const now = Date.now();
 
     if (args.pageId) {
+      const page = await ctx.db.get(args.pageId);
+      if (!page) throw new Error("CMS_PAGE_NOT_FOUND");
+      await requireActiveMembership(ctx, currentUser._id, page.orgId);
+
       await ctx.db.patch(args.pageId, {
         title: args.title,
         summary: args.summary,
@@ -102,12 +118,12 @@ export const updateCmsPageDraft = mutation({
         seoTitle: args.seoTitle,
         seoDescription: args.seoDescription,
         status: "draft",
-        updatedBy: args.authorId,
+        updatedBy: currentUser._id,
         updatedAt: now,
       });
 
       await ctx.db.insert("auditEvents", {
-        actorId: args.authorId,
+        actorId: currentUser._id,
         action: "cms_page_draft_updated",
         targetResource: args.pageId,
         timestamp: now,
@@ -116,11 +132,17 @@ export const updateCmsPageDraft = mutation({
       return args.pageId;
     }
 
-    const org = await ctx.db.query("organizations").first();
-    if (!org) throw new Error("No organization found");
+    const memberships = await ctx.db
+      .query("memberships")
+      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
+      .collect();
+    const membership = memberships.find(
+      (candidate) => candidate.status === "active",
+    );
+    if (!membership) throw new Error("FORBIDDEN");
 
     const id = await ctx.db.insert("cmsPages", {
-      orgId: org._id,
+      orgId: membership.orgId,
       slug: args.slug,
       routeType: "public",
       title: args.title,
@@ -131,12 +153,12 @@ export const updateCmsPageDraft = mutation({
       canonicalPath: `/${args.slug}`,
       indexable: true,
       status: "draft",
-      updatedBy: args.authorId,
+      updatedBy: currentUser._id,
       updatedAt: now,
     });
 
     await ctx.db.insert("auditEvents", {
-      actorId: args.authorId,
+      actorId: currentUser._id,
       action: "cms_page_created",
       targetResource: id,
       timestamp: now,
@@ -146,40 +168,39 @@ export const updateCmsPageDraft = mutation({
   },
 });
 
-/**
- * Operations Mutation: Publish a CMS page.
- */
+/** Publish a CMS page only with an authenticated publisher role. */
 export const publishCmsPage = mutation({
   args: {
     pageId: v.id("cmsPages"),
-    approverId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.approverId);
-    if (!user || (user.role !== "content_approver" && user.role !== "owner" && user.role !== "admin")) {
-      throw new Error("Unauthorized to publish CMS content");
-    }
+    const currentUser = await requireAuthenticatedUser(
+      ctx,
+      CMS_PUBLISHER_ROLES,
+    );
+    const page = await ctx.db.get(args.pageId);
+    if (!page) throw new Error("CMS_PAGE_NOT_FOUND");
+    await requireActiveMembership(ctx, currentUser._id, page.orgId);
 
     const now = Date.now();
     await ctx.db.patch(args.pageId, {
       status: "published",
       publishedAt: now,
       updatedAt: now,
-      updatedBy: args.approverId,
+      updatedBy: currentUser._id,
     });
 
-    // Also update attached page sections
     const sections = await ctx.db
       .query("cmsPageSections")
       .withIndex("by_page_order", (q) => q.eq("pageId", args.pageId))
       .collect();
 
-    for (const sec of sections) {
-      await ctx.db.patch(sec._id, { status: "published" });
+    for (const section of sections) {
+      await ctx.db.patch(section._id, { status: "published" });
     }
 
     await ctx.db.insert("auditEvents", {
-      actorId: args.approverId,
+      actorId: currentUser._id,
       action: "cms_page_published",
       targetResource: args.pageId,
       timestamp: now,
