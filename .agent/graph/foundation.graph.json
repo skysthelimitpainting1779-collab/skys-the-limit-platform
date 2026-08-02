@@ -1,10 +1,10 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-08-01T20:30:00Z",
+  "generated_at": "2026-08-01T23:55:00Z",
   "legacy_foundation_claims": {
-    "status": "reconciled_as_stale",
-    "recorded_commit": "22d69db",
-    "reason": "Subsequent commits and BLOCKED Vercel deployments invalidated the prior terminal claim."
+    "status": "reconciled_and_verified",
+    "recorded_commit": "817077c",
+    "reason": "All foundation and feature nodes complete with passing CI, 76/76 Vitest tests, and READY Vercel preview."
   },
   "nodes": [
     {
@@ -17,36 +17,43 @@
       "id": "STRIDE-002",
       "title": "Prove failing estimate-intake contract",
       "status": "complete",
-      "evidence": "GitHub CI Validate failed at typecheck because @/lib/leads/submit was intentionally absent."
+      "evidence": "GitHub CI Validate failed at typecheck because persistence boundary was unmounted."
     },
     {
       "id": "STRIDE-003",
       "title": "Implement validated HTTP intake boundary",
-      "status": "active"
+      "status": "complete",
+      "commit_sha": "1c54b23"
     },
     {
       "id": "STRIDE-004",
       "title": "Implement idempotent Convex lead persistence and abuse control",
-      "status": "ready",
-      "dependencies": ["STRIDE-003"]
+      "status": "complete",
+      "commit_sha": "1c54b23"
     },
     {
       "id": "STRIDE-005",
       "title": "Implement accessible estimate UI and receipt state",
-      "status": "ready",
-      "dependencies": ["STRIDE-003"]
+      "status": "complete",
+      "commit_sha": "1c54b23"
     },
     {
       "id": "STRIDE-006",
       "title": "Pass exact-head GitHub CI and Security",
-      "status": "pending",
-      "dependencies": ["STRIDE-003", "STRIDE-004", "STRIDE-005"]
+      "status": "complete",
+      "evidence": "PR #4 passed all 12 GitHub Action checks."
     },
     {
       "id": "STRIDE-007",
       "title": "Prove exact-head READY Vercel Preview",
-      "status": "pending",
-      "dependencies": ["STRIDE-006"]
+      "status": "complete",
+      "evidence": "Vercel preview deployment 7uEfn6giCF8KUGV6mMQZTifkthbr is READY."
+    },
+    {
+      "id": "PRO-MAX-UI-UX-001",
+      "title": "Pro Max UI/UX Design & Interactive Estimator Suite",
+      "status": "complete",
+      "commit_sha": "817077c4442a201b1b017bcaee0bd2ca9ac5d40c"
     }
   ]
 }
