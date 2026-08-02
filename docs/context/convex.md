@@ -1,15 +1,13 @@
-# Convex implementation contract
+# Convex Backend & CMS Contract — Context7 Research Record
 
-- Research date: 2026-08-01
-- Official Context7 library: `/websites/convex_dev`
-- Installed package: Convex `1.42.x`
-- Decision: Convex remains the source of operational business truth.
+- **Research Date:** 2026-08-02
+- **Library ID:** `/get-convex/convex`
+- **Version:** Convex 1.x
+- **Official Source:** https://docs.convex.dev
+- **Decision Affected:** Database schema, server functions, indexing, and CMS publication model.
 
-## Applied constraints
-
-- Every public Convex function declares argument and return validators.
-- Estimate intake uses one transactional mutation.
-- An idempotency index prevents accidental duplicate records.
-- A composite email/created-time index provides a zero-cost bootstrap abuse limit.
-- The server mutation assigns authoritative timestamps rather than trusting browser time.
-- The Next.js Route Handler calls the mutation through `ConvexHttpClient` and `anyApi`, so a missing generated function reference does not block the bootstrap build.
+## Key Contracts
+1. **Typed Schema Definitions:** Use `defineSchema` and `defineTable` with explicit validators (`v.string()`, `v.number()`, `v.literal()`, `v.union()`). No `v.any()`.
+2. **Indexing Rules:** Explicit indexes for all access patterns (`by_slug`, `by_status`, `by_org`, `by_user_org`, `by_lead`, `by_created_at`).
+3. **Public Preloading & Projection:** Preload published CMS records in Server Components (`preloadQuery`) and return minimal public projections.
+4. **Server Authorization:** Validate user identities and role grants inside `query` and `mutation` functions before reading or mutating protected data.

@@ -5,9 +5,12 @@ import ResidentialPage, { metadata as resMeta } from "@/app/residential/page";
 import CommercialPage, { metadata as commMeta } from "@/app/commercial/page";
 import PublicSectorPage, { metadata as pubMeta } from "@/app/public-sector/page";
 import EstimatePage, { metadata as estMeta } from "@/app/estimate/page";
-import CustomerPage, { metadata as custMeta } from "@/app/customer/page";
-import CrewPage, { metadata as crewMeta } from "@/app/crew/page";
-import OperationsPage, { metadata as opsMeta } from "@/app/operations/page";
+import CustomerPage from "@/app/customer/page";
+import CrewPage from "@/app/crew/page";
+import OperationsPage from "@/app/operations/page";
+import { metadata as custMeta } from "@/app/customer/layout";
+import { metadata as crewMeta } from "@/app/crew/layout";
+import { metadata as opsMeta } from "@/app/operations/layout";
 
 describe("App Router Route Shells Suite", () => {
   it("verifies all 8 routes export valid page components and metadata", () => {

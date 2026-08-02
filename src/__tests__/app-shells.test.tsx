@@ -6,9 +6,12 @@ import { CustomerDashboard } from "@/components/customer/CustomerDashboard";
 import { CrewDashboard } from "@/components/crew/CrewDashboard";
 import { OperationsDashboard } from "@/components/operations/OperationsDashboard";
 import EstimatePage, { metadata as estMeta } from "@/app/estimate/page";
-import CustomerPage, { metadata as custMeta } from "@/app/customer/page";
-import CrewPage, { metadata as crewMeta } from "@/app/crew/page";
-import OperationsPage, { metadata as opsMeta } from "@/app/operations/page";
+import CustomerPage from "@/app/customer/page";
+import CrewPage from "@/app/crew/page";
+import OperationsPage from "@/app/operations/page";
+import { metadata as custMeta } from "@/app/customer/layout";
+import { metadata as crewMeta } from "@/app/crew/layout";
+import { metadata as opsMeta } from "@/app/operations/layout";
 import { Id } from "@convex/_generated/dataModel";
 
 // Mock convex/react hooks for unit testing component logic
