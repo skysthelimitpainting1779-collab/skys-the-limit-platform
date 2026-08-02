@@ -1,5 +1,3 @@
-import "server-only";
-
 import {
   getSignInUrl as getAuthKitSignInUrl,
   getSignUpUrl as getAuthKitSignUpUrl,
