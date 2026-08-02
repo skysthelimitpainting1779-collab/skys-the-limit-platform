@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Convex auto-generated files — managed by Convex CLI, not manually edited
     "convex/_generated/**",
+    // Skill scripts and metadata
+    ".github/**",
+    ".agents/**",
   ]),
   {
     rules: {
