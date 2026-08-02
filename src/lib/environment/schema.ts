@@ -16,6 +16,8 @@ const EnvironmentSchema = z
     // Authentication — required for auth-protected routes
     WORKOS_API_KEY: z.string().min(1).optional(),
     WORKOS_CLIENT_ID: z.string().min(1).optional(),
+    WORKOS_COOKIE_PASSWORD: z.string().min(32).optional(),
+    WORKOS_REDIRECT_URI: z.string().url().optional(),
     NEXT_PUBLIC_WORKOS_REDIRECT_URI: z.string().url().optional(),
 
     // Vercel (auto-injected)
