@@ -3,8 +3,8 @@
   "repository": "skysthelimitpainting1779-collab/skys-the-limit-platform",
   "branch": "dev",
   "active_node": null,
-  "last_completed_node": "TASTE-SKILLS-INSTALLED-001",
-  "last_verified_commit": "57824cd09918ea82c5c8248bef7d358cae7e6d2a",
+  "last_completed_node": "BASELINE-UI-POLISH-001",
+  "last_verified_commit": "285beb3b29a27c0ffc86f1a74873d4f8f2cbacda",
   "ci_status": "success",
   "vercel_status": "ready",
   "production_effects_enabled": false,
@@ -12,7 +12,7 @@
   "pause_reason": null,
   "reconciliation": {
     "previous_claim": "13 taste-skill packages installed",
-    "observed_reality": "13 taste-skill design packages from Leonxlnx/taste-skill installed and verified into .agents/skills/; PR #20 merged into dev.",
-    "correction": "Control plane fully reconciled to exact HEAD 57824cd09918ea82c5c8248bef7d358cae7e6d2a on dev."
+    "observed_reality": "Executed npx ui-skills start protocol: loaded smallest craft skill ibelick/baseline-ui and applied typography constraints (text-balance, text-pretty, tabular-nums) to ProjectCalculator; PR #22 merged into dev.",
+    "correction": "Control plane fully reconciled to exact HEAD 285beb3b29a27c0ffc86f1a74873d4f8f2cbacda on dev."
   }
 }
