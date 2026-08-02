@@ -17,9 +17,8 @@ jobs:
     env:
       NEXT_PUBLIC_DEPLOYMENT_TIER: test
       ENABLE_EXTERNAL_EFFECTS: "false"
-      # Convex requires every auth-config environment reference to exist before
-      # starting its local backend. This non-secret placeholder accepts no real
-      # WorkOS tenant tokens and keeps the anonymous E2E deployment fail-closed.
+      # Non-secret placeholder for an isolated local deployment. It does not
+      # correspond to a real WorkOS tenant and therefore remains fail-closed.
       WORKOS_CLIENT_ID: client_UNCONFIGURED_FAIL_CLOSED
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -41,9 +40,32 @@ jobs:
           nohup bash -lc 'echo n | CONVEX_AGENT_MODE=anonymous npx convex dev' > /tmp/convex.log 2>&1 &
           echo $! > /tmp/convex.pid
 
+          configured=false
+          for _ in $(seq 1 120); do
+            if [[ -f .env.local ]]; then
+              # auth.config.ts reads deployment-scoped variables. The shell env
+              # alone is intentionally insufficient, so configure the isolated
+              # local deployment through the official Convex CLI.
+              npx convex env set WORKOS_CLIENT_ID "$WORKOS_CLIENT_ID"
+              configured=true
+              break
+            fi
+            if ! kill -0 "$(cat /tmp/convex.pid)" 2>/dev/null; then
+              cat /tmp/convex.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [[ "$configured" != "true" ]]; then
+            cat /tmp/convex.log
+            echo "Convex local deployment was not configured within 120 seconds"
+            exit 1
+          fi
+
           ready=false
           for _ in $(seq 1 120); do
-            if [[ -f .env.local ]] && grep -q 'Convex functions ready' /tmp/convex.log; then
+            if grep -q 'Convex functions ready' /tmp/convex.log; then
               ready=true
               break
             fi
@@ -56,7 +78,7 @@ jobs:
 
           if [[ "$ready" != "true" ]]; then
             cat /tmp/convex.log
-            echo "Convex did not become ready within 120 seconds"
+            echo "Convex did not become ready within 120 seconds after auth configuration"
             exit 1
           fi
 
