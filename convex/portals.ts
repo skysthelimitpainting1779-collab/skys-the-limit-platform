@@ -1,12 +1,21 @@
-import { query, mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import {
+  assertCrewAssignment,
+  assertCustomerOwnership,
+  CREW_ROLES,
+  OPERATIONS_ROLES,
+  requireAuthenticatedUser,
+} from "./lib/authorization";
 
 /**
- * Operations Overview Query: Actionable metrics linked to underlying records.
+ * Operations Overview Query: restricted to authenticated operations roles.
  */
 export const getOperationsOverview = query({
   args: {},
   handler: async (ctx) => {
+    await requireAuthenticatedUser(ctx, OPERATIONS_ROLES);
+
     const newLeads = await ctx.db
       .query("leads")
       .withIndex("by_status", (q) => q.eq("status", "new"))
@@ -40,20 +49,31 @@ export const getOperationsOverview = query({
 export const listOperationsLeads = query({
   args: {},
   handler: async (ctx) => {
+    await requireAuthenticatedUser(ctx, OPERATIONS_ROLES);
     return await ctx.db.query("leads").order("desc").take(50);
   },
 });
 
 /**
- * Customer Overview Query: Scoped strictly to authenticated customer email.
+ * Customer Overview Query: identity is derived from the authenticated Convex
+ * token. The client cannot select another customer's email or user ID.
  */
 export const getCustomerOverview = query({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    const customer = await ctx.db
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await requireAuthenticatedUser(ctx, ["customer"]);
+
+    const customerByUser = await ctx.db
       .query("customers")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
       .first();
+
+    const customer =
+      customerByUser ??
+      (await ctx.db
+        .query("customers")
+        .withIndex("by_email", (q) => q.eq("email", currentUser.email))
+        .first());
 
     if (!customer) {
       return {
@@ -62,6 +82,12 @@ export const getCustomerOverview = query({
         jobs: [],
         documents: [],
       };
+    }
+
+    if (customer.userId) {
+      assertCustomerOwnership(customer.userId, currentUser._id);
+    } else if (customer.email !== currentUser.email) {
+      throw new Error("FORBIDDEN");
     }
 
     const estimates = await ctx.db
@@ -89,23 +115,23 @@ export const getCustomerOverview = query({
 });
 
 /**
- * Crew Today Assignments Query: Scoped strictly to assigned crew member userId.
+ * Crew assignments are derived from the authenticated application user.
  */
 export const getCrewTodayAssignments = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await requireAuthenticatedUser(ctx, CREW_ROLES);
     const jobs = await ctx.db.query("jobs").collect();
 
-    const assignedJobs = jobs.filter(
-      (job) => job.crewIds && job.crewIds.includes(args.userId),
+    return jobs.filter(
+      (job) => job.crewIds && job.crewIds.includes(currentUser._id),
     );
-
-    return assignedJobs;
   },
 });
 
 /**
- * Crew Mutation: Submit a prep/finish checklist item.
+ * Crew Mutation: submit checklist progress only for an assigned job. Actor and
+ * audit identity are derived from the authenticated token.
  */
 export const submitChecklistProgress = mutation({
   args: {
@@ -123,9 +149,14 @@ export const submitChecklistProgress = mutation({
         completed: v.boolean(),
       }),
     ),
-    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx, CREW_ROLES);
+    const job = await ctx.db.get(args.jobId);
+    if (!job) throw new Error("JOB_NOT_FOUND");
+
+    assertCrewAssignment(job.crewIds, currentUser._id, currentUser.role);
+
     const now = Date.now();
     const existing = await ctx.db
       .query("checklists")
@@ -136,7 +167,7 @@ export const submitChecklistProgress = mutation({
 
     const itemsWithMeta = args.items.map((item) => ({
       ...item,
-      completedBy: item.completed ? args.userId : undefined,
+      completedBy: item.completed ? currentUser._id : undefined,
       completedAt: item.completed ? now : undefined,
     }));
 
@@ -151,7 +182,7 @@ export const submitChecklistProgress = mutation({
     }
 
     await ctx.db.insert("auditEvents", {
-      actorId: args.userId,
+      actorId: currentUser._id,
       action: "crew_checklist_updated",
       targetResource: args.jobId,
       metadata: { category: args.category },
