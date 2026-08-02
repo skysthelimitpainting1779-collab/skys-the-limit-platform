@@ -1,5 +1,21 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
+
+vi.mock("@workos-inc/authkit-nextjs", () => ({
+  getSignInUrl: vi.fn(),
+  getSignUpUrl: vi.fn(),
+  withAuth: vi.fn(),
+}));
+
+vi.mock("@workos-inc/authkit-nextjs/components", () => ({
+  AuthKitProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAccessToken: () => ({
+    getAccessToken: vi.fn().mockResolvedValue(null),
+    refresh: vi.fn().mockResolvedValue(null),
+  }),
+  useAuth: () => ({ user: null, loading: false }),
+}));
+
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { EstimateForm } from "@/components/estimate/EstimateForm";
 import { CustomerDashboard } from "@/components/customer/CustomerDashboard";
@@ -14,12 +30,14 @@ import { metadata as crewMeta } from "@/app/crew/layout";
 import { metadata as opsMeta } from "@/app/operations/layout";
 import { Id } from "@convex/_generated/dataModel";
 
-// Mock convex/react hooks for unit testing component logic
 vi.mock("convex/react", () => ({
   ConvexProvider: ({ children }: { children: React.ReactNode }) => children,
-  ConvexReactClient: vi.fn().mockImplementation((url: string) => ({
-    url,
-  })),
+  ConvexProviderWithAuth: ({
+    children,
+  }: {
+    children: React.ReactNode;
+  }) => children,
+  ConvexReactClient: vi.fn().mockImplementation((url: string) => ({ url })),
   useQuery: vi.fn((queryFn: unknown, args: unknown) => {
     if (args === "skip") return undefined;
     return [];
@@ -28,15 +46,18 @@ vi.mock("convex/react", () => ({
 }));
 
 describe("App Shells & Convex Integration Suite", () => {
-  it("establishes ConvexClientProvider with fallback/sandbox handling when env vars are unset", () => {
+  it("establishes ConvexClientProvider with fail-closed handling when env vars are unset", () => {
     expect(typeof ConvexClientProvider).toBe("function");
 
-    // Test with process.env undefined
     const origEnv = process.env.NEXT_PUBLIC_CONVEX_URL;
     delete process.env.NEXT_PUBLIC_CONVEX_URL;
 
     expect(() => {
-      const el = <ConvexClientProvider><div>test</div></ConvexClientProvider>;
+      const el = (
+        <ConvexClientProvider>
+          <div>test</div>
+        </ConvexClientProvider>
+      );
       expect(el).toBeDefined();
       expect(el.type).toBe(ConvexClientProvider);
     }).not.toThrow();
@@ -80,7 +101,9 @@ describe("App Shells & Convex Integration Suite", () => {
   });
 
   it("evaluates EstimateForm JSX node tree without throwing", () => {
-    const node = <EstimateForm defaultOrgId={"orgs_123" as Id<"organizations">} />;
+    const node = (
+      <EstimateForm defaultOrgId={"orgs_123" as Id<"organizations">} />
+    );
     expect(node).toBeDefined();
     expect(node.type).toBe(EstimateForm);
   });
