@@ -1,36 +1,43 @@
-# Context7 Provider Research Skill
+---
+name: context7-provider-research
+description: Fetch up-to-date API schemas, official documentation, and implementation patterns using Context7 MCP.
+---
 
-## trigger
-Use when introducing or refactoring third-party library integrations.
+## Trigger
+Use when introducing or refactoring third-party library integrations, SDKs, or external frameworks.
 
-## purpose
-Fetch exact up-to-date API schemas and patterns using Context7 MCP.
+## Purpose
+Fetch exact up-to-date API schemas and official documentation using the Context7 MCP server.
 
-## required inputs
-Library name, integration concept.
+## Required Inputs
+- Target library name (e.g., `react`, `next`, `convex`)
+- Integration scope or concept
 
-## allowed files
-`docs/context/*.md`
+## Allowed Files
+- `docs/context/*.md`
+- `src/**`
+- `convex/**`
 
-## discovery steps
+## Discovery Steps
 1. Run `resolve-library-id` with exact package name.
-2. Select high-reputation library ID.
-3. Query docs for specific concept.
+2. Select high-reputation library ID (`/org/project`).
+3. Query official docs for specific concept using `query-docs`.
 
-## current-doc requirement
-Context7 resolution required. Do not rely on LLM training data.
+## Current-Doc Requirement
+Context7 resolution required. Do not rely on outdated LLM training data.
 
-## test-first sequence
-Write contract test asserting expected library behavior.
+## Test-First Sequence
+Write contract test asserting expected library interface behavior.
 
-## verification commands
-`npm test`
+## Verification Commands
+- `npm run verify:skills`
+- `npm test`
 
-## stop conditions
+## Stop Conditions
 Stop if Context7 returns no matching authoritative documentation.
 
-## evidence format
-Saved record in `docs/context/`.
+## Evidence Format
+Saved context documentation record in `docs/context/`.
 
-## handoff format
-Context summary passed to feature implementation node.
+## Handoff Format
+Context summary passed to feature implementation task.
