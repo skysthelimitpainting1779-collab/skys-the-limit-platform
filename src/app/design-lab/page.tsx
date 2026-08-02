@@ -90,7 +90,7 @@ export default function DesignLabIndex() {
                 </ul>
                 <Link
                   href={`/design-lab/${c.slug}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-xs font-semibold text-slate-950 hover:bg-amber-400 transition-all w-full"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-xs font-semibold text-black hover:bg-amber-400 transition-all w-full"
                 >
                   Preview Concept
                   <ArrowRight className="size-3.5" />

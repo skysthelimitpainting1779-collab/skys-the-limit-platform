@@ -71,7 +71,7 @@ export function BeforeAfterSlider({
           className="absolute top-0 bottom-0 z-20 w-0.5 bg-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.8)]"
           style={{ left: `${sliderPosition}%` }}
         >
-          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-8 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center shadow-lg border-2 border-slate-950 cursor-grab active:cursor-grabbing">
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 size-8 rounded-full bg-amber-400 text-black flex items-center justify-center shadow-lg border-2 border-slate-950 cursor-grab active:cursor-grabbing">
             <Sliders className="size-4 rotate-90" />
           </div>
         </div>

@@ -28,7 +28,7 @@ export default function ConceptProofInEveryLayer() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
               <Link
                 href="/estimate"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-bold text-black hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/20"
               >
                 Get a Written Scope
                 <ArrowRight className="size-4" />

@@ -83,7 +83,7 @@ export function ProjectFitBuilder() {
                   onClick={() => setBuyerType(item.id)}
                   className={`py-3 px-3 text-xs font-semibold rounded-xl border transition-all flex flex-col items-center gap-1.5 ${
                     buyerType === item.id
-                      ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md font-bold"
+                      ? "bg-amber-500 text-black border-amber-400 shadow-md font-bold"
                       : "bg-slate-950/80 hover:bg-slate-800 text-slate-300 border-slate-800"
                   }`}
                 >
@@ -190,7 +190,7 @@ export function ProjectFitBuilder() {
           <MotionPressable className="w-full">
             <Link
               href={rec.href}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-bold text-slate-950 shadow-lg hover:bg-amber-400 transition-all w-full"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-bold text-black shadow-lg hover:bg-amber-400 transition-all w-full"
             >
               {rec.cta}
               <ArrowRight className="size-4" />

@@ -149,8 +149,8 @@ export default function HomePage() {
 
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-foreground leading-[1.1]">
                 Careful Prep. <br />
-                <span className="bg-gradient-to-r from-primary via-orange-500 to-amber-600 bg-clip-text text-transparent">
-                  Flawless Finish.
+                <span className="text-primary font-extrabold">
+                  Durable Finish.
                 </span>{" "}
                 <br />
                 Documented Handoff.

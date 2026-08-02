@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 
 export default function DesignLabLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Discreet Concept Banner */}
-      <div className="sticky top-0 z-50 bg-amber-500/10 border-b border-amber-500/20 backdrop-blur-md px-4 py-2 text-xs flex items-center justify-between text-amber-300">
+      <div className="sticky top-0 z-50 bg-amber-950/80 border-b border-amber-500/20 backdrop-blur-md px-4 py-2 text-xs flex items-center justify-between text-amber-300">
         <div className="flex items-center gap-2 font-mono">
           <AlertCircle className="size-3.5 text-amber-400 shrink-0" />
           <span>Concept Preview — Source verification pending for candidate assets</span>
         </div>
-        <span className="font-mono text-[10px] opacity-75 uppercase tracking-wider">
+        <span className="font-mono text-[10px] text-amber-400 uppercase tracking-wider font-bold">
           Internal Vercel Preview Lab
         </span>
       </div>
