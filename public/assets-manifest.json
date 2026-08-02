@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "updatedAt": "2026-08-01",
   "assets": [
     {
@@ -13,6 +13,18 @@
       "prohibitedUses": ["completed-project proof", "unapproved recoloring", "third-party redistribution"],
       "lastReviewed": "2026-08-01",
       "sha256": "031ee7ef36b2c773a3806a0ed4ec331276e4c30c81373e378eef6f099f88fbe0"
+    },
+    {
+      "path": "public/brand/sky-logo-illustrated-badge.jpg",
+      "title": "Sky's the Limit illustrated badge logo — canonical source JPEG",
+      "classification": "public-approved",
+      "source": "Drive pack source 01-brand/approved/sky-logo-illustrated-badge.jpg",
+      "driveFileId": "1Yf3_PhRPO8uv1WuRdkPGUrIK9VAhu6IG",
+      "contentOwner": "Sky's the Limit Painting LLC",
+      "approvedUses": ["owned website branding", "navigation", "estimate intake", "social link previews", "print", "bids"],
+      "prohibitedUses": ["completed-project proof", "unapproved recoloring", "third-party redistribution"],
+      "lastReviewed": "2026-08-01",
+      "sha256": "615fe916e4db10a85da32e5674d5504c08c5452f2ed1aed405a30a88a2856856"
     }
   ],
   "pendingSources": []

@@ -18,7 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MotionReveal } from "@/design/motion/Reveal";
 import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
 import { MotionPressable } from "@/design/motion/Pressable";
-import { ProjectCalculator } from "@/components/estimate/ProjectCalculator";
+import { ProjectFitBuilder } from "@/components/estimate/ProjectFitBuilder";
 
 export const metadata: Metadata = {
   title: "Sky's the Limit Painting LLC | Premier Twin Cities Painting Contractors",
@@ -189,7 +189,7 @@ export default function HomePage() {
 
           {/* Interactive Calculator Card */}
           <MotionReveal direction="up" delay={0.2}>
-            <ProjectCalculator />
+            <ProjectFitBuilder />
           </MotionReveal>
         </div>
       </section>

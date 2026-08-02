@@ -22,7 +22,7 @@ describe("foundation verification contract", () => {
     };
 
     expect(output).toContain("assets: ok");
-    expect(manifest.assets).toHaveLength(1);
+    expect(manifest.assets.length).toBeGreaterThanOrEqual(1);
     expect(manifest.assets[0]).toEqual(
       expect.objectContaining({
         path: "public/brand/logo-illustrated-badge.webp",
