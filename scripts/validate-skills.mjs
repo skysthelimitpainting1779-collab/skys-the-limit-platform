@@ -1,4 +1,4 @@
-﻿import fs from "fs";
+import fs from "fs";
 import path from "path";
 
 const SKILLS_DIR = path.join(process.cwd(), ".agents", "skills");
@@ -18,12 +18,27 @@ const REQUIRED_SECTIONS = [
 ];
 
 // Vendor skill prefixes — any skill whose folder name starts with one of these
-// is installed by an external publisher (e.g. `npx convex ai-files install`)
+// is installed by an external publisher (e.g. `npx convex ai-files install`, `npx skills add`, `npx impeccable`)
 // and is exempt from the internal section schema.
-const VENDOR_PREFIXES = ["convex"];
+const VENDOR_PREFIXES = [
+  "convex",
+  "brandkit",
+  "industrial-brutalist-ui",
+  "gpt-taste",
+  "image-to-code",
+  "imagegen-frontend-mobile",
+  "imagegen-frontend-web",
+  "minimalist-ui",
+  "full-output-enforcement",
+  "redesign-existing-projects",
+  "high-end-visual-design",
+  "stitch-design-taste",
+  "design-taste-frontend",
+  "design-taste-frontend-v1",
+];
 
-// Skills whose SKILL.md contains a GENERATED marker in the first 10 lines
-// are also exempt (older install format).
+// Skills whose SKILL.md contains a GENERATED or VENDOR marker in the first 10 lines
+// are also exempt (older or external install format).
 const VENDOR_MARKER = "generated";
 
 function isVendorSkill(name, content) {
