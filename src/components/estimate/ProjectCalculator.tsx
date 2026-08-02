@@ -41,10 +41,10 @@ export function ProjectCalculator() {
           </Badge>
           <span className="text-xs font-medium text-muted-foreground">Interactive Cost Preview</span>
         </div>
-        <CardTitle className="text-2xl font-bold tracking-tight mt-2">
+        <CardTitle className="text-2xl font-bold tracking-tight text-balance mt-2">
           Project Cost Calculator
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-pretty">
           Get an immediate estimated budget range based on surface area and preparation level.
         </CardDescription>
       </CardHeader>
@@ -139,7 +139,7 @@ export function ProjectCalculator() {
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Estimated Price Range
             </div>
-            <div className="text-3xl font-extrabold tracking-tight text-foreground font-mono mt-0.5">
+            <div className="text-3xl font-extrabold tracking-tight text-foreground font-mono tabular-nums mt-0.5">
               ${minCost.toLocaleString()} – ${maxCost.toLocaleString()}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
