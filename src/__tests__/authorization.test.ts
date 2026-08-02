@@ -1,38 +1,57 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import {
+  assertAllowedRole,
+  assertCrewAssignment,
+  assertCustomerOwnership,
+  type AppRole,
+} from "../../convex/lib/authorization";
 
-describe("Platform Authorization Matrix Enforcement", () => {
-  it("restricts customer document access strictly to customer-owned records", () => {
-    const customerId = "cust-123";
-    const documents = [
-      { id: "doc-1", customerId: "cust-123", title: "My Scope Proposal.pdf" },
-      { id: "doc-2", customerId: "cust-999", title: "Other Customer Invoice.pdf" },
-    ];
+describe("portal authorization invariants", () => {
+  it("rejects users whose application role is not explicitly allowed", () => {
+    expect(() =>
+      assertAllowedRole("customer", ["owner", "admin", "project_manager"]),
+    ).toThrow("FORBIDDEN");
 
-    const accessibleDocs = documents.filter((doc) => doc.customerId === customerId);
-    expect(accessibleDocs.length).toBe(1);
-    expect(accessibleDocs[0].id).toBe("doc-1");
+    expect(() =>
+      assertAllowedRole("project_manager", [
+        "owner",
+        "admin",
+        "project_manager",
+      ]),
+    ).not.toThrow();
   });
 
-  it("restricts field crew access strictly to assigned jobs", () => {
-    const crewUserId = "user-crew-elena";
-    const jobs = [
-      { id: "job-201", crewIds: ["user-crew-elena", "user-crew-marcus"], stage: "in_progress" },
-      { id: "job-202", crewIds: ["user-crew-marcus"], stage: "scheduled" },
-    ];
+  it("rejects cross-customer record access", () => {
+    expect(() =>
+      assertCustomerOwnership("user_customer_a", "user_customer_b"),
+    ).toThrow("FORBIDDEN");
 
-    const assignedJobs = jobs.filter((job) => job.crewIds.includes(crewUserId));
-    expect(assignedJobs.length).toBe(1);
-    expect(assignedJobs[0].id).toBe("job-201");
+    expect(() =>
+      assertCustomerOwnership("user_customer_a", "user_customer_a"),
+    ).not.toThrow();
   });
 
-  it("prevents content_editor from directly publishing CMS pages without content_approver role", () => {
-    const editorUser = { id: "user-editor", role: "content_editor" };
-    const approverUser = { id: "user-approver", role: "content_approver" };
+  it("allows a crew member only on assigned jobs unless an operations role is present", () => {
+    const crewIds = ["user_crew_a", "user_crew_b"];
 
-    const canPublish = (user: { role: string }) =>
-      user.role === "content_approver" || user.role === "admin" || user.role === "owner";
+    expect(() =>
+      assertCrewAssignment(crewIds, "user_crew_c", "crew_member"),
+    ).toThrow("FORBIDDEN");
 
-    expect(canPublish(editorUser)).toBe(false);
-    expect(canPublish(approverUser)).toBe(true);
+    expect(() =>
+      assertCrewAssignment(crewIds, "user_crew_a", "crew_member"),
+    ).not.toThrow();
+
+    for (const role of ["owner", "admin", "project_manager"] as AppRole[]) {
+      expect(() =>
+        assertCrewAssignment(crewIds, "user_ops", role),
+      ).not.toThrow();
+    }
+  });
+
+  it("does not treat an unknown role as authorized", () => {
+    expect(() =>
+      assertAllowedRole(null, ["owner", "admin"]),
+    ).toThrow("FORBIDDEN");
   });
 });
