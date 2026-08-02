@@ -17,7 +17,15 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, HardHat, User, LayoutDashboard, FileText, Users, Briefcase, Settings } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { ShieldCheck, HardHat, User, LayoutDashboard, FileText, Users, Briefcase, Settings, LogOut, KeyRound } from "lucide-react";
 
 interface PortalShellProps {
   portalRole: "operations" | "customer" | "crew";
@@ -122,11 +130,51 @@ export function PortalShell({
                 Sky’s the Limit Painting LLC
               </span>
             </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="hidden sm:inline-block font-mono bg-muted px-2 py-1 rounded">
-                {userEmail}
-              </span>
-              <span className="font-semibold text-foreground">{userName}</span>
+
+            {/* Right User & Auth Controls */}
+            <div className="flex items-center gap-3 text-xs">
+              <Badge variant="outline" className="hidden sm:inline-flex border-amber-500/40 text-amber-500 font-mono gap-1">
+                <KeyRound className="w-3 h-3" /> WorkOS AuthKit
+              </Badge>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent border border-border transition-colors text-left">
+                    <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-500 font-bold flex items-center justify-center text-xs">
+                      {userName.charAt(0)}
+                    </div>
+                    <div className="hidden md:block text-left">
+                      <div className="font-semibold text-foreground leading-none">{userName}</div>
+                      <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">{userEmail}</div>
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{userName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{userEmail}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/operations" className="cursor-pointer">Operations Command</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/customer" className="cursor-pointer">Customer Hub</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/crew" className="cursor-pointer">Field Crew Portal</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/sign-out" className="cursor-pointer text-destructive flex items-center gap-2">
+                      <LogOut className="w-4 h-4" /> Sign Out (WorkOS)
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
 
