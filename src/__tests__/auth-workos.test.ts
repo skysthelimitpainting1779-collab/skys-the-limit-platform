@@ -18,33 +18,22 @@ import {
   getPlatformSignUpUrl,
 } from "@/lib/auth/workos";
 
-const ENV_KEYS = [
-  "WORKOS_API_KEY",
-  "WORKOS_CLIENT_ID",
-  "ALLOW_LOCAL_AUTH_MOCK",
-] as const;
-
-function clearAuthEnvironment() {
-  for (const key of ENV_KEYS) delete process.env[key];
-}
-
 function configureWorkOS() {
-  process.env.WORKOS_API_KEY = "sk_test_configured";
-  process.env.WORKOS_CLIENT_ID = "client_configured";
+  vi.stubEnv("WORKOS_API_KEY", "sk_test_configured");
+  vi.stubEnv("WORKOS_CLIENT_ID", "client_configured");
 }
 
 describe("WorkOS AuthKit fail-closed integration", () => {
-  const originalNodeEnv = process.env.NODE_ENV;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    clearAuthEnvironment();
-    process.env.NODE_ENV = "test";
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("WORKOS_API_KEY", "");
+    vi.stubEnv("WORKOS_CLIENT_ID", "");
+    vi.stubEnv("ALLOW_LOCAL_AUTH_MOCK", "false");
   });
 
   afterEach(() => {
-    clearAuthEnvironment();
-    process.env.NODE_ENV = originalNodeEnv;
+    vi.unstubAllEnvs();
   });
 
   it("returns an unauthenticated session when WorkOS is not configured", async () => {
@@ -58,8 +47,8 @@ describe("WorkOS AuthKit fail-closed integration", () => {
   });
 
   it("permits the owner mock only in explicit local development", async () => {
-    process.env.NODE_ENV = "development";
-    process.env.ALLOW_LOCAL_AUTH_MOCK = "true";
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("ALLOW_LOCAL_AUTH_MOCK", "true");
 
     const session = await getCurrentSession();
 
@@ -69,7 +58,7 @@ describe("WorkOS AuthKit fail-closed integration", () => {
   });
 
   it("does not enable the mock in preview, production, or test environments", async () => {
-    process.env.ALLOW_LOCAL_AUTH_MOCK = "true";
+    vi.stubEnv("ALLOW_LOCAL_AUTH_MOCK", "true");
 
     const session = await getCurrentSession();
 
