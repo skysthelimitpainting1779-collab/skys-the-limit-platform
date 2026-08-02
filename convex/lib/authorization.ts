@@ -1,3 +1,4 @@
+import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 export type AppRole =
@@ -40,7 +41,9 @@ export const CREW_ROLES: readonly AppRole[] = [
   "staff",
 ];
 
-type AuthContext = Pick<QueryCtx, "auth" | "db"> | Pick<MutationCtx, "auth" | "db">;
+type AuthContext =
+  | Pick<QueryCtx, "auth" | "db">
+  | Pick<MutationCtx, "auth" | "db">;
 
 export function assertAllowedRole(
   role: AppRole | null | undefined,
@@ -105,8 +108,8 @@ export async function requireAuthenticatedUser(
 
 export async function requireActiveMembership(
   ctx: AuthContext,
-  userId: string,
-  orgId: string,
+  userId: Id<"users">,
+  orgId: Id<"organizations">,
 ): Promise<void> {
   const membership = await ctx.db
     .query("memberships")
