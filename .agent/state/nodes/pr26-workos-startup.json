@@ -1,0 +1,44 @@
+{
+  "node_id": "pr26-workos-startup",
+  "status": "peer_review_passed",
+  "verdict": "pass",
+  "base_revision": "8604f3a672ec6ece75e1d3e969c5d57f6c408d95",
+  "candidate_commit": "ab13af39e46bb5e8f8231e4d4f6fc8b185451c49",
+  "branch": "fix/pr26-security-hardening",
+  "scope": "Independent evaluation of deterministic WorkOS JWT provider configuration, fail-closed AuthKit runtime credentials, isolated test setup, and the anonymous local Convex CI startup sequence.",
+  "changed_files": [
+    ".github/workflows/lead-intake-e2e.yml",
+    "convex/auth.config.ts",
+    "convex/auth.ts",
+    "convex/security.test.ts",
+    "src/__tests__/lead-intake-workflow.test.ts",
+    "src/__tests__/portal-security-regression.test.ts"
+  ],
+  "evidence": {
+    "contract_compliance": "pass: auth.config.ts is deterministic and depends only on WORKOS_CLIENT_ID, while the runtime AuthKit client separately fails startup when any of WORKOS_CLIENT_ID, WORKOS_API_KEY, or WORKOS_WEBHOOK_SECRET is absent or left as a replacement placeholder.",
+    "jwt_provider_parity": "pass: Context7 current documentation for @convex-dev/workos-authkit and the installed 0.2.7 source both produce the same two customJwt providers: legacy https://api.workos.com/ with client-ID audience, current https://api.workos.com/user_management/<clientId>, RS256, and https://api.workos.com/sso/jwks/<clientId> for both.",
+    "convex_startup_sequence": "pass: current Convex documentation and installed Convex CLI 1.43.0 explicitly document CONVEX_AGENT_MODE=anonymous npx convex init, then convex env set, then convex dev; init performs no push or typecheck, so auth variables are present before auth.config.ts is first evaluated.",
+    "test_harness": "pass: the hostile Convex test seeds explicit non-secret local-only WorkOS values before import.meta.glob resolves backend modules, preserving real-deployment fail-closed behavior while allowing the authorization suite to load.",
+    "security_review": "pass: the workflow grants contents:read only, creates an anonymous local deployment, uses no deploy key and no --prod flag, retains ENABLE_EXTERNAL_EFFECTS=false, and contains only declared local test placeholders rather than usable WorkOS credentials.",
+    "production_effect_boundary": "pass: the candidate contains no production deployment, production Convex mutation, external email/payment effect, domain change, credential rotation, or branch merge path.",
+    "regression_evidence": "pass: the retained exact physical checkout E:\\DevCaches\\verify-pr26-16e5261 was independently confirmed at candidate ab13af39e46bb5e8f8231e4d4f6fc8b185451c49; supplied verification evidence records npm run verify passing 17 suites/105 tests and the Next.js 16.2.12 Turbopack production build, npm audit reporting zero high-severity production vulnerabilities, and git show --check clean.",
+    "independent_static_check": "pass: exact candidate/parent and six-file inventory were independently verified; candidate source and tests were reviewed against Graphify, current Context7 Convex and WorkOS documentation, installed package source, and project Convex guidance; git show --check is clean."
+  },
+  "review": {
+    "north_star": "WorkOS authentication must start deterministically and fail closed while isolated CI can configure a fresh local deployment before its first function push.",
+    "dependencies": "Convex 1.43.0 and @convex-dev/workos-authkit 0.2.7, validated against current official documentation through Context7 and installed package source.",
+    "green_metrics": "Exact provider parity, mandatory runtime credential denial, documented anonymous init-to-env-to-dev ordering, non-secret test harness configuration, no production effects, exact-head full verification, and clean diff checks.",
+    "findings": [],
+    "advisories": [
+      "The static provider configuration intentionally matches AuthKit's default api.workos.com hostname. If a WorkOS custom API hostname is introduced later, update auth.config.ts and add parity coverage in the same change.",
+      "WORKOS_ACTION_SECRET remains optional in AuthKit 0.2.7 and the action endpoint rejects requests when it is absent. Keep WorkOS Actions disabled unless that secret and the corresponding internal action handler are intentionally provisioned and reviewed.",
+      "Remote Lead Intake E2E and protected-preview authentication checks still need to be green at the published exact head before merge; this receipt does not authorize production deployment or dev-to-main merge."
+    ]
+  },
+  "rollback": {
+    "last_known_good_revision": "8604f3a672ec6ece75e1d3e969c5d57f6c408d95",
+    "command": "git revert ab13af39e46bb5e8f8231e4d4f6fc8b185451c49",
+    "human_approval_required": false,
+    "note": "Reverting this source commit does not itself mutate a live Convex deployment, but it restores the startup-order failure and runtime placeholder fallback that this candidate removes."
+  }
+}
