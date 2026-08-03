@@ -1,0 +1,57 @@
+{
+  "node_id": "v4-workos-startup",
+  "title": "Independent WorkOS Startup and Anonymous Convex CI Evaluation",
+  "timestamp": "2026-08-03T12:45:00Z",
+  "status": "completed",
+  "evaluator": "v4_workos_final_eval",
+  "independent_evaluator": true,
+  "verdict": "pass",
+  "target": {
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform-v4-security",
+    "branch": "fix/v4-checklist-files-security",
+    "parent_commit": "a70d68d81efc1d82339062e02693df40d50588eb",
+    "candidate_commit": "32445bc5967aca1ec0051ca68c8c1b93491a4cd1",
+    "candidate_state": "committed source independently reviewed at exact HEAD; exact detached physical verification evidence supplied from E:/DevCaches/verify-v4-137f2ee"
+  },
+  "changed_files": [
+    ".github/workflows/lead-intake-e2e.yml",
+    "convex/auth.config.ts",
+    "convex/auth.ts",
+    "convex/lib/workosEnvironment.ts",
+    "convex/workosSecurity.test.ts",
+    "src/__tests__/lead-intake-workflow.test.ts"
+  ],
+  "evidence": {
+    "graphify_discovery": "pass — Graphify was queried before raw-file inspection and surfaced auth.config.ts, auth.ts, workosEnvironment.ts, the authorization boundary, and the existing anonymous-local-deploy lesson",
+    "jwt_provider_parity": "pass — the two deterministic customJwt provider objects match the installed @convex-dev/workos-authkit getAuthConfigProviders implementation field-for-field: WorkOS API and user-management issuers, RS256, shared client JWKS, and applicationID only on the API issuer",
+    "current_convex_docs": "pass — Context7 official Convex documentation confirms the same WorkOS AuthKit custom-JWT provider shapes and requires exact issuer/audience matching; installed Convex 1.43.0 CLI help explicitly documents the anonymous `convex init && convex env set && convex dev` agent sequence",
+    "current_workos_docs": "pass — Context7 official AuthKit Next.js documentation confirms client ID, API key, cookie password, and redirect configuration and requires server-only API keys plus distinct environment credentials",
+    "startup_dependency_order": "pass — auth.config.ts no longer imports auth.ts or constructs AuthKit before deployment variables exist; it requires only WORKOS_CLIENT_ID, while auth.ts constructs AuthKit only after the standalone helper validates client ID, API key, webhook secret, and action secret",
+    "fail_closed_environment_helper": "pass — missing, blank, copied-placeholder, and explicitly unconfigured values are rejected before the AuthKit client is constructed; there are no generated fallback secrets or partially configured runtime paths",
+    "anonymous_ci_sequence": "pass — the workflow removes prior local state, initializes an anonymous local deployment without pushing code, writes all deployment-scoped WorkOS inputs through the official CLI, and only then starts anonymous convex dev",
+    "test_environment_isolation": "pass — CI values are documented non-secret local-only sentinels, redirects target 127.0.0.1, repository permissions are contents:read, external effects are false, no GitHub secrets or production URLs are referenced, and the workflow contains no convex deploy, --prod, or production selector",
+    "workflow_resilience": "pass — strict shell mode, bounded readiness polling, child liveness checks, non-empty tenant validation, failure logs, and unconditional local service cleanup remain present",
+    "focused_tests": "pass — independent rerun of convex/workosSecurity.test.ts and src/__tests__/lead-intake-workflow.test.ts completed with 2 files / 8 tests passing",
+    "full_verification": "pass — supplied exact detached physical checkout evidence for candidate 32445bc5967aca1ec0051ca68c8c1b93491a4cd1 records npm run verify passing 18 suites / 103 tests plus the Next.js 16.2.12 Turbopack production build",
+    "dependency_audit": "pass — supplied exact-candidate evidence records npm audit --omit=dev --audit-level=high with zero vulnerabilities",
+    "commit_integrity": "pass — HEAD and parent resolve to the target SHAs, the candidate changes exactly six declared files, git show --check is clean, and the only pre-existing worktree modification is the expected generated graphify-out/graph.json",
+    "secret_review": "pass — no private key, production credential prefix, GitHub token, or production URI was found in the candidate diff; local CI sentinel values are nonfunctional and cannot authorize a WorkOS session",
+    "frontend_policy": "not applicable — no frontend component or page changed"
+  },
+  "release_gates": [
+    "Require the hosted Lead Intake E2E and all other exact-head checks to pass after publication of this candidate and receipt.",
+    "Provision distinct non-production WorkOS, Convex, Vercel Blob, and organization values in protected Preview; never copy local CI sentinels or Production credentials.",
+    "Retain independent approval, repository/branch governance, protected-preview anonymous denial smokes, and owner approval before merge or release."
+  ],
+  "limitations": [
+    "No live WorkOS organization, cloud Convex deployment, Vercel Preview environment, production credential, or production data was accessed.",
+    "The GitHub-hosted anonymous service lifecycle remains a post-publication exact-head CI gate; current documentation, installed CLI behavior, static sequencing, focused tests, and exact-candidate full verification are complete."
+  ],
+  "rollback": {
+    "last_known_good_commit": "a70d68d81efc1d82339062e02693df40d50588eb",
+    "command": "git revert 32445bc5967aca1ec0051ca68c8c1b93491a4cd1",
+    "human_approval_required": false,
+    "production_effects": false
+  },
+  "notes": "The candidate passes independent evaluation. It removes the startup cycle without weakening WorkOS authentication, follows the official anonymous Convex initialization order, fails closed on incomplete AuthKit configuration, and remains isolated from Preview and Production effects."
+}
