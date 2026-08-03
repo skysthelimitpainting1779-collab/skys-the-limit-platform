@@ -1,0 +1,103 @@
+name: Temporary DJ YS Official Skill Bundle
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-dj-ys-skill-bundle.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Build exact GitHub skill snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/dj-ys-official-skills"
+          SRC="$RUNNER_TEMP/src"
+          mkdir -p "$ROOT/01_COREY_HAINES_MARKETING_SKILLS" "$ROOT/02_UI_UX_PRO_MAX" "$ROOT/03_TASTE" "$ROOT/04_IMPECCABLE" "$SRC"
+
+          fetch_repo() {
+            local repo="$1"
+            local sha="$2"
+            local dest="$3"
+            git init -q "$dest"
+            git -C "$dest" remote add origin "https://github.com/${repo}.git"
+            git -C "$dest" fetch -q --depth=1 origin "$sha"
+            git -C "$dest" checkout -q --detach FETCH_HEAD
+            rm -rf "$dest/.git"
+          }
+
+          fetch_repo coreyhaines31/marketingskills 7868cb9251fad80a73d26e488a5ad5f6c4a9f335 "$SRC/marketingskills"
+          cp -a "$SRC/marketingskills/." "$ROOT/01_COREY_HAINES_MARKETING_SKILLS/"
+
+          fetch_repo nextlevelbuilder/ui-ux-pro-max-skill 4d140cf8ff6842de13213c7214eff3810371beb2 "$SRC/ui-ux-pro-max"
+          cp -a "$SRC/ui-ux-pro-max/.claude/skills/ui-ux-pro-max/." "$ROOT/02_UI_UX_PRO_MAX/"
+          cp "$SRC/ui-ux-pro-max/README.md" "$ROOT/02_UI_UX_PRO_MAX/UPSTREAM_README.md"
+          find "$SRC/ui-ux-pro-max" -maxdepth 1 -iname 'LICENSE*' -exec cp {} "$ROOT/02_UI_UX_PRO_MAX/" \;
+
+          fetch_repo Leonxlnx/taste-skill e988add20dab0fa97d7a76781c48961c8184288e "$SRC/taste-skill"
+          cp -a "$SRC/taste-skill/skills/taste-skill/." "$ROOT/03_TASTE/"
+          cp "$SRC/taste-skill/README.md" "$ROOT/03_TASTE/UPSTREAM_README.md"
+          cp "$SRC/taste-skill/CHANGELOG.md" "$ROOT/03_TASTE/UPSTREAM_CHANGELOG.md"
+          find "$SRC/taste-skill" -maxdepth 1 -iname 'LICENSE*' -exec cp {} "$ROOT/03_TASTE/" \;
+
+          fetch_repo pbakaus/impeccable 6d2af3f800f4038596483c09416618a09dc223fd "$SRC/impeccable"
+          cp -a "$SRC/impeccable/skill/." "$ROOT/04_IMPECCABLE/"
+          cp "$SRC/impeccable/README.md" "$ROOT/04_IMPECCABLE/UPSTREAM_README.md"
+          find "$SRC/impeccable" -maxdepth 1 \( -iname 'LICENSE*' -o -iname 'NOTICE*' \) -exec cp {} "$ROOT/04_IMPECCABLE/" \;
+
+          cat > "$ROOT/GITHUB_SOURCE_LOCKS.json" <<'JSON'
+          {
+            "generated_utc": "2026-08-03",
+            "sources": [
+              {"name":"Corey Haines Marketing Skills","repository":"coreyhaines31/marketingskills","commit":"7868cb9251fad80a73d26e488a5ad5f6c4a9f335","included_path":"entire repository snapshot"},
+              {"name":"UI UX Pro Max","repository":"nextlevelbuilder/ui-ux-pro-max-skill","commit":"4d140cf8ff6842de13213c7214eff3810371beb2","included_path":".claude/skills/ui-ux-pro-max"},
+              {"name":"Taste Skill","repository":"Leonxlnx/taste-skill","commit":"e988add20dab0fa97d7a76781c48961c8184288e","included_path":"skills/taste-skill"},
+              {"name":"Impeccable","repository":"pbakaus/impeccable","commit":"6d2af3f800f4038596483c09416618a09dc223fd","included_path":"skill"}
+            ]
+          }
+          JSON
+
+          cat > "$ROOT/README.md" <<'MD'
+          # Official GitHub Skills Bundle
+
+          This artifact contains exact source files fetched directly from the maintainers' GitHub repositories at the commits recorded in `GITHUB_SOURCE_LOCKS.json`.
+
+          - Corey Haines Marketing Skills: entire source snapshot, including all skills, references, assets, evaluations, license, and repository metadata files.
+          - UI UX Pro Max: canonical `.claude/skills/ui-ux-pro-max` package plus upstream README/license.
+          - Taste: canonical `skills/taste-skill` package plus upstream README/changelog/license.
+          - Impeccable: canonical `skill` package plus upstream README/license/notice.
+          MD
+
+          find "$ROOT" -type f -print0 | sort -z | xargs -0 sha256sum > "$ROOT/SHA256SUMS.txt"
+          python - <<'PY'
+          import json, os
+          root = os.environ['RUNNER_TEMP'] + '/dj-ys-official-skills'
+          counts = {}
+          for d in sorted(os.listdir(root)):
+              p = os.path.join(root, d)
+              if os.path.isdir(p):
+                  counts[d] = sum(len(files) for _, _, files in os.walk(p))
+          with open(os.path.join(root, 'FILE_COUNTS.json'), 'w', encoding='utf-8') as f:
+              json.dump(counts, f, indent=2)
+          print(counts)
+          PY
+          cd "$RUNNER_TEMP"
+          zip -q -r DJ-YS-OFFICIAL-GITHUB-SKILLS.zip dj-ys-official-skills
+          unzip -t DJ-YS-OFFICIAL-GITHUB-SKILLS.zip
+
+      - name: Upload official skills ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: DJ-YS-OFFICIAL-GITHUB-SKILLS
+          path: ${{ runner.temp }}/DJ-YS-OFFICIAL-GITHUB-SKILLS.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
