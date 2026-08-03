@@ -21,6 +21,11 @@ import {
 function configureWorkOS() {
   vi.stubEnv("WORKOS_API_KEY", "sk_test_configured");
   vi.stubEnv("WORKOS_CLIENT_ID", "client_configured");
+  vi.stubEnv("WORKOS_COOKIE_PASSWORD", "a_secure_cookie_password_32_chars");
+  vi.stubEnv(
+    "NEXT_PUBLIC_WORKOS_REDIRECT_URI",
+    "http://localhost:3000/auth/callback",
+  );
 }
 
 describe("WorkOS AuthKit fail-closed integration", () => {
@@ -29,6 +34,8 @@ describe("WorkOS AuthKit fail-closed integration", () => {
     vi.stubEnv("NODE_ENV", "test");
     vi.stubEnv("WORKOS_API_KEY", "");
     vi.stubEnv("WORKOS_CLIENT_ID", "");
+    vi.stubEnv("WORKOS_COOKIE_PASSWORD", "");
+    vi.stubEnv("NEXT_PUBLIC_WORKOS_REDIRECT_URI", "");
     vi.stubEnv("ALLOW_LOCAL_AUTH_MOCK", "false");
   });
 
@@ -80,12 +87,13 @@ describe("WorkOS AuthKit fail-closed integration", () => {
   it("accepts only recognized server-provided roles", async () => {
     configureWorkOS();
     authkit.withAuth.mockResolvedValue({
+      organizationId: "org_workos_123",
+      role: "customer",
       user: {
         id: "user_workos_123",
         email: "customer@example.com",
         firstName: "Taylor",
         lastName: "Customer",
-        metadata: { role: "customer" },
       },
     });
 
@@ -93,18 +101,39 @@ describe("WorkOS AuthKit fail-closed integration", () => {
 
     expect(session.isAuthenticated).toBe(true);
     expect(session.user?.role).toBe("customer");
+    expect(session.user?.organizationId).toBe("org_workos_123");
     expect(session.mode).toBe("live_authkit");
   });
 
   it("does not invent an owner role when authenticated metadata has no valid role", async () => {
     configureWorkOS();
     authkit.withAuth.mockResolvedValue({
+      organizationId: "org_workos_456",
+      role: "super_owner",
       user: {
         id: "user_workos_456",
         email: "unknown@example.com",
         firstName: "Unknown",
         lastName: "Role",
-        metadata: { role: "super_owner" },
+      },
+    });
+
+    const session = await getCurrentSession();
+
+    expect(session.isAuthenticated).toBe(true);
+    expect(session.user?.role).toBeNull();
+  });
+
+  it("does not trust mutable user metadata as an authorization role", async () => {
+    configureWorkOS();
+    authkit.withAuth.mockResolvedValue({
+      organizationId: "org_workos_789",
+      user: {
+        id: "user_workos_789",
+        email: "attacker@example.com",
+        firstName: "Metadata",
+        lastName: "Attacker",
+        metadata: { role: "owner" },
       },
     });
 

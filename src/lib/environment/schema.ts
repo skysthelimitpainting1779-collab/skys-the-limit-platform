@@ -14,11 +14,13 @@ const EnvironmentSchema = z
     NEXT_PUBLIC_CONVEX_URL: z.string().url({
       message: "NEXT_PUBLIC_CONVEX_URL must be a valid Convex deployment URL",
     }),
+    NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: z.string().min(1).optional(),
 
     // Authentication — required for WorkOS AuthKit
     WORKOS_API_KEY: z.string().min(1).optional(),
     WORKOS_CLIENT_ID: z.string().min(1).optional(),
     WORKOS_COOKIE_PASSWORD: z.string().min(32).optional(),
+    WORKOS_WEBHOOK_SECRET: z.string().min(1).optional(),
     NEXT_PUBLIC_WORKOS_REDIRECT_URI: z.string().url().optional(),
     ALLOW_LOCAL_AUTH_MOCK: z
       .enum(["true", "false"])
@@ -38,6 +40,48 @@ const EnvironmentSchema = z
       .default("false"),
   })
   .superRefine((data, ctx) => {
+    const workOSConfiguration = [
+      ["WORKOS_API_KEY", data.WORKOS_API_KEY],
+      ["WORKOS_CLIENT_ID", data.WORKOS_CLIENT_ID],
+      ["WORKOS_COOKIE_PASSWORD", data.WORKOS_COOKIE_PASSWORD],
+      ["WORKOS_WEBHOOK_SECRET", data.WORKOS_WEBHOOK_SECRET],
+      [
+        "NEXT_PUBLIC_WORKOS_REDIRECT_URI",
+        data.NEXT_PUBLIC_WORKOS_REDIRECT_URI,
+      ],
+    ] as const;
+    const hasAnyWorkOSValue = workOSConfiguration.some(([, value]) => value);
+    if (hasAnyWorkOSValue) {
+      for (const [name, value] of workOSConfiguration) {
+        if (!value) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [name],
+            message: "WorkOS AuthKit configuration must be complete",
+          });
+        }
+      }
+    }
+
+    if (data.VERCEL_ENV === "production") {
+      for (const [name, value] of workOSConfiguration) {
+        if (!value) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [name],
+            message: "WorkOS AuthKit is required in Production",
+          });
+        }
+      }
+      if (!data.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID"],
+          message: "Production lead intake requires an organization ID",
+        });
+      }
+    }
+
     const secretPrefix = String.fromCharCode(
       115,
       107,

@@ -9,17 +9,35 @@ import { Badge } from "@/components/ui/badge";
 import { MotionReveal } from "@/design/motion/Reveal";
 import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
 
-export function OperationsDashboard() {
+export function OperationsDashboard({
+  orgId,
+}: {
+  orgId?: Id<"organizations">;
+} = {}) {
   const [selectedLeadStatus, setSelectedLeadStatus] = useState<string>("all");
 
   const leads = useQuery(
-    api.leads.list,
-    selectedLeadStatus !== "all"
-      ? { status: selectedLeadStatus as "new" | "contacted" | "qualified" | "scheduled" | "closed" | "lost" }
-      : {}
+    api.portals.listOperationsLeads,
+    orgId
+      ? selectedLeadStatus !== "all"
+        ? {
+            orgId,
+            status: selectedLeadStatus as
+              | "new"
+              | "contacted"
+              | "qualified"
+              | "scheduled"
+              | "closed"
+              | "lost",
+          }
+        : { orgId }
+      : "skip",
   );
-  const jobs = useQuery(api.jobs.list, {});
-  const auditEvents = useQuery(api.auditEvents.listRecent, { limit: 15 });
+  const jobs = useQuery(api.jobs.list, orgId ? { orgId } : "skip");
+  const auditEvents = useQuery(
+    api.auditEvents.listRecent,
+    orgId ? { orgId, limit: 15 } : "skip",
+  );
 
   const updateLeadStatus = useMutation(api.leads.updateStatus);
   const updateJobStatus = useMutation(api.jobs.updateStatus);

@@ -5,10 +5,17 @@ import {
   useAccessToken,
   useAuth,
 } from "@workos-inc/authkit-nextjs/components";
-import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
+import {
+  ConvexProviderWithAuth,
+  ConvexReactClient,
+  useConvexAuth,
+  useMutation,
+} from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import {
   type ReactNode,
   useCallback,
+  useEffect,
   useState,
 } from "react";
 
@@ -54,9 +61,26 @@ function ConfiguredConvexProvider({
 
   return (
     <ConvexProviderWithAuth client={client} useAuth={useAuthFromAuthKit}>
+      <ProvisionAuthenticatedUser />
       {children}
     </ConvexProviderWithAuth>
   );
+}
+
+/** Bind the JWT to a webhook-verified WorkOS profile; Convex owns grants. */
+function ProvisionAuthenticatedUser() {
+  const { isAuthenticated } = useConvexAuth();
+  const storeAuthenticatedUser = useMutation(api.users.store);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    void storeAuthenticatedUser({}).catch(() => {
+      console.error("[AuthKit] Convex identity provisioning failed.");
+    });
+  }, [isAuthenticated, storeAuthenticatedUser]);
+
+  return null;
 }
 
 function useAuthFromAuthKit() {

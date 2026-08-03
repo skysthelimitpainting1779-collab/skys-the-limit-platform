@@ -1,4 +1,4 @@
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 export type AppRole =
@@ -21,6 +21,14 @@ export const OPERATIONS_ROLES: readonly AppRole[] = [
   "project_manager",
 ];
 
+export const OPERATIONS_MANAGER_ROLES: readonly AppRole[] = [
+  "owner",
+  "admin",
+  "project_manager",
+];
+
+export const ROLE_ADMIN_ROLES: readonly AppRole[] = ["owner", "admin"];
+
 export const CMS_EDITOR_ROLES: readonly AppRole[] = [
   "owner",
   "admin",
@@ -40,6 +48,8 @@ export const CREW_ROLES: readonly AppRole[] = [
   "crew",
   "staff",
 ];
+
+export const AUDIT_READER_ROLES: readonly AppRole[] = ["owner", "admin"];
 
 type AuthContext =
   | Pick<QueryCtx, "auth" | "db">
@@ -76,41 +86,45 @@ export function assertCrewAssignment(
 
 export async function requireAuthenticatedUser(
   ctx: AuthContext,
-  allowedRoles?: readonly AppRole[],
-) {
+): Promise<Doc<"users">> {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("UNAUTHENTICATED");
-  }
-
-  const externalId = identity.subject || identity.tokenIdentifier;
-  if (!externalId) {
+  if (!identity?.tokenIdentifier) {
     throw new Error("UNAUTHENTICATED");
   }
 
   const user = await ctx.db
     .query("users")
-    .withIndex("by_externalId", (query) =>
-      query.eq("externalId", externalId),
+    .withIndex("by_tokenIdentifier", (query) =>
+      query.eq("tokenIdentifier", identity.tokenIdentifier),
     )
     .unique();
 
   if (!user) {
     throw new Error("USER_NOT_PROVISIONED");
   }
-
-  if (allowedRoles) {
-    assertAllowedRole(user.role, allowedRoles);
+  if (user.identityStatus === "disabled") {
+    throw new Error("USER_DISABLED");
   }
 
   return user;
 }
 
-export async function requireActiveMembership(
+export async function requireActiveOrganization(
+  ctx: AuthContext,
+  orgId: Id<"organizations">,
+): Promise<Doc<"organizations">> {
+  const organization = await ctx.db.get(orgId);
+  if (!organization || organization.status !== "active") {
+    throw new Error("FORBIDDEN");
+  }
+  return organization;
+}
+
+export async function getActiveMembership(
   ctx: AuthContext,
   userId: Id<"users">,
   orgId: Id<"organizations">,
-): Promise<void> {
+): Promise<Doc<"memberships"> | null> {
   const membership = await ctx.db
     .query("memberships")
     .withIndex("by_user_org", (query) =>
@@ -118,7 +132,52 @@ export async function requireActiveMembership(
     )
     .unique();
 
-  if (!membership || membership.status !== "active") {
+  if (!membership || membership.status !== "active") return null;
+
+  const organization = await ctx.db.get(orgId);
+  if (!organization || organization.status !== "active") return null;
+
+  return membership;
+}
+
+export async function requireActiveMembership(
+  ctx: AuthContext,
+  userId: Id<"users">,
+  orgId: Id<"organizations">,
+  allowedRoles?: readonly AppRole[],
+): Promise<Doc<"memberships">> {
+  const membership = await getActiveMembership(ctx, userId, orgId);
+  if (!membership) {
     throw new Error("FORBIDDEN");
   }
+
+  if (allowedRoles) {
+    assertAllowedRole(membership.role, allowedRoles);
+  }
+
+  return membership;
+}
+
+export async function listActiveMemberships(
+  ctx: AuthContext,
+  userId: Id<"users">,
+  allowedRoles?: readonly AppRole[],
+): Promise<Doc<"memberships">[]> {
+  const memberships = await ctx.db
+    .query("memberships")
+    .withIndex("by_user", (query) => query.eq("userId", userId))
+    .take(50);
+
+  const activeMemberships: Doc<"memberships">[] = [];
+  for (const membership of memberships) {
+    if (membership.status !== "active") continue;
+    if (allowedRoles && !allowedRoles.includes(membership.role)) continue;
+
+    const organization = await ctx.db.get(membership.orgId);
+    if (organization?.status === "active") {
+      activeMemberships.push(membership);
+    }
+  }
+
+  return activeMemberships;
 }

@@ -10,7 +10,8 @@ export const metadata: Metadata = {
     "Get an accurate, fixed-price painting estimate for Twin Cities residential, commercial, or public-sector properties. Idempotent submission & 24-hour turnaround.",
   openGraph: {
     title: "Request a Painting Estimate | Sky's the Limit Painting LLC",
-    description: "Get an accurate, fixed-price painting estimate for Twin Cities properties.",
+    description:
+      "Get an accurate, fixed-price painting estimate for Twin Cities properties.",
     url: "https://skysthelimitpaintingllc.com/estimate",
   },
 };

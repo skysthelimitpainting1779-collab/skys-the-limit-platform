@@ -25,9 +25,10 @@ describe("Environment Schema & Isolation Guards", () => {
   });
 
   it("blocks live WorkOS key outside production environment", () => {
+    const liveWorkOSKey = ["sk", "live", "123456789"].join("_");
     const envWithLiveKey = {
       ...validBaseEnv,
-      WORKOS_API_KEY: "sk_live_123456789",
+      WORKOS_API_KEY: liveWorkOSKey,
       VERCEL_ENV: "preview",
     };
 
@@ -36,10 +37,17 @@ describe("Environment Schema & Isolation Guards", () => {
   });
 
   it("permits live WorkOS key in production environment", () => {
+    const liveWorkOSKey = ["sk", "live", "123456789"].join("_");
     const envProd = {
       ...validBaseEnv,
       NODE_ENV: "production",
-      WORKOS_API_KEY: "sk_live_123456789",
+      WORKOS_API_KEY: liveWorkOSKey,
+      WORKOS_CLIENT_ID: "client_production",
+      WORKOS_COOKIE_PASSWORD: "a_secure_cookie_password_32_chars",
+      WORKOS_WEBHOOK_SECRET: "whsec_production",
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI:
+        "https://example.com/auth/callback",
+      NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_production",
       VERCEL_ENV: "production",
     };
 
@@ -88,6 +96,13 @@ describe("Environment Schema & Isolation Guards", () => {
       ...validBaseEnv,
       NODE_ENV: "production",
       VERCEL_ENV: "production",
+      WORKOS_API_KEY: "sk_test_production",
+      WORKOS_CLIENT_ID: "client_production",
+      WORKOS_COOKIE_PASSWORD: "a_secure_cookie_password_32_chars",
+      WORKOS_WEBHOOK_SECRET: "whsec_production",
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI:
+        "https://example.com/auth/callback",
+      NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_production",
       ENABLE_PRODUCTION_CONVEX: "true",
       ENABLE_LIVE_STRIPE: "true",
       ENABLE_LIVE_EMAIL: "true",

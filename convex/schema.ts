@@ -38,6 +38,11 @@ const permissionStatus = v.union(
 export default defineSchema({
   users: defineTable({
     externalId: v.string(),
+    tokenIdentifier: v.optional(v.string()),
+    identitySource: v.optional(v.literal("workos_webhook")),
+    identityStatus: v.optional(
+      v.union(v.literal("active"), v.literal("disabled")),
+    ),
     email: v.string(),
     role: userRole,
     name: v.string(),
@@ -45,10 +50,12 @@ export default defineSchema({
     avatarUrl: v.optional(v.string()),
   })
     .index("by_externalId", ["externalId"])
+    .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_email", ["email"])
     .index("by_role", ["role"]),
 
   organizations: defineTable({
+    externalId: v.optional(v.string()),
     name: v.string(),
     slug: v.string(),
     status: v.union(
@@ -57,7 +64,9 @@ export default defineSchema({
       v.literal("suspended"),
     ),
     settings: v.optional(v.record(v.string(), v.any())),
-  }).index("by_slug", ["slug"]),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_externalId", ["externalId"]),
 
   memberships: defineTable({
     userId: v.id("users"),
@@ -252,6 +261,7 @@ export default defineSchema({
 
   // --- APPLICATION & REVENUE TABLES ---
   leads: defineTable({
+    orgId: v.optional(v.id("organizations")),
     idempotencyKey: v.string(),
     fullName: v.string(),
     email: v.string(),
@@ -278,6 +288,19 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_org", ["orgId"])
+    .index("by_org_and_status", ["orgId", "status"])
+    .index("by_org_and_idempotency_key", ["orgId", "idempotencyKey"])
+    .index("by_org_and_email_and_created_at", [
+      "orgId",
+      "email",
+      "createdAt",
+    ])
+    .index("by_org_and_phone_and_created_at", [
+      "orgId",
+      "phone",
+      "createdAt",
+    ])
     .index("by_status", ["status"])
     .index("by_idempotency_key", ["idempotencyKey"])
     .index("by_email_and_created_at", ["email", "createdAt"])
@@ -326,6 +349,7 @@ export default defineSchema({
     .index("by_lead", ["leadId"])
     .index("by_customer", ["customerId"])
     .index("by_org", ["orgId"])
+    .index("by_org_and_status", ["orgId", "status"])
     .index("by_status", ["status"]),
 
   estimateVersions: defineTable({
@@ -363,6 +387,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_org", ["orgId"])
+    .index("by_org_and_status", ["orgId", "status"])
+    .index("by_org_and_stage", ["orgId", "stage"])
     .index("by_status", ["status"])
     .index("by_customer", ["customerId"])
     .index("by_stage", ["stage"]),
@@ -374,6 +400,7 @@ export default defineSchema({
     role: v.string(),
   })
     .index("by_job", ["jobId"])
+    .index("by_user", ["userId"])
     .index("by_user_date", ["userId", "assignedDate"]),
 
   tasks: defineTable({
@@ -435,6 +462,7 @@ export default defineSchema({
     fileUrl: v.string(),
     createdAt: v.number(),
   })
+    .index("by_org", ["orgId"])
     .index("by_customer", ["customerId"])
     .index("by_job", ["jobId"]),
 
@@ -448,6 +476,7 @@ export default defineSchema({
   }).index("by_user_read", ["userId", "read"]),
 
   auditEvents: defineTable({
+    orgId: v.optional(v.id("organizations")),
     actorId: v.string(),
     action: v.string(),
     targetResource: v.string(),
@@ -455,5 +484,12 @@ export default defineSchema({
     timestamp: v.number(),
   })
     .index("by_target", ["targetResource"])
-    .index("by_actor", ["actorId"]),
+    .index("by_actor", ["actorId"])
+    .index("by_org_and_timestamp", ["orgId", "timestamp"])
+    .index("by_org_and_target", ["orgId", "targetResource"])
+    .index("by_org_and_actor_and_timestamp", [
+      "orgId",
+      "actorId",
+      "timestamp",
+    ]),
 });

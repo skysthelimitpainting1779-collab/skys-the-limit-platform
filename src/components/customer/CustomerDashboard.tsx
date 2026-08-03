@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Id } from "@convex/_generated/dataModel";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -22,15 +21,13 @@ export function CustomerDashboard({ defaultLeadId = "", defaultOrgId }: Customer
   const [leadIdInput, setLeadIdInput] = useState(defaultLeadId);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(defaultLeadId || null);
 
-  const estimates = useQuery(
-    api.estimates.listByLead,
-    activeLeadId ? { leadId: activeLeadId as Id<"leads"> } : "skip"
+  const overview = useQuery(api.portals.getCustomerOverview, {});
+  const estimates = overview?.estimates.filter(
+    (estimate) => !activeLeadId || estimate.leadId === activeLeadId,
   );
+  const jobs = overview?.jobs;
 
-  const jobs = useQuery(
-    api.jobs.list,
-    defaultOrgId ? { orgId: defaultOrgId as Id<"organizations"> } : {}
-  );
+  void defaultOrgId;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -12,7 +12,7 @@ import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
 import { MotionPressable } from "@/design/motion/Pressable";
 
 export function CrewDashboard() {
-  const jobs = useQuery(api.jobs.list, {});
+  const jobs = useQuery(api.portals.getCrewTodayAssignments, {});
   const updateStatus = useMutation(api.jobs.updateStatus);
 
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);

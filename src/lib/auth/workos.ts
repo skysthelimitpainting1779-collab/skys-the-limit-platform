@@ -28,6 +28,7 @@ export interface PlatformUserSession {
     email: string;
     name: string;
     role: AppRole | null;
+    organizationId?: string;
     avatarUrl?: string;
   } | null;
   mode: "live_authkit" | "local_dev_mock" | "unauthenticated";
@@ -37,19 +38,24 @@ function isRecognizedRole(value: unknown): value is AppRole {
   return typeof value === "string" && APP_ROLES.includes(value as AppRole);
 }
 
-function getServerProvidedRole(user: unknown): AppRole | null {
-  const metadata = (user as { metadata?: Record<string, unknown> } | null)
-    ?.metadata;
-  const role = metadata?.role;
-  return isRecognizedRole(role) ? role : null;
+function getServerProvidedRole(
+  role: unknown,
+  roles: readonly unknown[] | undefined,
+): AppRole | null {
+  if (isRecognizedRole(role)) return role;
+  return roles?.find(isRecognizedRole) ?? null;
 }
 
 function isWorkOSConfigured(): boolean {
   return Boolean(
     process.env.WORKOS_API_KEY &&
       process.env.WORKOS_CLIENT_ID &&
+      process.env.WORKOS_COOKIE_PASSWORD &&
+      process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI &&
       !process.env.WORKOS_API_KEY.includes("REPLACE_ME") &&
-      !process.env.WORKOS_CLIENT_ID.includes("REPLACE_ME"),
+      !process.env.WORKOS_CLIENT_ID.includes("REPLACE_ME") &&
+      !process.env.WORKOS_COOKIE_PASSWORD.includes("REPLACE_ME") &&
+      !process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI.includes("REPLACE_ME"),
   );
 }
 
@@ -86,7 +92,7 @@ function authUnavailableUrl(returnTo: string): string {
 export async function getCurrentSession(): Promise<PlatformUserSession> {
   if (isWorkOSConfigured()) {
     try {
-      const { user } = await withAuth();
+      const { user, organizationId, role, roles } = await withAuth();
       if (!user) return unauthenticatedSession();
 
       return {
@@ -97,7 +103,8 @@ export async function getCurrentSession(): Promise<PlatformUserSession> {
           name:
             `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
             user.email,
-          role: getServerProvidedRole(user),
+          role: getServerProvidedRole(role, roles),
+          organizationId,
           avatarUrl: user.profilePictureUrl || undefined,
         },
         mode: "live_authkit",
@@ -116,6 +123,7 @@ export async function getCurrentSession(): Promise<PlatformUserSession> {
         email: "operator@skysthelimitpainting.com",
         name: "Sky’s Operator",
         role: "owner",
+        organizationId: "organization_local",
       },
       mode: "local_dev_mock",
     };
@@ -136,6 +144,13 @@ export async function requirePortalSession(
   }
 
   if (!session.user.role || !allowedRoles.includes(session.user.role)) {
+    redirect("/?auth=forbidden");
+  }
+
+  if (
+    allowedRoles.some((role) => role !== "customer") &&
+    !session.user.organizationId
+  ) {
     redirect("/?auth=forbidden");
   }
 

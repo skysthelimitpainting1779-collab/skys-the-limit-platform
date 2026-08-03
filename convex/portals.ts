@@ -1,44 +1,85 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
 import {
   assertCrewAssignment,
   assertCustomerOwnership,
   CREW_ROLES,
+  listActiveMemberships,
   OPERATIONS_ROLES,
+  requireActiveMembership,
+  requireActiveOrganization,
   requireAuthenticatedUser,
 } from "./lib/authorization";
+import {
+  customerValidator,
+  documentValidator,
+  estimateValidator,
+  jobValidator,
+  leadValidator,
+} from "./lib/returnValidators";
 
 /**
  * Operations Overview Query: restricted to authenticated operations roles.
  */
 export const getOperationsOverview = query({
-  args: {},
-  handler: async (ctx) => {
-    await requireAuthenticatedUser(ctx, OPERATIONS_ROLES);
+  args: { orgId: v.id("organizations") },
+  returns: v.object({
+    newLeadsCount: v.number(),
+    pendingEstimatesCount: v.number(),
+    activeJobsCount: v.number(),
+    recentAuditCount: v.number(),
+    countsCapped: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      args.orgId,
+      OPERATIONS_ROLES,
+    );
 
     const newLeads = await ctx.db
       .query("leads")
-      .withIndex("by_status", (q) => q.eq("status", "new"))
-      .collect();
+      .withIndex("by_org_and_status", (q) =>
+        q.eq("orgId", args.orgId).eq("status", "new"),
+      )
+      .take(501);
 
     const pendingEstimates = await ctx.db
       .query("estimates")
-      .withIndex("by_status", (q) => q.eq("status", "sent"))
-      .collect();
+      .withIndex("by_org_and_status", (q) =>
+        q.eq("orgId", args.orgId).eq("status", "sent"),
+      )
+      .take(501);
 
     const activeJobs = await ctx.db
       .query("jobs")
-      .withIndex("by_stage", (q) => q.eq("stage", "in_progress"))
-      .collect();
+      .withIndex("by_org_and_stage", (q) =>
+        q.eq("orgId", args.orgId).eq("stage", "in_progress"),
+      )
+      .take(501);
 
-    const auditCount = (await ctx.db.query("auditEvents").take(20)).length;
+    const auditCount = (
+      await ctx.db
+        .query("auditEvents")
+        .withIndex("by_org_and_timestamp", (q) =>
+          q.eq("orgId", args.orgId),
+        )
+        .order("desc")
+        .take(20)
+    ).length;
 
     return {
-      newLeadsCount: newLeads.length,
-      pendingEstimatesCount: pendingEstimates.length,
-      activeJobsCount: activeJobs.length,
+      newLeadsCount: Math.min(newLeads.length, 500),
+      pendingEstimatesCount: Math.min(pendingEstimates.length, 500),
+      activeJobsCount: Math.min(activeJobs.length, 500),
       recentAuditCount: auditCount,
-      timestamp: Date.now(),
+      countsCapped:
+        newLeads.length > 500 ||
+        pendingEstimates.length > 500 ||
+        activeJobs.length > 500,
     };
   },
 });
@@ -47,10 +88,44 @@ export const getOperationsOverview = query({
  * Operations Leads Directory Query.
  */
 export const listOperationsLeads = query({
-  args: {},
-  handler: async (ctx) => {
-    await requireAuthenticatedUser(ctx, OPERATIONS_ROLES);
-    return await ctx.db.query("leads").order("desc").take(50);
+  args: {
+    orgId: v.id("organizations"),
+    status: v.optional(
+      v.union(
+        v.literal("new"),
+        v.literal("contacted"),
+        v.literal("qualified"),
+        v.literal("scheduled"),
+        v.literal("closed"),
+        v.literal("lost"),
+      ),
+    ),
+  },
+  returns: v.array(leadValidator),
+  handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      args.orgId,
+      OPERATIONS_ROLES,
+    );
+
+    if (args.status) {
+      return await ctx.db
+        .query("leads")
+        .withIndex("by_org_and_status", (q) =>
+          q.eq("orgId", args.orgId).eq("status", args.status!),
+        )
+        .order("desc")
+        .take(50);
+    }
+
+    return await ctx.db
+      .query("leads")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .order("desc")
+      .take(50);
   },
 });
 
@@ -60,20 +135,21 @@ export const listOperationsLeads = query({
  */
 export const getCustomerOverview = query({
   args: {},
+  returns: v.object({
+    customer: v.union(v.null(), customerValidator),
+    estimates: v.array(estimateValidator),
+    jobs: v.array(jobValidator),
+    documents: v.array(documentValidator),
+  }),
   handler: async (ctx) => {
-    const currentUser = await requireAuthenticatedUser(ctx, ["customer"]);
+    const currentUser = await requireAuthenticatedUser(ctx);
 
     const customerByUser = await ctx.db
       .query("customers")
       .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
       .first();
 
-    const customer =
-      customerByUser ??
-      (await ctx.db
-        .query("customers")
-        .withIndex("by_email", (q) => q.eq("email", currentUser.email))
-        .first());
+    const customer = customerByUser;
 
     if (!customer) {
       return {
@@ -84,26 +160,29 @@ export const getCustomerOverview = query({
       };
     }
 
-    if (customer.userId) {
-      assertCustomerOwnership(customer.userId, currentUser._id);
-    } else if (customer.email !== currentUser.email) {
-      throw new Error("FORBIDDEN");
-    }
+    assertCustomerOwnership(customer.userId, currentUser._id);
+    await requireActiveOrganization(ctx, customer.orgId);
 
-    const estimates = await ctx.db
-      .query("estimates")
-      .withIndex("by_customer", (q) => q.eq("customerId", customer._id))
-      .collect();
+    const estimates = (
+      await ctx.db
+        .query("estimates")
+        .withIndex("by_customer", (q) => q.eq("customerId", customer._id))
+        .take(100)
+    ).filter((estimate) => estimate.orgId === customer.orgId);
 
-    const jobs = await ctx.db
-      .query("jobs")
-      .withIndex("by_customer", (q) => q.eq("customerId", customer._id))
-      .collect();
+    const jobs = (
+      await ctx.db
+        .query("jobs")
+        .withIndex("by_customer", (q) => q.eq("customerId", customer._id))
+        .take(100)
+    ).filter((job) => job.orgId === customer.orgId);
 
-    const documents = await ctx.db
-      .query("documents")
-      .withIndex("by_customer", (q) => q.eq("customerId", customer._id))
-      .collect();
+    const documents = (
+      await ctx.db
+        .query("documents")
+        .withIndex("by_customer", (q) => q.eq("customerId", customer._id))
+        .take(100)
+    ).filter((document) => document.orgId === customer.orgId);
 
     return {
       customer,
@@ -119,13 +198,31 @@ export const getCustomerOverview = query({
  */
 export const getCrewTodayAssignments = query({
   args: {},
+  returns: v.array(jobValidator),
   handler: async (ctx) => {
-    const currentUser = await requireAuthenticatedUser(ctx, CREW_ROLES);
-    const jobs = await ctx.db.query("jobs").collect();
-
-    return jobs.filter(
-      (job) => job.crewIds && job.crewIds.includes(currentUser._id),
+    const currentUser = await requireAuthenticatedUser(ctx);
+    const memberships = await listActiveMemberships(
+      ctx,
+      currentUser._id,
+      CREW_ROLES,
     );
+    if (memberships.length === 0) throw new Error("FORBIDDEN");
+
+    const authorizedJobs = new Map<Id<"jobs">, Doc<"jobs">>();
+    for (const membership of memberships) {
+      const jobs = await ctx.db
+        .query("jobs")
+        .withIndex("by_org", (q) => q.eq("orgId", membership.orgId))
+        .order("desc")
+        .take(100);
+      for (const job of jobs) {
+        if (job.crewIds.includes(currentUser._id)) {
+          authorizedJobs.set(job._id, job);
+        }
+      }
+    }
+
+    return Array.from(authorizedJobs.values());
   },
 });
 
@@ -150,12 +247,19 @@ export const submitChecklistProgress = mutation({
       }),
     ),
   },
+  returns: v.object({ success: v.boolean() }),
   handler: async (ctx, args) => {
-    const currentUser = await requireAuthenticatedUser(ctx, CREW_ROLES);
+    const currentUser = await requireAuthenticatedUser(ctx);
     const job = await ctx.db.get(args.jobId);
     if (!job) throw new Error("JOB_NOT_FOUND");
 
-    assertCrewAssignment(job.crewIds, currentUser._id, currentUser.role);
+    const membership = await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      job.orgId,
+      CREW_ROLES,
+    );
+    assertCrewAssignment(job.crewIds, currentUser._id, membership.role);
 
     const now = Date.now();
     const existing = await ctx.db
@@ -182,6 +286,7 @@ export const submitChecklistProgress = mutation({
     }
 
     await ctx.db.insert("auditEvents", {
+      orgId: job.orgId,
       actorId: currentUser._id,
       action: "crew_checklist_updated",
       targetResource: args.jobId,

@@ -1,5 +1,12 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import {
+  OPERATIONS_ROLES,
+  requireActiveMembership,
+  requireActiveOrganization,
+  requireAuthenticatedUser,
+} from "./lib/authorization";
+import { estimateValidator } from "./lib/returnValidators";
 
 export const estimateStatusValidator = v.union(
   v.literal("draft"),
@@ -22,9 +29,17 @@ export const create = mutation({
     pricing: pricingValidator,
     status: v.optional(estimateStatusValidator),
   },
+  returns: v.id("estimates"),
   handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      args.orgId,
+      OPERATIONS_ROLES,
+    );
     const lead = await ctx.db.get(args.leadId);
-    if (!lead) {
+    if (!lead?.orgId || lead.orgId !== args.orgId) {
       throw new Error("Lead not found");
     }
     const org = await ctx.db.get(args.orgId);
@@ -47,8 +62,28 @@ export const get = query({
   args: {
     estimateId: v.id("estimates"),
   },
+  returns: v.union(v.null(), estimateValidator),
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.estimateId);
+    const currentUser = await requireAuthenticatedUser(ctx);
+    const estimate = await ctx.db.get(args.estimateId);
+    if (!estimate) return null;
+
+    if (estimate.customerId) {
+      const customer = await ctx.db.get(estimate.customerId);
+      if (customer?.userId === currentUser._id) {
+        if (customer.orgId !== estimate.orgId) throw new Error("FORBIDDEN");
+        await requireActiveOrganization(ctx, estimate.orgId);
+        return estimate;
+      }
+    }
+
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      estimate.orgId,
+      OPERATIONS_ROLES,
+    );
+    return estimate;
   },
 });
 
@@ -56,33 +91,54 @@ export const listByLead = query({
   args: {
     leadId: v.id("leads"),
   },
+  returns: v.array(estimateValidator),
   handler: async (ctx, args) => {
-    return await ctx.db
+    const currentUser = await requireAuthenticatedUser(ctx);
+    const lead = await ctx.db.get(args.leadId);
+    if (!lead?.orgId) throw new Error("LEAD_NOT_FOUND");
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      lead.orgId,
+      OPERATIONS_ROLES,
+    );
+    const estimates = await ctx.db
       .query("estimates")
       .withIndex("by_lead", (q) => q.eq("leadId", args.leadId))
-      .collect();
+      .take(100);
+    return estimates.filter((estimate) => estimate.orgId === lead.orgId);
   },
 });
 
 export const list = query({
   args: {
-    orgId: v.optional(v.id("organizations")),
+    orgId: v.id("organizations"),
     status: v.optional(estimateStatusValidator),
   },
+  returns: v.array(estimateValidator),
   handler: async (ctx, args) => {
-    let estimates;
-    if (args.orgId !== undefined) {
-      estimates = await ctx.db
-        .query("estimates")
-        .withIndex("by_org", (q) => q.eq("orgId", args.orgId!))
-        .collect();
-    } else {
-      estimates = await ctx.db.query("estimates").collect();
-    }
+    const currentUser = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      args.orgId,
+      OPERATIONS_ROLES,
+    );
+
     if (args.status !== undefined) {
-      estimates = estimates.filter((est) => est.status === args.status);
+      return await ctx.db
+        .query("estimates")
+        .withIndex("by_org_and_status", (q) =>
+          q.eq("orgId", args.orgId).eq("status", args.status!),
+        )
+        .order("desc")
+        .take(100);
     }
-    return estimates;
+    return await ctx.db
+      .query("estimates")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .order("desc")
+      .take(100);
   },
 });
 
@@ -93,11 +149,19 @@ export const update = mutation({
     pricing: v.optional(pricingValidator),
     status: v.optional(estimateStatusValidator),
   },
+  returns: estimateValidator,
   handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx);
     const existing = await ctx.db.get(args.estimateId);
     if (!existing) {
       throw new Error("Estimate not found");
     }
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      existing.orgId,
+      OPERATIONS_ROLES,
+    );
     const updates: {
       scope?: string;
       pricing?: number | Record<string, unknown>;
@@ -108,7 +172,9 @@ export const update = mutation({
     if (args.status !== undefined) updates.status = args.status;
 
     await ctx.db.patch(args.estimateId, updates);
-    return await ctx.db.get(args.estimateId);
+    const updated = await ctx.db.get(args.estimateId);
+    if (!updated) throw new Error("Estimate not found");
+    return updated;
   },
 });
 
@@ -155,17 +221,14 @@ export function computeTotalFromPricing(
 
 export const calculateTotal = query({
   args: {
-    estimateId: v.optional(v.id("estimates")),
     pricing: v.optional(pricingValidator),
   },
-  handler: async (ctx, args) => {
-    let rawPricing: number | Record<string, unknown> | undefined = args.pricing as number | Record<string, unknown> | undefined;
-    if (args.estimateId) {
-      const estimate = await ctx.db.get(args.estimateId);
-      if (estimate) {
-        rawPricing = estimate.pricing as number | Record<string, unknown>;
-      }
-    }
+  returns: v.number(),
+  handler: async (_ctx, args) => {
+    const rawPricing = args.pricing as
+      | number
+      | Record<string, unknown>
+      | undefined;
     if (rawPricing === undefined) {
       return 0;
     }

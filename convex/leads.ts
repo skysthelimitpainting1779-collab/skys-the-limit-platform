@@ -1,6 +1,13 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { normalizeLeadMutationInput } from "./lib/leadValidation";
+import {
+  OPERATIONS_ROLES,
+  requireActiveMembership,
+  requireActiveOrganization,
+  requireAuthenticatedUser,
+} from "./lib/authorization";
+import { leadValidator } from "./lib/returnValidators";
 
 export const leadStatusValidator = v.union(
   v.literal("new"),
@@ -25,6 +32,7 @@ const segment = projectTypeValidator;
 // new leads from duplicate submissions.
 export const create = mutation({
   args: {
+    orgId: v.id("organizations"),
     idempotencyKey: v.string(),
     fullName: v.string(),
     email: v.string(),
@@ -43,12 +51,15 @@ export const create = mutation({
     created: v.boolean(),
   }),
   handler: async (ctx, args) => {
+    await requireActiveOrganization(ctx, args.orgId);
     const input = normalizeLeadMutationInput(args);
 
     const existing = await ctx.db
       .query("leads")
-      .withIndex("by_idempotency_key", (query) =>
-        query.eq("idempotencyKey", input.idempotencyKey),
+      .withIndex("by_org_and_idempotency_key", (query) =>
+        query
+          .eq("orgId", args.orgId)
+          .eq("idempotencyKey", input.idempotencyKey),
       )
       .unique();
 
@@ -60,14 +71,20 @@ export const create = mutation({
     const fifteenMinutesAgo = serverNow - 15 * 60 * 1000;
     const recentFromEmail = await ctx.db
       .query("leads")
-      .withIndex("by_email_and_created_at", (query) =>
-        query.eq("email", input.email).gte("createdAt", fifteenMinutesAgo),
+      .withIndex("by_org_and_email_and_created_at", (query) =>
+        query
+          .eq("orgId", args.orgId)
+          .eq("email", input.email)
+          .gte("createdAt", fifteenMinutesAgo),
       )
       .take(3);
     const recentFromPhone = await ctx.db
       .query("leads")
-      .withIndex("by_phone_and_created_at", (query) =>
-        query.eq("phone", input.phone).gte("createdAt", fifteenMinutesAgo),
+      .withIndex("by_org_and_phone_and_created_at", (query) =>
+        query
+          .eq("orgId", args.orgId)
+          .eq("phone", input.phone)
+          .gte("createdAt", fifteenMinutesAgo),
       )
       .take(3);
 
@@ -76,6 +93,7 @@ export const create = mutation({
     }
 
     const id = await ctx.db.insert("leads", {
+      orgId: args.orgId,
       idempotencyKey: input.idempotencyKey,
       fullName: input.fullName,
       email: input.email,
@@ -102,23 +120,48 @@ export const get = query({
   args: {
     leadId: v.id("leads"),
   },
+  returns: leadValidator,
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.leadId);
+    const currentUser = await requireAuthenticatedUser(ctx);
+    const lead = await ctx.db.get(args.leadId);
+    if (!lead?.orgId) throw new Error("LEAD_NOT_FOUND");
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      lead.orgId,
+      OPERATIONS_ROLES,
+    );
+    return lead;
   },
 });
 
 export const list = query({
   args: {
+    orgId: v.id("organizations"),
     status: v.optional(leadStatusValidator),
   },
+  returns: v.array(leadValidator),
   handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      args.orgId,
+      OPERATIONS_ROLES,
+    );
     if (args.status !== undefined) {
       return await ctx.db
         .query("leads")
-        .withIndex("by_status", (q) => q.eq("status", args.status!))
-        .collect();
+        .withIndex("by_org_and_status", (q) =>
+          q.eq("orgId", args.orgId).eq("status", args.status!),
+        )
+        .take(100);
     }
-    return await ctx.db.query("leads").collect();
+    return await ctx.db
+      .query("leads")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .order("desc")
+      .take(100);
   },
 });
 
@@ -127,22 +170,45 @@ export const updateStatus = mutation({
     leadId: v.id("leads"),
     status: leadStatusValidator,
   },
+  returns: leadValidator,
   handler: async (ctx, args) => {
+    const currentUser = await requireAuthenticatedUser(ctx);
     const existing = await ctx.db.get(args.leadId);
-    if (!existing) {
+    if (!existing?.orgId) {
       throw new Error("Lead not found");
     }
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      existing.orgId,
+      OPERATIONS_ROLES,
+    );
     await ctx.db.patch(args.leadId, { status: args.status, updatedAt: Date.now() });
-    return await ctx.db.get(args.leadId);
+    const updated = await ctx.db.get(args.leadId);
+    if (!updated) throw new Error("Lead not found");
+    return updated;
   },
 });
 
 export const search = query({
   args: {
+    orgId: v.id("organizations"),
     query: v.string(),
   },
+  returns: v.array(leadValidator),
   handler: async (ctx, args) => {
-    const leads = await ctx.db.query("leads").collect();
+    const currentUser = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      currentUser._id,
+      args.orgId,
+      OPERATIONS_ROLES,
+    );
+    const leads = await ctx.db
+      .query("leads")
+      .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
+      .order("desc")
+      .take(200);
     const q = args.query.trim().toLowerCase();
     if (!q) {
       return leads;
