@@ -17,6 +17,15 @@ jobs:
     env:
       NEXT_PUBLIC_DEPLOYMENT_TIER: test
       ENABLE_EXTERNAL_EFFECTS: "false"
+      # Non-secret test-only values for the isolated local deployment. They do
+      # not correspond to a WorkOS tenant and cannot authorize a real session.
+      WORKOS_CLIENT_ID: client_local_ci_fail_closed
+      WORKOS_API_KEY: sk_test_local_ci_fail_closed
+      WORKOS_COOKIE_PASSWORD: local_ci_cookie_password_is_at_least_32_chars
+      WORKOS_REDIRECT_URI: http://127.0.0.1:3100/auth/callback
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://127.0.0.1:3100/auth/callback
+      WORKOS_WEBHOOK_SECRET: whsec_local_ci_fail_closed
+      WORKOS_ACTION_SECRET: action_local_ci_fail_closed
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
@@ -37,6 +46,32 @@ jobs:
           nohup bash -lc 'echo n | CONVEX_AGENT_MODE=anonymous npx convex dev' > /tmp/convex.log 2>&1 &
           echo $! > /tmp/convex.pid
 
+          configured=false
+          for _ in $(seq 1 120); do
+            if [[ -f .env.local ]]; then
+              # auth.config.ts reads deployment-scoped variables. The shell env
+              # alone is intentionally insufficient, so configure the isolated
+              # local deployment through the official Convex CLI.
+              npx convex env set WORKOS_CLIENT_ID "$WORKOS_CLIENT_ID"
+              npx convex env set WORKOS_API_KEY "$WORKOS_API_KEY"
+              npx convex env set WORKOS_WEBHOOK_SECRET "$WORKOS_WEBHOOK_SECRET"
+              npx convex env set WORKOS_ACTION_SECRET "$WORKOS_ACTION_SECRET"
+              configured=true
+              break
+            fi
+            if ! kill -0 "$(cat /tmp/convex.pid)" 2>/dev/null; then
+              cat /tmp/convex.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          if [[ "$configured" != "true" ]]; then
+            cat /tmp/convex.log
+            echo "Convex local deployment was not configured within 120 seconds"
+            exit 1
+          fi
+
           ready=false
           for _ in $(seq 1 120); do
             if [[ -f .env.local ]] && grep -q 'Convex functions ready' /tmp/convex.log; then
@@ -56,7 +91,14 @@ jobs:
             exit 1
           fi
 
+          test_org_id=$(npx convex run ci:ensureLocalTestOrganization '{"environment":"local-ci"}' | tr -d '"\r\n')
+          if [[ -z "$test_org_id" ]]; then
+            echo "Convex did not return a local test organization ID"
+            exit 1
+          fi
+
           grep -E '^(CONVEX_DEPLOYMENT|NEXT_PUBLIC_CONVEX_URL)=' .env.local >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID=$test_org_id" >> "$GITHUB_ENV"
 
       - name: Build and start Next.js
         shell: bash
