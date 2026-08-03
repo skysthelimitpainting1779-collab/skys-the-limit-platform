@@ -1,0 +1,42 @@
+{
+  "node_id": "pr26-ci-bootstrap",
+  "status": "peer_review_passed",
+  "verdict": "pass",
+  "base_revision": "f168c81d9158915e26777cc7096fae9a36a16961",
+  "candidate_commit": "65a7566e53020b0f155f342f182945e16a87bfa0",
+  "branch": "fix/pr26-security-hardening",
+  "scope": "Focused remediation for anonymous local Convex and tenant-bound lead-intake CI bootstrap after GitHub run 30776932566.",
+  "changed_files": [
+    ".github/workflows/lead-intake-e2e.yml",
+    "convex/ci.ts",
+    "src/__tests__/lead-intake-workflow.test.ts"
+  ],
+  "evidence": {
+    "contract_compliance": "pass: the workflow supplies complete non-secret local WorkOS inputs, sets deployment-scoped Convex auth variables through the CLI, creates a real organization ID, and exports it for the Next.js lead-intake build.",
+    "authorization_boundary": "pass: ci.ensureLocalTestOrganization is an internalMutation with literal local-ci arguments and is absent from the public api surface; browser callers cannot invoke it.",
+    "production_effect_boundary": "pass: the workflow starts a fresh anonymous development backend after deleting .env.local, uses no CONVEX_DEPLOY_KEY or --prod flag, has contents:read permissions, and keeps ENABLE_EXTERNAL_EFFECTS=false.",
+    "secret_review": "pass: all added WorkOS values are explicit local-only placeholders; no live key, deploy credential, private URI, or customer data is present.",
+    "test_first": "reported red evidence: three workflow contract tests failed before the remediation and pass after it.",
+    "focused_tests": "pass: src/__tests__/lead-intake-workflow.test.ts, 3 tests.",
+    "evaluator_verification": "pass through skills/env/assets, lint, typecheck, and 17 suites/105 tests in the candidate worktree; npm audit --omit=dev --audit-level=high found 0 vulnerabilities; git show --check and diff check are clean.",
+    "exact_physical_checkout": "pass evidence for commit 65a7566e53020b0f155f342f182945e16a87bfa0: detached clean lockfile-exact checkout with physical node_modules completed npm run verify including the Next.js 16.2.12 Turbopack production build.",
+    "local_build_note": "The evaluator's additional build attempt in the branch worktree reached Turbopack after all prior checks passed, then rejected the node_modules junction because it points outside the project root. This is an evaluator-worktree topology limitation, not a source failure; the physical detached checkout supplies the build proof."
+  },
+  "review": {
+    "north_star": "CI proves real lead persistence against an isolated tenant without exposing credentials or adding a browser-callable bootstrap path.",
+    "dependencies": "Convex CLI and internalMutation behavior revalidated against current official Convex documentation through Context7.",
+    "findings": [],
+    "advisories": [
+      "An internal function remains executable by operators holding deployment administration credentials. Keep ci.ensureLocalTestOrganization out of production automation; add a deployment-scoped guard before reusing this seam outside the anonymous local workflow.",
+      "The local WorkOS webhook/action placeholders are intentionally public and suitable only for the isolated backend. Never reuse them in Preview or Production.",
+      "The post-fix GitHub Lead Intake E2E workflow must still be rerun successfully at the exact remote head; local workflow contract tests are not a substitute for that status check.",
+      "All protected-preview gates from pr26-security-hardening remain in force, including isolated WorkOS webhook provisioning, hostile-identity smoke tests, repository privacy, branch protection, independent approval, and owner approval before production data or deployment effects."
+    ]
+  },
+  "rollback": {
+    "last_known_good_revision": "f168c81d9158915e26777cc7096fae9a36a16961",
+    "command": "git revert 65a7566e53020b0f155f342f182945e16a87bfa0",
+    "human_approval_required": false,
+    "note": "Reverting restores the known CI bootstrap failure and does not itself mutate a live Convex deployment."
+  }
+}
