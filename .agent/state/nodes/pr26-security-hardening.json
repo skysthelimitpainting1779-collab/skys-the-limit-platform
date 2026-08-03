@@ -1,0 +1,67 @@
+{
+  "node_id": "pr26-security-hardening",
+  "status": "peer_review_passed",
+  "base_revision": "47bf8ce306ba9e7fb6952afde65fdcadcbbcdd73",
+  "candidate_commit": "16e526189af8988d13e25ac2276e184aed5cbf49",
+  "branch": "fix/pr26-security-hardening",
+  "source_state": "Committed source is clean at 16e526189af8988d13e25ac2276e184aed5cbf49; its sole parent is PR #26 head 47bf8ce306ba9e7fb6952afde65fdcadcbbcdd73. The local graphify cache is intentionally dirty and this receipt is intentionally untracked/excluded from the source commit.",
+  "scope": "Remediate all five critical PR #26 authorization findings, harden WorkOS identity binding, upgrade compatible dependencies, and preserve intentional public APIs.",
+  "changed_surfaces": [
+    ".env.example and environment validation",
+    ".husky/pre-commit",
+    "convex authorization, schema, RPCs, tests, and generated API types",
+    "WorkOS AuthKit session and Convex provider integration",
+    "portal and estimate client callers",
+    "authorization and migration documentation",
+    "dependency manifests",
+    "homepage craft-floor correction"
+  ],
+  "evidence": {
+    "test_first": "Hostile authorization tests reproduced owner claim escalation, issuer collision, mutable-email claiming, CMS target-role bypass, tenant leakage, suspended-organization reads, legacy tenant mismatch, and estimator job overreach before their fixes.",
+    "focused_security": "pass: convex/security.test.ts — 17 hostile and legitimate-path tests",
+    "anonymous_rpc_inventory": "pass: 30 protected public RPCs reject anonymous callers with valid argument shapes; allowlisted public CMS, lead intake, and pure pricing paths remain operational",
+    "verification": "pass at source commit 16e526189af8988d13e25ac2276e184aed5cbf49 in detached clean worktree E:\\DevCaches\\verify-pr26-16e5261 with a physical node_modules installed by committed npm ci: npm run verify — skills/env/assets, lint, typecheck, 16 suites/102 tests, and Next.js 16.2.12 Turbopack production build",
+    "dependency_audit": "pass: npm audit --omit=dev --audit-level=high — 0 vulnerabilities",
+    "ui_audit": "pass: impeccable detector — 0 findings after solid-color hero correction",
+    "diff_check": "pass: git diff --check (line-ending warnings only)",
+    "peer_evaluator": {
+      "verdict": "pass",
+      "north_star": "All sensitive Convex functions fail closed, and a real WorkOS AuthKit principal can bind only to a signature-verified WorkOS profile without receiving caller-controlled grants.",
+      "scope": "Independent re-review of the current full diff, all five critical findings, every public Convex RPC, official WorkOS component integration, webhook lifecycle, identity disable path, schema/index migration, dependencies, tests, docs, environment controls, and modified UI.",
+      "dependencies": "@convex-dev/workos-authkit 0.2.7 (current), Convex 1.43.0, AuthKit Next.js 4.3.1, Next.js 16.2.12, React 19.2.8; official Convex WorkOS AuthKit and AuthKit Next.js documentation re-resolved and queried through Context7.",
+      "green_metrics": "All five original authorization findings and the evaluator's WorkOS provisioning finding are closed; 30 protected public RPC calls reject anonymous identities; the realistic no-email AuthKit token, webhook create/update/delete lifecycle, no signed-role grant, disabled-user denial, tenant, customer, crew, CMS, and audit cases pass.",
+      "findings": [],
+      "resolved_findings": [
+        {
+          "title": "Automatic WorkOS provisioning requires profile claims that standard AuthKit access tokens do not contain",
+          "resolution": "The official @convex-dev/workos-authkit component now owns JWT provider configuration and signature-verifying webhook routes. Verified user.created/user.updated events synchronize profile fields; user.deleted disables rather than deletes the app user. users.store accepts no arguments, requires tokenIdentifier plus subject, and binds only an active identitySource=workos_webhook profile for that exact subject. WorkOS role/org claims create no membership or grant. A missing/placeholder webhook secret receives a per-isolate cryptographically random fail-closed value rather than a source-known secret.",
+          "evidence": "convex/convex.config.ts, convex/auth.config.ts, convex/http.ts, convex/auth.ts, convex/users.ts, convex/lib/authorization.ts, convex/schema.ts, convex/security.test.ts, docs/runbooks/PR26_SECURITY_MIGRATION.md"
+        }
+      ],
+      "advisories": [
+        "No live Convex deployment or protected WorkOS preview was accessed. Configure the preview webhook, run auth.backfillUsers, and prove signature validation and hostile identities in protected preview before release as the runbook requires.",
+        "The component registers /workos/action as well as /workos/webhook. WorkOS Actions are not enabled here, so the action route fails closed without WORKOS_ACTION_SECRET/authKitAction; configure and review both only if Actions are later enabled.",
+        "graphify-out/graph.json remains substantially larger than the base graph and includes agent-skill nodes. Confirm the generated expansion is intended before committing; it is not a security blocker.",
+        "The AGENTS.md-required make-no-mistakes-max skill is not installed or listed. Its North Star/scope/dependencies/green-metrics alignment loop was applied manually; the missing skill remains a governance gap."
+      ],
+      "verification": {
+        "source_commit": "16e526189af8988d13e25ac2276e184aed5cbf49",
+        "source_commit_parent": "47bf8ce306ba9e7fb6952afde65fdcadcbbcdd73",
+        "isolated_worktree": "E:\\DevCaches\\verify-pr26-16e5261 — detached, clean, physical lockfile-exact node_modules from npm ci",
+        "npm_run_typecheck": "pass",
+        "npm_run_lint": "pass",
+        "npm_test": "pass: 16 files, 102 tests",
+        "focused_security": "pass: convex/security.test.ts, 17 tests",
+        "npm_run_build": "pass: Next.js 16.2.12 Turbopack production build",
+        "npm_audit_omit_dev_high": "pass: 0 vulnerabilities",
+        "verify_contracts": "pass: skills, environment, assets",
+        "git_diff_check": "pass"
+      }
+    }
+  },
+  "rollback": {
+    "last_known_good_revision": "47bf8ce306ba9e7fb6952afde65fdcadcbbcdd73",
+    "command_after_commit": "git revert 16e526189af8988d13e25ac2276e184aed5cbf49",
+    "human_approval_required": true
+  }
+}
