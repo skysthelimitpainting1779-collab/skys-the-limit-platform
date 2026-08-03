@@ -12,6 +12,7 @@ const EnvironmentSchema = z
     NEXT_PUBLIC_CONVEX_URL: z
       .string()
       .url({ message: "NEXT_PUBLIC_CONVEX_URL must be a valid Convex deployment URL" }),
+    NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: z.string().min(1).optional(),
 
     // Authentication — required for auth-protected routes
     WORKOS_API_KEY: z.string().min(1).optional(),
@@ -19,6 +20,11 @@ const EnvironmentSchema = z
     WORKOS_COOKIE_PASSWORD: z.string().min(32).optional(),
     WORKOS_REDIRECT_URI: z.string().url().optional(),
     NEXT_PUBLIC_WORKOS_REDIRECT_URI: z.string().url().optional(),
+    WORKOS_WEBHOOK_SECRET: z.string().min(1).optional(),
+    WORKOS_ACTION_SECRET: z.string().min(1).optional(),
+
+    // File storage — server-only; use isolated stores in Preview and Production
+    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 
     // Vercel (auto-injected)
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
@@ -30,6 +36,122 @@ const EnvironmentSchema = z
     ENABLE_PRODUCTION_CONVEX: z.enum(["true", "false"]).default("false"),
   })
   .superRefine((data, ctx) => {
+    const isPlaceholder = (value: string | undefined) => {
+      if (!value?.trim()) return false;
+      const normalized = value.trim().toLowerCase();
+      return [
+        "replace_me",
+        "replace_with_",
+        "unconfigured",
+        "placeholder",
+        "your-deployment",
+        "generate_",
+      ].some((marker) => normalized.includes(marker));
+    };
+    const workOSConfiguration = [
+      ["WORKOS_API_KEY", data.WORKOS_API_KEY],
+      ["WORKOS_CLIENT_ID", data.WORKOS_CLIENT_ID],
+      ["WORKOS_COOKIE_PASSWORD", data.WORKOS_COOKIE_PASSWORD],
+      ["WORKOS_REDIRECT_URI", data.WORKOS_REDIRECT_URI],
+      ["NEXT_PUBLIC_WORKOS_REDIRECT_URI", data.NEXT_PUBLIC_WORKOS_REDIRECT_URI],
+      ["WORKOS_WEBHOOK_SECRET", data.WORKOS_WEBHOOK_SECRET],
+    ] as const;
+    if (workOSConfiguration.some(([, value]) => Boolean(value))) {
+      for (const [name, value] of workOSConfiguration) {
+        if (!value) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [name],
+            message: "WorkOS AuthKit configuration must be complete",
+          });
+        }
+      }
+    }
+    for (const [name, value] of workOSConfiguration) {
+      if (isPlaceholder(value)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [name],
+          message: "Placeholder values are not valid credentials",
+        });
+      }
+    }
+    if (isPlaceholder(data.WORKOS_ACTION_SECRET)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["WORKOS_ACTION_SECRET"],
+        message: "Placeholder values are not valid credentials",
+      });
+    }
+
+    const isDeployment =
+      data.VERCEL_ENV === "preview" || data.VERCEL_ENV === "production";
+    if (isDeployment) {
+      for (const [name, value] of workOSConfiguration) {
+        if (!value || isPlaceholder(value)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [name],
+            message: "WorkOS AuthKit must be configured for deployment",
+          });
+        }
+      }
+      if (
+        !data.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID ||
+        isPlaceholder(data.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID"],
+          message: "Deployment lead intake requires a real organization ID",
+        });
+      }
+      if (
+        !data.BLOB_READ_WRITE_TOKEN ||
+        isPlaceholder(data.BLOB_READ_WRITE_TOKEN)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["BLOB_READ_WRITE_TOKEN"],
+          message: "Vercel Blob must be configured for deployment",
+        });
+      }
+      if (isPlaceholder(data.NEXT_PUBLIC_CONVEX_URL)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["NEXT_PUBLIC_CONVEX_URL"],
+          message: "Deployment requires a real Convex URL",
+        });
+      }
+      for (const redirectName of [
+        "WORKOS_REDIRECT_URI",
+        "NEXT_PUBLIC_WORKOS_REDIRECT_URI",
+      ] as const) {
+        const redirect = data[redirectName];
+        if (
+          redirect &&
+          (new URL(redirect).protocol !== "https:" ||
+            new URL(redirect).hostname === "localhost")
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [redirectName],
+            message: "Deployment redirect URI must use HTTPS",
+          });
+        }
+      }
+      if (
+        data.WORKOS_REDIRECT_URI &&
+        data.NEXT_PUBLIC_WORKOS_REDIRECT_URI &&
+        data.WORKOS_REDIRECT_URI !== data.NEXT_PUBLIC_WORKOS_REDIRECT_URI
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["WORKOS_REDIRECT_URI"],
+          message: "WorkOS redirect URI values must match",
+        });
+      }
+    }
     const secretPrefix = String.fromCharCode(115, 107, 95, 108, 105, 118, 101, 95);
     if (data.WORKOS_API_KEY?.startsWith(secretPrefix) && data.VERCEL_ENV !== "production") {
       ctx.addIssue({
@@ -45,8 +167,12 @@ type Environment = z.infer<typeof EnvironmentSchema>;
 function validateEnvironment(
   envInput: Record<string, string | undefined> = process.env
 ): Environment {
-  // Skip during build if explicitly opted out
   if (envInput.SKIP_ENV_VALIDATION === "true") {
+    if (envInput.VERCEL_ENV === "preview" || envInput.VERCEL_ENV === "production") {
+      throw new Error(
+        "BLOCKED: SKIP_ENV_VALIDATION is not permitted in Preview/Production.",
+      );
+    }
     return {} as Environment;
   }
 
@@ -86,4 +212,3 @@ export const env = process.env.SKIP_ENV_VALIDATION === "true"
 
 export { EnvironmentSchema, validateEnvironment };
 export type { Environment };
-

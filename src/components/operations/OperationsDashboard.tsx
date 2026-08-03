@@ -9,17 +9,29 @@ import { Badge } from "@/components/ui/badge";
 import { MotionReveal } from "@/design/motion/Reveal";
 import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
 
-export function OperationsDashboard() {
+export function OperationsDashboard({ orgId }: { orgId?: Id<"organizations"> }) {
   const [selectedLeadStatus, setSelectedLeadStatus] = useState<string>("all");
+  const capabilities = useQuery(
+    api.users.getMyCapabilities,
+    orgId ? { orgId } : "skip",
+  );
 
   const leads = useQuery(
     api.leads.list,
-    selectedLeadStatus !== "all"
-      ? { status: selectedLeadStatus as "new" | "contacted" | "qualified" | "scheduled" | "closed" | "lost" }
-      : {}
+    orgId && capabilities?.canManageLeads
+      ? selectedLeadStatus !== "all"
+        ? { orgId, status: selectedLeadStatus as "new" | "contacted" | "qualified" | "scheduled" | "closed" | "lost" }
+        : { orgId }
+      : "skip"
   );
-  const jobs = useQuery(api.jobs.list, {});
-  const auditEvents = useQuery(api.auditEvents.listRecent, { limit: 15 });
+  const jobs = useQuery(
+    api.jobs.list,
+    orgId && capabilities?.canReadJobs ? { orgId } : "skip",
+  );
+  const auditEvents = useQuery(
+    api.auditEvents.listRecent,
+    orgId && capabilities?.canReadAudit ? { orgId, limit: 15 } : "skip",
+  );
 
   const updateLeadStatus = useMutation(api.leads.updateStatus);
   const updateJobStatus = useMutation(api.jobs.updateStatus);
@@ -27,6 +39,16 @@ export function OperationsDashboard() {
   const [updatingLeadId, setUpdatingLeadId] = useState<string | null>(null);
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
+
+  if (!orgId) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          Operations tenant context is not configured.
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleLeadStatusChange = async (leadId: Id<"leads">, newStatus: "new" | "contacted" | "qualified" | "scheduled" | "closed" | "lost") => {
     setOpError(null);
@@ -108,7 +130,7 @@ export function OperationsDashboard() {
                 Track incoming estimate requests and pipeline conversions
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            {capabilities?.canManageLeads && <div className="flex items-center gap-2">
               <label htmlFor="lead-status-filter" className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Filter:
               </label>
@@ -127,12 +149,24 @@ export function OperationsDashboard() {
                 <option value="closed">Closed</option>
                 <option value="lost">Lost</option>
               </select>
-            </div>
+            </div>}
           </div>
 
-          {leads === undefined ? (
+          {capabilities === undefined ? (
             <Card data-testid="leads-loading-card">
               <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm animate-pulse">
+                Loading lead pipeline from Convex...
+              </CardContent>
+            </Card>
+          ) : !capabilities.canManageLeads ? (
+            <Card data-testid="leads-restricted-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Lead management is not available for this organization role.
+              </CardContent>
+            </Card>
+          ) : leads === undefined ? (
+            <Card data-testid="leads-loading-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground animate-pulse">
                 Loading lead pipeline from Convex...
               </CardContent>
             </Card>
@@ -208,9 +242,21 @@ export function OperationsDashboard() {
             Active Field Operations
           </h2>
 
-          {jobs === undefined ? (
+          {capabilities === undefined ? (
             <Card data-testid="ops-jobs-loading-card">
               <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm animate-pulse">
+                Loading job executions...
+              </CardContent>
+            </Card>
+          ) : !capabilities.canReadJobs ? (
+            <Card data-testid="ops-jobs-restricted-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Job operations are not available for this organization role.
+              </CardContent>
+            </Card>
+          ) : jobs === undefined ? (
+            <Card data-testid="ops-jobs-loading-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground animate-pulse">
                 Loading job executions...
               </CardContent>
             </Card>
@@ -249,7 +295,7 @@ export function OperationsDashboard() {
                         <span>Crew Assigned:</span>
                         <span className="font-semibold text-slate-900 dark:text-slate-100">{job.crewIds.length} Painters</span>
                       </div>
-                      <div className="flex justify-between items-center pt-2">
+                      {capabilities.canUpdateJobs && <div className="flex justify-between items-center pt-2">
                         <span className="text-xs text-slate-500">Update Status:</span>
                         <select
                           className="h-8 rounded text-xs border border-slate-300 bg-white px-2 py-0 focus-visible:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
@@ -263,7 +309,7 @@ export function OperationsDashboard() {
                           <option value="completed">Completed</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
-                      </div>
+                      </div>}
                     </CardContent>
                   </Card>
                 </MotionStaggerItem>
@@ -280,9 +326,21 @@ export function OperationsDashboard() {
             Recent System Audit Trail
           </h2>
 
-          {auditEvents === undefined ? (
+          {capabilities === undefined ? (
             <Card data-testid="audit-loading-card">
               <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm animate-pulse">
+                Loading audit trail from Convex...
+              </CardContent>
+            </Card>
+          ) : !capabilities.canReadAudit ? (
+            <Card data-testid="audit-restricted-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Audit logs are restricted to organization administrators and owners.
+              </CardContent>
+            </Card>
+          ) : auditEvents === undefined ? (
+            <Card data-testid="audit-loading-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground animate-pulse">
                 Loading audit trail from Convex...
               </CardContent>
             </Card>

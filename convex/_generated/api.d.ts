@@ -9,7 +9,11 @@
  */
 
 import type * as auditEvents from "../auditEvents.js";
+import type * as auth from "../auth.js";
+import type * as checklists from "../checklists.js";
 import type * as estimates from "../estimates.js";
+import type * as fileActions from "../fileActions.js";
+import type * as files from "../files.js";
 import type * as jobs from "../jobs.js";
 import type * as leads from "../leads.js";
 import type * as users from "../users.js";
@@ -22,7 +26,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auditEvents: typeof auditEvents;
+  auth: typeof auth;
+  checklists: typeof checklists;
   estimates: typeof estimates;
+  fileActions: typeof fileActions;
+  files: typeof files;
   jobs: typeof jobs;
   leads: typeof leads;
   users: typeof users;
@@ -54,4 +62,8 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+import type { ComponentApi as WorkOSAuthKitComponentApi } from "@convex-dev/workos-authkit/_generated/component.js";
+
+export declare const components: {
+  workOSAuthKit: WorkOSAuthKitComponentApi<"workOSAuthKit">;
+};

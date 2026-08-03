@@ -18,7 +18,6 @@ export interface EstimateFormProps {
 
 export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}) {
   const createLead = useMutation(api.leads.create);
-  const createEstimate = useMutation(api.estimates.create);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -37,7 +36,13 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
     setIsSubmitting(true);
 
     try {
+      if (!defaultOrgId) {
+        throw new Error(
+          "Estimate intake is temporarily unavailable. Please contact us directly.",
+        );
+      }
       const result = await createLead({
+        orgId: defaultOrgId,
         idempotencyKey: crypto.randomUUID(),
         fullName,
         email,
@@ -47,16 +52,6 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
         projectDetails,
         sourcePath: "/estimate",
       });
-
-      if (defaultOrgId) {
-        await createEstimate({
-          leadId: result.id,
-          orgId: defaultOrgId,
-          scope: projectDetails || `Estimate request for ${segment} project`,
-          pricing: 0,
-          status: "draft",
-        });
-      }
 
       setSubmittedLeadId(result.id);
       onSuccess?.(result.id);

@@ -11,12 +11,29 @@ import { MotionReveal } from "@/design/motion/Reveal";
 import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
 import { MotionPressable } from "@/design/motion/Pressable";
 
-export function CrewDashboard() {
-  const jobs = useQuery(api.jobs.list, {});
+export function CrewDashboard({ orgId }: { orgId?: Id<"organizations"> }) {
+  const capabilities = useQuery(
+    api.users.getMyCapabilities,
+    orgId ? { orgId } : "skip",
+  );
+  const jobs = useQuery(
+    api.jobs.list,
+    orgId && capabilities?.canReadJobs ? { orgId } : "skip",
+  );
   const updateStatus = useMutation(api.jobs.updateStatus);
 
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
+
+  if (!orgId) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-sm text-muted-foreground">
+          Crew tenant context is not configured.
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleUpdateStatus = async (
     jobId: Id<"jobs">,
@@ -89,9 +106,21 @@ export function CrewDashboard() {
             )}
           </div>
 
-          {jobs === undefined ? (
+          {capabilities === undefined ? (
             <Card data-testid="crew-jobs-loading-card">
               <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm animate-pulse">
+                Loading crew dispatch schedule from Convex...
+              </CardContent>
+            </Card>
+          ) : !capabilities.canReadJobs ? (
+            <Card data-testid="crew-jobs-restricted-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Assigned jobs are not available for this organization role.
+              </CardContent>
+            </Card>
+          ) : jobs === undefined ? (
+            <Card data-testid="crew-jobs-loading-card">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground animate-pulse">
                 Loading crew dispatch schedule from Convex...
               </CardContent>
             </Card>
@@ -132,7 +161,7 @@ export function CrewDashboard() {
                       </CardContent>
                     </div>
 
-                    <CardContent className="pt-0">
+                    {capabilities.canUpdateJobs && <CardContent className="pt-0">
                       <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                         {job.status !== "in_progress" && (
                           <MotionPressable className="flex-1">
@@ -177,7 +206,7 @@ export function CrewDashboard() {
                           </MotionPressable>
                         )}
                       </div>
-                    </CardContent>
+                    </CardContent>}
                   </Card>
                 </MotionStaggerItem>
               ))}

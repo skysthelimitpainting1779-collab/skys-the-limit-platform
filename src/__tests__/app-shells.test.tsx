@@ -1,5 +1,22 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
+
+vi.mock("@workos-inc/authkit-nextjs", () => ({
+  authkitProxy: vi.fn(() => vi.fn()),
+  getSignInUrl: vi.fn(),
+  getSignUpUrl: vi.fn(),
+  withAuth: vi.fn(),
+}));
+
+vi.mock("@workos-inc/authkit-nextjs/components", () => ({
+  AuthKitProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAccessToken: () => ({
+    getAccessToken: vi.fn().mockResolvedValue(null),
+    refresh: vi.fn().mockResolvedValue(null),
+  }),
+  useAuth: () => ({ user: null, loading: false }),
+}));
+
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { EstimateForm } from "@/components/estimate/EstimateForm";
 import { CustomerDashboard } from "@/components/customer/CustomerDashboard";
@@ -14,9 +31,12 @@ import { Id } from "@convex/_generated/dataModel";
 // Mock convex/react hooks for unit testing component logic
 vi.mock("convex/react", () => ({
   ConvexProvider: ({ children }: { children: React.ReactNode }) => children,
+  ConvexProviderWithAuth: ({ children }: { children: React.ReactNode }) =>
+    children,
   ConvexReactClient: vi.fn().mockImplementation((url: string) => ({
     url,
   })),
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: false, isLoading: false })),
   useQuery: vi.fn((queryFn: unknown, args: unknown) => {
     if (args === "skip") return undefined;
     return [];

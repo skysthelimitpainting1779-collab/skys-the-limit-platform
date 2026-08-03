@@ -29,9 +29,14 @@ function getConvexClient(): ConvexHttpClient {
 async function persistLead(
   input: LeadPersistenceInput,
 ): Promise<LeadPersistenceResult> {
+  const orgId = process.env.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID;
+  if (!orgId || orgId.includes("REPLACE_ME")) {
+    throw new Error("LEAD_INTAKE_ORGANIZATION_NOT_CONFIGURED");
+  }
   // Browser time is retained only for boundary-test evidence. Convex assigns
   // authoritative timestamps, so the public mutation never accepts them.
   const mutationInput = {
+    orgId,
     idempotencyKey: input.idempotencyKey,
     fullName: input.fullName,
     email: input.email,

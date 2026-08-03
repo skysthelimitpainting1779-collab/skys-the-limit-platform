@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MotionReveal } from "@/design/motion/Reveal";
 import { Badge } from "@/components/ui/badge";
 import { CrewDashboard } from "@/components/crew/CrewDashboard";
+import type { Id } from "@convex/_generated/dataModel";
 
 export const metadata: Metadata = {
   title: "Crew Workspace | Sky's the Limit Painting",
@@ -9,6 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function CrewPage() {
+  const orgId = process.env.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID as
+    | Id<"organizations">
+    | undefined;
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -24,7 +28,7 @@ export default function CrewPage() {
           </div>
         </MotionReveal>
 
-        <CrewDashboard />
+        <CrewDashboard orgId={orgId} />
       </div>
     </div>
   );
