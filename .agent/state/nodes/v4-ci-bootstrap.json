@@ -1,0 +1,48 @@
+{
+  "node_id": "v4-ci-bootstrap",
+  "title": "Independent CI Remediation Evaluation — Anonymous Convex WorkOS and Tenant Bootstrap",
+  "timestamp": "2026-08-03T02:12:00Z",
+  "status": "completed",
+  "evaluator": "v4_security_peer_evaluator",
+  "independent_evaluator": true,
+  "verdict": "pass",
+  "target": {
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform-v4-security",
+    "branch": "fix/v4-checklist-files-security",
+    "parent_commit": "20fa1e5b3504b87255a475280ff71c2b57cc589a",
+    "candidate_commit": "9e90ed9634fbb10076f06af060a2a96e7a85af92",
+    "candidate_state": "committed and rechecked in an exact detached physical checkout"
+  },
+  "changed_files": [
+    ".github/workflows/lead-intake-e2e.yml",
+    "convex/ci.ts",
+    "src/__tests__/lead-intake-workflow.test.ts"
+  ],
+  "evidence": {
+    "convex_visibility_boundary": "pass — ensureLocalTestOrganization is registered with internalMutation, has validators, has no public query/mutation/action wrapper, and is absent from browser-callable API paths; current Convex documentation confirms internal functions are not exposed to clients",
+    "bootstrap_scope": "pass — the helper accepts only the local-ci literal, uses the unique by_slug index, idempotently reuses the isolated organization, and creates only the active tenant required by anonymous lead-intake validation",
+    "credential_isolation": "pass — the job contains explicit non-secret fail-closed local values, read-only repository permissions, no GitHub secret interpolation, no Convex deploy key, no --prod selector, and no cloud or production URL; .env.local is removed before anonymous local initialization",
+    "workos_configuration": "pass — all AuthKit inputs required by the application are present; only deployment-scoped values are copied into the anonymous Convex deployment, while cookie and redirect inputs remain scoped to the local Next.js process; external effects remain disabled",
+    "workflow_safety": "pass — set -euo pipefail, bounded readiness loops, child-process liveness checks, the pre-existing Convex readiness condition, non-empty tenant ID validation, failure logs, and unconditional local-process cleanup are preserved",
+    "tenant_binding": "pass — the internal mutation returns a real Convex organizations ID and the workflow exports it as NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID before building, so anonymous leads remain bound to requireActiveOrganization instead of using an unscoped fixture",
+    "protected_preview_gate": "pass — preview-verification.yml, release-verification.yml, and deployment environment validation are unchanged between parent and candidate; local fake credentials neither satisfy nor replace the protected-preview WorkOS, Convex, Blob, exact-head, or owner-approval gates",
+    "test_first_contract": "pass — the three added tests assert complete deployment-scoped WorkOS setup, complete local AuthKit inputs with effects disabled, and internal-only tenant bootstrap wiring",
+    "focused_test": "pass — independent rerun: src/__tests__/lead-intake-workflow.test.ts, 1 file / 3 tests",
+    "full_verification": "pass — exact detached commit at E:/DevCaches/verify-v4-137f2ee passed skills, environment, assets, ESLint, TypeScript, 18 Vitest suites / 103 tests, and the Next.js 16.2.12 Turbopack production build",
+    "dependency_audit": "pass — npm audit --omit=dev --audit-level=high reported 0 vulnerabilities for the exact committed lockfile",
+    "commit_integrity": "pass — candidate has exactly parent 20fa1e5b3504b87255a475280ff71c2b57cc589a, the detached checkout was clean, and git show --check reported no whitespace errors",
+    "context7": "pass — current official Convex documentation confirms internal-function visibility and trusted CLI invocation; current AuthKit Next.js documentation confirms required local inputs and environment-specific credential isolation",
+    "frontend_policy": "not applicable — no frontend component or page was modified, so raw Tailwind color and operational-claim checks have no changed surface"
+  },
+  "release_gates": [
+    "Require the Lead Intake E2E GitHub Actions job to pass on exact commit 9e90ed9634fbb10076f06af060a2a96e7a85af92 after publication; the GitHub-hosted anonymous local Convex lifecycle was not reproduced inside this Windows evaluator session.",
+    "Do not configure the local fail-closed WorkOS values in Vercel Preview, Production, or cloud Convex deployments; protected preview must retain independently provisioned non-production credentials.",
+    "Do not invoke ci:ensureLocalTestOrganization against Preview or Production; it is a trusted internal CLI seam intended only for the anonymous local CI deployment.",
+    "Keep exact-head CI, Security, Vercel Preview readiness, independent approval, and owner approval gates green before merge or release."
+  ],
+  "limitations": [
+    "No live WorkOS tenant, cloud Convex deployment, Vercel Preview credential, production credential, or production data was accessed.",
+    "The exact GitHub-hosted service orchestration remains a post-publication CI gate; code-level, workflow-contract, exact-lockfile, and production-build verification are complete."
+  ],
+  "notes": "The focused CI remediation is safe to publish for exact-head CI evaluation. Internal/public visibility, credential isolation, tenant binding, and workflow cleanup fail closed; protected-preview provisioning remains mandatory and separate."
+}
