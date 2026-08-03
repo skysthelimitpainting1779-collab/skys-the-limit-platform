@@ -2,48 +2,25 @@ import { AuthKit, type AuthFunctions } from "@convex-dev/workos-authkit";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
+import { requireConfiguredWorkOSValue } from "./lib/workosEnvironment";
 
-const configuredClientId = process.env.WORKOS_CLIENT_ID;
-const configuredApiKey = process.env.WORKOS_API_KEY;
-const configuredWebhookSecret = process.env.WORKOS_WEBHOOK_SECRET;
-const configuredActionSecret = process.env.WORKOS_ACTION_SECRET;
-const unconfiguredWebhookSecret = `unconfigured_${globalThis.crypto.randomUUID()}`;
-const unconfiguredActionSecret = `unconfigured_${globalThis.crypto.randomUUID()}`;
-const unconfiguredApiKey = `${["sk", "test"].join("_")}_UNCONFIGURED_FAIL_CLOSED`;
-
-export function isConfiguredEnvironmentValue(value: string | undefined) {
-  if (!value?.trim()) return false;
-  const normalized = value.trim().toLowerCase();
-  return ![
-    "replace_me",
-    "replace_with_",
-    "unconfigured",
-    "placeholder",
-    "your-deployment",
-    "generate_",
-  ].some((marker) => normalized.includes(marker));
-}
+const configuredClientId = requireConfiguredWorkOSValue("WORKOS_CLIENT_ID");
+const configuredApiKey = requireConfiguredWorkOSValue("WORKOS_API_KEY");
+const configuredWebhookSecret = requireConfiguredWorkOSValue(
+  "WORKOS_WEBHOOK_SECRET",
+);
+const configuredActionSecret = requireConfiguredWorkOSValue(
+  "WORKOS_ACTION_SECRET",
+);
 
 const authFunctions: AuthFunctions = internal.auth;
 
 export const authKit = new AuthKit<DataModel>(components.workOSAuthKit, {
   authFunctions,
-  clientId:
-    isConfiguredEnvironmentValue(configuredClientId)
-      ? configuredClientId
-      : "client_UNCONFIGURED_FAIL_CLOSED",
-  apiKey:
-    isConfiguredEnvironmentValue(configuredApiKey)
-      ? configuredApiKey
-      : unconfiguredApiKey,
-  webhookSecret:
-    isConfiguredEnvironmentValue(configuredWebhookSecret)
-      ? configuredWebhookSecret
-      : unconfiguredWebhookSecret,
-  actionSecret:
-    isConfiguredEnvironmentValue(configuredActionSecret)
-      ? configuredActionSecret
-      : unconfiguredActionSecret,
+  clientId: configuredClientId,
+  apiKey: configuredApiKey,
+  webhookSecret: configuredWebhookSecret,
+  actionSecret: configuredActionSecret,
 });
 
 type WorkOSProfile = {

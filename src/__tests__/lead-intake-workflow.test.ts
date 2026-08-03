@@ -21,6 +21,18 @@ describe("lead-intake CI isolation contract", () => {
         `npx convex env set ${variable} "$${variable}"`,
       );
     }
+
+    const initIndex = workflow.indexOf(
+      "CONVEX_AGENT_MODE=anonymous npx convex init",
+    );
+    const firstEnvironmentWriteIndex = workflow.indexOf("npx convex env set");
+    const devIndex = workflow.indexOf(
+      "CONVEX_AGENT_MODE=anonymous npx convex dev",
+    );
+
+    expect(initIndex).toBeGreaterThanOrEqual(0);
+    expect(firstEnvironmentWriteIndex).toBeGreaterThan(initIndex);
+    expect(devIndex).toBeGreaterThan(firstEnvironmentWriteIndex);
   });
 
   it("provides complete local AuthKit inputs without deployment credentials", () => {
