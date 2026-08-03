@@ -3,27 +3,32 @@ import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
-const configuredClientId = process.env.WORKOS_CLIENT_ID;
-const configuredApiKey = process.env.WORKOS_API_KEY;
-const configuredWebhookSecret = process.env.WORKOS_WEBHOOK_SECRET;
-const unconfiguredWebhookSecret = `unconfigured_${globalThis.crypto.randomUUID()}`;
+type RequiredWorkOSValue =
+  | "WORKOS_CLIENT_ID"
+  | "WORKOS_API_KEY"
+  | "WORKOS_WEBHOOK_SECRET";
+
+function requireConfiguredWorkOSValue(name: RequiredWorkOSValue): string {
+  const value = process.env[name];
+  if (!value || value.includes("REPLACE_ME")) {
+    throw new Error(`${name} must be configured for Convex AuthKit`);
+  }
+  return value;
+}
+
+const configuredClientId = requireConfiguredWorkOSValue("WORKOS_CLIENT_ID");
+const configuredApiKey = requireConfiguredWorkOSValue("WORKOS_API_KEY");
+const configuredWebhookSecret = requireConfiguredWorkOSValue(
+  "WORKOS_WEBHOOK_SECRET",
+);
 
 const authFunctions: AuthFunctions = internal.auth;
 
 export const authKit = new AuthKit<DataModel>(components.workOSAuthKit, {
   authFunctions,
-  clientId:
-    configuredClientId && !configuredClientId.includes("REPLACE_ME")
-      ? configuredClientId
-      : "client_UNCONFIGURED_FAIL_CLOSED",
-  apiKey:
-    configuredApiKey && !configuredApiKey.includes("REPLACE_ME")
-      ? configuredApiKey
-      : "sk_test_UNCONFIGURED_FAIL_CLOSED",
-  webhookSecret:
-    configuredWebhookSecret && !configuredWebhookSecret.includes("REPLACE_ME")
-      ? configuredWebhookSecret
-      : unconfiguredWebhookSecret,
+  clientId: configuredClientId,
+  apiKey: configuredApiKey,
+  webhookSecret: configuredWebhookSecret,
 });
 
 type WorkOSProfile = {

@@ -12,10 +12,13 @@ describe("portal security regression contract", () => {
     const auth = source("convex/auth.ts");
     const http = source("convex/http.ts");
 
-    expect(authConfig).toContain("authKit.getAuthConfigProviders()");
+    expect(authConfig).toContain('type: "customJwt"');
+    expect(authConfig).toContain("process.env.WORKOS_CLIENT_ID");
+    expect(authConfig).not.toContain('from "./auth"');
     expect(auth).toContain("new AuthKit<DataModel>");
     expect(auth).toContain("authKit.events");
-    expect(auth).toContain("globalThis.crypto.randomUUID()");
+    expect(auth).toContain("requireConfiguredWorkOSValue");
+    expect(auth).not.toContain("globalThis.crypto.randomUUID()");
     expect(auth).not.toContain("whsec_UNCONFIGURED_FAIL_CLOSED");
     expect(http).toContain("authKit.registerRoutes(http)");
   });

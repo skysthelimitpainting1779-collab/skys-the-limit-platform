@@ -8,6 +8,12 @@ import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 
+Object.assign(process.env, {
+  WORKOS_CLIENT_ID: "client_local_convex_test",
+  WORKOS_API_KEY: "sk_" + "test_local_convex_test",
+  WORKOS_WEBHOOK_SECRET: "whsec_" + "local_convex_test",
+});
+
 const modules = import.meta.glob("./**/*.ts");
 
 const issuerA = "https://issuer-a.example/";
