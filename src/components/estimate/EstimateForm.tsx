@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,16 +14,14 @@ export interface EstimateFormProps {
   onSuccess?: (leadId: string) => void;
 }
 
-export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}) {
-  const createLead = useMutation(api.leads.create);
-  const createEstimate = useMutation(api.estimates.create);
-
+export function EstimateForm({ onSuccess }: EstimateFormProps = {}) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [serviceAddress, setServiceAddress] = useState("");
   const [segment, setSegment] = useState<"residential" | "commercial" | "public-sector">("residential");
   const [projectDetails, setProjectDetails] = useState("");
+  const [contactConsent, setContactConsent] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedLeadId, setSubmittedLeadId] = useState<string | null>(null);
@@ -37,29 +33,35 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
     setIsSubmitting(true);
 
     try {
-      const result = await createLead({
-        idempotencyKey: crypto.randomUUID(),
-        fullName,
-        email,
-        phone,
-        segment,
-        serviceAddress,
-        projectDetails,
-        sourcePath: "/estimate",
+      if (!contactConsent) {
+        throw new Error("Consent is required before we can contact you.");
+      }
+      const response = await fetch("/api/estimate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          idempotencyKey: crypto.randomUUID(),
+          fullName,
+          email,
+          phone,
+          segment,
+          serviceAddress,
+          projectDetails,
+          contactConsent,
+          sourcePath: "/estimate",
+          companyWebsite: "",
+        }),
       });
-
-      if (defaultOrgId) {
-        await createEstimate({
-          leadId: result.id,
-          orgId: defaultOrgId,
-          scope: projectDetails || `Estimate request for ${segment} project`,
-          pricing: 0,
-          status: "draft",
-        });
+      const result = (await response.json()) as {
+        receiptId?: string;
+        error?: string;
+      };
+      if (!response.ok || !result.receiptId) {
+        throw new Error(result.error ?? "The estimate request could not be submitted.");
       }
 
-      setSubmittedLeadId(result.id);
-      onSuccess?.(result.id);
+      setSubmittedLeadId(result.receiptId);
+      onSuccess?.(result.receiptId);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to submit estimate request. Please try again.";
       setError(msg);
@@ -75,6 +77,7 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
     setServiceAddress("");
     setSegment("residential");
     setProjectDetails("");
+    setContactConsent(false);
     setSubmittedLeadId(null);
     setError(null);
   };
@@ -198,8 +201,23 @@ export function EstimateForm({ defaultOrgId, onSuccess }: EstimateFormProps = {}
         />
       </div>
 
+      <div className="flex items-start gap-3 rounded-md border border-border p-4">
+        <input
+          id="contactConsent"
+          type="checkbox"
+          required
+          checked={contactConsent}
+          onChange={(event) => setContactConsent(event.target.checked)}
+          className="mt-0.5 size-4 rounded border-input accent-primary"
+        />
+        <Label htmlFor="contactConsent" className="text-sm leading-5">
+          I agree that Sky&apos;s the Limit Painting may contact me about this
+          estimate request.
+        </Label>
+      </div>
+
       <MotionPressable>
-        <Button type="submit" disabled={isSubmitting} className="w-full text-base font-semibold shadow-lg">
+        <Button type="submit" disabled={isSubmitting || !contactConsent} className="w-full text-base font-semibold shadow-lg">
           {isSubmitting ? "Submitting Estimate Request..." : "Submit Estimate Request"}
         </Button>
       </MotionPressable>

@@ -1,236 +1,476 @@
 "use client";
 
-import React, { useState } from "react";
-import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Id } from "@convex/_generated/dataModel";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import type { Id } from "@convex/_generated/dataModel";
+import { useAction, usePaginatedQuery, useQuery } from "convex/react";
+import {
+  CalendarDays,
+  CircleDollarSign,
+  Download,
+  FileLock2,
+  Home,
+  Mail,
+  MapPin,
+  MessageSquareText,
+  Phone,
+  ShieldCheck,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { usePortalWorkspace } from "@/components/portal/PortalShell";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { MotionReveal } from "@/design/motion/Reveal";
-import { MotionStagger, MotionStaggerItem } from "@/design/motion/Stagger";
-import { MotionPressable } from "@/design/motion/Pressable";
-import { computeTotalFromPricing } from "@convex/estimates";
 
-export interface CustomerDashboardProps {
-  defaultLeadId?: string;
-  defaultOrgId?: string;
+type CustomerPortalResult = {
+  customer: {
+    _id: Id<"customers">;
+    orgId: Id<"organizations">;
+    name: string;
+    email: string;
+    phone?: string;
+    status: string;
+  };
+  properties: Array<{
+    _id: Id<"properties">;
+    label?: string;
+    address: string;
+    propertyType?: string;
+    accessNotes?: string;
+  }>;
+  estimates: Array<{
+    _id: Id<"estimates">;
+    propertyId?: Id<"properties">;
+    scope: string;
+    pricing: number | Record<string, unknown>;
+    status: string;
+    createdAt: number;
+  }>;
+  jobs: Array<{
+    _id: Id<"jobs">;
+    propertyId?: Id<"properties">;
+    title?: string;
+    address?: string;
+    status: string;
+    schedule: number | string | Record<string, unknown>;
+  }>;
+  updates: Array<{
+    _id: Id<"projectUpdates">;
+    jobId: Id<"jobs">;
+    message: string;
+    createdAt: number;
+  }>;
+};
+
+function formatPricing(pricing: number | Record<string, unknown>) {
+  if (typeof pricing === "number") {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(pricing);
+  }
+  for (const key of ["total", "amount", "grandTotal"]) {
+    const value = pricing[key];
+    if (typeof value === "number") {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      }).format(value);
+    }
+  }
+  return "Itemized pricing available";
 }
 
-export function CustomerDashboard({ defaultLeadId = "", defaultOrgId }: CustomerDashboardProps) {
-  const [leadIdInput, setLeadIdInput] = useState(defaultLeadId);
-  const [activeLeadId, setActiveLeadId] = useState<string | null>(defaultLeadId || null);
+function formatSchedule(schedule: CustomerPortalResult["jobs"][number]["schedule"]) {
+  if (typeof schedule === "number") return new Date(schedule).toLocaleString();
+  if (typeof schedule === "string") return schedule;
+  for (const key of ["label", "date", "startDate", "start"]) {
+    const value = schedule[key];
+    if (typeof value === "string") return value;
+    if (typeof value === "number") return new Date(value).toLocaleString();
+  }
+  return "Schedule details are being finalized";
+}
 
-  const estimates = useQuery(
-    api.estimates.listByLead,
-    activeLeadId ? { leadId: activeLeadId as Id<"leads"> } : "skip"
+function formatFileSize(size: number) {
+  if (size < 1_024) return `${size} B`;
+  if (size < 1_024 * 1_024) return `${(size / 1_024).toFixed(1)} KB`;
+  return `${(size / (1_024 * 1_024)).toFixed(1)} MB`;
+}
+
+function PortalSection({
+  id,
+  icon,
+  title,
+  description,
+  children,
+}: {
+  id: string;
+  icon: ReactNode;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className="scroll-mt-32 rounded-xl border border-border bg-card">
+      <header className="border-b border-border px-4 py-4 sm:px-5">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            {icon}
+          </span>
+          <div>
+            <h2 className="text-lg font-bold tracking-tight">{title}</h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              {description}
+            </p>
+          </div>
+        </div>
+      </header>
+      <div className="p-4 sm:p-5">{children}</div>
+    </section>
   );
+}
 
-  const jobs = useQuery(
-    api.jobs.list,
-    defaultOrgId ? { orgId: defaultOrgId as Id<"organizations"> } : {}
+function EmptyState({ children }: { children: ReactNode }) {
+  return (
+    <p className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center text-sm text-muted-foreground">
+      {children}
+    </p>
   );
+}
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (leadIdInput.trim()) {
-      setActiveLeadId(leadIdInput.trim());
-    } else {
-      setActiveLeadId(null);
-    }
-  };
+export function CustomerDashboard() {
+  const workspace = usePortalWorkspace();
+  const orgId = workspace?.selectedOrgId ?? null;
+  const hasCustomerRole = workspace?.activeMembership?.role === "customer";
+  const result = useQuery(
+    api.customers.getMyPortal,
+    orgId && hasCustomerRole ? { orgId } : "skip",
+  ) as
+    | CustomerPortalResult
+    | null
+    | undefined;
+  const shouldLoadDocuments =
+    orgId !== null &&
+    hasCustomerRole &&
+    result !== undefined &&
+    result !== null;
+  const {
+    results: documents,
+    status: documentStatus,
+    loadMore: loadMoreDocuments,
+  } = usePaginatedQuery(
+    api.files.listMyCustomerDocuments,
+    shouldLoadDocuments && orgId ? { orgId } : "skip",
+    { initialNumItems: 25 },
+  );
+  const getCustomerDownloadUrl = useAction(
+    api.fileActions.getCustomerDownloadUrl,
+  );
+  const [downloadingDocumentId, setDownloadingDocumentId] =
+    useState<Id<"documents"> | null>(null);
+  const [documentError, setDocumentError] = useState<string | null>(null);
 
-  const formatPricing = (pricing: number | Record<string, unknown>) => {
-    const total = computeTotalFromPricing(pricing);
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(total);
-  };
+  async function downloadDocument(documentId: Id<"documents">) {
+    setDownloadingDocumentId(documentId);
+    setDocumentError(null);
+    try {
+      const { url } = await getCustomerDownloadUrl({ documentId });
+      window.location.assign(url);
+    } catch {
+      setDocumentError(
+        "This document could not be authorized. Refresh the page or contact the office.",
+      );
+    } finally {
+      setDownloadingDocumentId(null);
+    }
+  }
 
-  const formatSchedule = (schedule: number | Record<string, unknown> | string) => {
-    if (typeof schedule === "number") {
-      return new Date(schedule).toLocaleDateString();
-    }
-    if (typeof schedule === "string") {
-      return schedule;
-    }
-    if (typeof schedule === "object" && schedule !== null) {
-      const s = schedule as Record<string, unknown>;
-      return (typeof s.date === "string" ? s.date : null) ||
-        (typeof s.startDate === "string" ? s.startDate : null) ||
-        JSON.stringify(schedule);
-    }
-    return "Scheduled";
-  };
+  if (!orgId && workspace?.context !== undefined) {
+    return (
+      <div className="mt-8 rounded-xl border border-border bg-card p-6">
+        <h2 className="font-bold">No active customer organization</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          A verified customer membership is required before project records can be loaded.
+        </p>
+      </div>
+    );
+  }
 
-  const getEstimateBadgeVariant = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return "brand";
-      case "sent":
-        return "secondary";
-      case "declined":
-      case "expired":
-        return "destructive";
-      default:
-        return "outline";
-    }
-  };
+  if (orgId && workspace?.activeMembership && !hasCustomerRole) {
+    return (
+      <div className="mt-8 rounded-xl border border-border bg-card p-6">
+        <h2 className="font-bold">Customer records are not available for this role</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This page opens only for an exact customer membership and customer-record binding.
+        </p>
+      </div>
+    );
+  }
 
-  const getJobBadgeVariant = (status: string) => {
-    switch (status) {
-      case "in_progress":
-        return "brand";
-      case "completed":
-        return "default";
-      case "cancelled":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
+  if (result === undefined) {
+    return (
+      <div className="mt-8 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+        Verifying your customer account binding…
+      </div>
+    );
+  }
+
+  if (result === null) {
+    return (
+      <MotionReveal direction="up">
+        <section className="mt-8 rounded-xl border border-border bg-card p-6 sm:p-8">
+          <div className="flex size-11 items-center justify-center rounded-lg bg-muted">
+            <ShieldCheck className="size-5" aria-hidden="true" />
+          </div>
+          <h2 className="mt-5 text-2xl font-extrabold tracking-tight">
+            Secure account linking required
+          </h2>
+          <p className="mt-3 max-w-[65ch] text-sm leading-6 text-muted-foreground">
+            Your WorkOS session is valid, but it is not yet bound to a customer
+            record. Project information remains hidden until an authorized
+            invitation links this exact identity. Email addresses and record IDs
+            are never accepted as proof of ownership.
+          </p>
+          <p className="mt-4 text-sm font-semibold">
+            Contact the office to complete a verified account invitation.
+          </p>
+        </section>
+      </MotionReveal>
+    );
+  }
+
+  const { customer, properties, estimates, jobs, updates } = result;
 
   return (
-    <div className="space-y-8" data-testid="customer-dashboard">
-      <MotionReveal direction="down">
-        <Card data-testid="customer-lookup-card">
-          <CardHeader>
-            <CardTitle>Look Up Your Project Estimates</CardTitle>
-            <CardDescription>Enter your Lead Reference ID from your estimate confirmation</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSearch} className="flex gap-4 flex-col sm:flex-row">
-              <Input
-                placeholder="Enter Lead ID (e.g. leads_123)..."
-                value={leadIdInput}
-                onChange={(e) => setLeadIdInput(e.target.value)}
-                className="flex-1"
-                aria-label="Lead Reference ID"
-              />
-              <MotionPressable>
-                <Button type="submit" variant="default" className="w-full sm:w-auto">
-                  Lookup Estimates
-                </Button>
-              </MotionPressable>
-            </form>
-          </CardContent>
-        </Card>
-      </MotionReveal>
-
-      {/* Active Estimates Section */}
-      <MotionReveal direction="up" delay={0.1}>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-              Your Estimates
-            </h2>
-            {activeLeadId && (
-              <Badge variant="outline">
-                Filter: <span className="font-mono ml-1">{activeLeadId}</span>
-              </Badge>
-            )}
+    <div className="mt-8 space-y-5" data-testid="customer-dashboard">
+      <MotionReveal direction="up">
+        <section className="rounded-xl border border-border bg-foreground p-5 text-background sm:p-6">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-background/65">
+                Verified customer record
+              </p>
+              <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
+                {customer.name}
+              </h2>
+              <div className="mt-4 flex flex-col gap-2 text-sm text-background/75 sm:flex-row sm:flex-wrap sm:gap-x-5">
+                <span className="inline-flex items-center gap-2">
+                  <Mail className="size-4" aria-hidden="true" />
+                  {customer.email}
+                </span>
+                {customer.phone ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Phone className="size-4" aria-hidden="true" />
+                    {customer.phone}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            <Badge variant="secondary" className="w-fit capitalize">
+              {customer.status.replaceAll("_", " ")}
+            </Badge>
           </div>
-
-          {!activeLeadId ? (
-            <Card data-testid="estimates-prompt-card">
-              <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-                Enter your Lead Reference ID above to load your active painting proposals.
-              </CardContent>
-            </Card>
-          ) : estimates === undefined ? (
-            <Card data-testid="estimates-loading-card">
-              <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm animate-pulse">
-                Loading estimate records from Convex...
-              </CardContent>
-            </Card>
-          ) : estimates.length === 0 ? (
-            <Card data-testid="estimates-empty-card">
-              <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-                No estimates found for lead ID <span className="font-mono">{activeLeadId}</span>.
-              </CardContent>
-            </Card>
-          ) : (
-            <MotionStagger className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(estimates as Array<{ _id: string; scope: string; status: string; pricing: number | Record<string, unknown>; createdAt: number }>).map((est) => (
-                <MotionStaggerItem key={est._id}>
-                  <Card data-testid={`estimate-card-${est._id}`}>
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg font-semibold">{est.scope}</CardTitle>
-                        <CardDescription className="text-xs font-mono">ID: {est._id}</CardDescription>
-                      </div>
-                      <Badge variant={getEstimateBadgeVariant(est.status)}>
-                        {est.status.toUpperCase()}
-                      </Badge>
-                    </CardHeader>
-                    <CardContent className="pt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                      <div className="flex justify-between items-center font-medium text-slate-900 dark:text-slate-100">
-                        <span>Total Pricing:</span>
-                        <span className="text-lg font-bold text-[#E65100]">
-                          {formatPricing(est.pricing)}
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-400">
-                        Created: {new Date(est.createdAt).toLocaleDateString()}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </MotionStaggerItem>
-              ))}
-            </MotionStagger>
-          )}
-        </div>
+        </section>
       </MotionReveal>
 
-      {/* Active Jobs & Project Status Section */}
-      <MotionReveal direction="up" delay={0.2}>
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            Scheduled Jobs & Project Execution
-          </h2>
+      <nav className="flex gap-2 overflow-x-auto pb-1" aria-label="Customer record sections">
+        {[
+          ["properties", "Properties"],
+          ["estimates", "Estimates"],
+          ["schedule", "Schedule"],
+          ["updates", "Updates"],
+          ["documents", "Documents"],
+        ].map(([href, label]) => (
+          <a
+            key={href}
+            href={`#${href}`}
+            className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-border bg-card px-4 text-sm font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
 
-          {jobs === undefined ? (
-            <Card data-testid="jobs-loading-card">
-              <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm animate-pulse">
-                Loading job schedule from Convex...
-              </CardContent>
-            </Card>
-          ) : jobs.length === 0 ? (
-            <Card data-testid="jobs-empty-card">
-              <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-                No active jobs currently scheduled.
-              </CardContent>
-            </Card>
-          ) : (
-            <MotionStagger className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {(jobs as Array<{ _id: string; status: string; schedule: number | string | Record<string, unknown>; crewIds: string[]; estimateId: string }>).map((job) => (
-                <MotionStaggerItem key={job._id}>
-                  <Card data-testid={`job-card-${job._id}`}>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base font-semibold">Job Reference</CardTitle>
-                        <Badge variant={getJobBadgeVariant(job.status)}>
-                          {job.status.replace("_", " ").toUpperCase()}
-                        </Badge>
-                      </div>
-                      <CardDescription className="font-mono text-xs">{job._id}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="text-sm space-y-2 text-slate-600 dark:text-slate-400">
-                      <div>
-                        <span className="font-medium text-slate-900 dark:text-slate-200">Schedule:</span>{" "}
-                        {formatSchedule(job.schedule)}
-                      </div>
-                      <div>
-                        <span className="font-medium text-slate-900 dark:text-slate-200">Assigned Crew:</span>{" "}
-                        {job.crewIds.length > 0 ? `${job.crewIds.length} Painters` : "Pending Dispatch"}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </MotionStaggerItem>
-              ))}
-            </MotionStagger>
-          )}
-        </div>
-      </MotionReveal>
+      <PortalSection
+        id="properties"
+        icon={<Home className="size-5" aria-hidden="true" />}
+        title="Properties"
+        description="Only properties linked to your verified customer record are shown."
+      >
+        {properties.length === 0 ? (
+          <EmptyState>No properties are linked to this account.</EmptyState>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {properties.map((property) => (
+              <article key={property._id} className="rounded-lg border border-border p-4">
+                <h3 className="font-bold">{property.label || "Project property"}</h3>
+                <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                  <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  {property.address}
+                </p>
+                {property.propertyType ? (
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {property.propertyType}
+                  </p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        )}
+      </PortalSection>
+
+      <PortalSection
+        id="estimates"
+        icon={<CircleDollarSign className="size-5" aria-hidden="true" />}
+        title="Estimates"
+        description="Pricing and scope come directly from estimates bound to this customer."
+      >
+        {estimates.length === 0 ? (
+          <EmptyState>No estimates are available for this account.</EmptyState>
+        ) : (
+          <div className="space-y-3">
+            {estimates.map((estimate) => (
+              <article key={estimate._id} className="rounded-lg border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-bold">{estimate.scope}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Created {new Date(estimate.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-extrabold tabular-nums">{formatPricing(estimate.pricing)}</p>
+                    <Badge variant="outline" className="mt-2 capitalize">
+                      {estimate.status.replaceAll("_", " ")}
+                    </Badge>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </PortalSection>
+
+      <PortalSection
+        id="schedule"
+        icon={<CalendarDays className="size-5" aria-hidden="true" />}
+        title="Project schedule"
+        description="Scheduled work and current status for jobs on this customer record."
+      >
+        {jobs.length === 0 ? (
+          <EmptyState>No scheduled jobs are available yet.</EmptyState>
+        ) : (
+          <div className="space-y-3">
+            {jobs.map((job) => (
+              <article key={job._id} className="rounded-lg border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold">{job.title || "Painting project"}</h3>
+                    {job.address ? (
+                      <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                        <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                        {job.address}
+                      </p>
+                    ) : null}
+                    <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <CalendarDays className="size-4" aria-hidden="true" />
+                      {formatSchedule(job.schedule)}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="capitalize">
+                    {job.status.replaceAll("_", " ")}
+                  </Badge>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </PortalSection>
+
+      <PortalSection
+        id="updates"
+        icon={<MessageSquareText className="size-5" aria-hidden="true" />}
+        title="Project updates"
+        description="Only updates explicitly marked customer-visible are returned by the server."
+      >
+        {updates.length === 0 ? (
+          <EmptyState>No customer-visible project updates are available.</EmptyState>
+        ) : (
+          <ol className="space-y-3">
+            {updates.map((update) => (
+              <li key={update._id} className="rounded-lg border border-border p-4">
+                <time className="text-xs font-semibold text-muted-foreground" dateTime={new Date(update.createdAt).toISOString()}>
+                  {new Date(update.createdAt).toLocaleString()}
+                </time>
+                <p className="mt-2 text-sm leading-6">{update.message}</p>
+              </li>
+            ))}
+          </ol>
+        )}
+      </PortalSection>
+
+      <PortalSection
+        id="documents"
+        icon={<FileLock2 className="size-5" aria-hidden="true" />}
+        title="Documents"
+        description="Document downloads fail closed unless a customer-visible file is bound through a project on this exact customer record."
+      >
+        {documentStatus === "LoadingFirstPage" ? (
+          <p className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            Verifying document grants…
+          </p>
+        ) : documents.length === 0 && documentStatus === "Exhausted" ? (
+          <EmptyState>No customer-visible documents are available.</EmptyState>
+        ) : (
+          <div className="space-y-3">
+            {documents.map((document) => (
+              <article
+                key={document._id}
+                className="flex flex-col gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <h3 className="truncate font-bold">{document.name}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatFileSize(document.size)} · Added {" "}
+                    {new Date(document.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void downloadDocument(document._id)}
+                  disabled={downloadingDocumentId === document._id}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-sm font-bold text-background transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
+                >
+                  <Download className="size-4" aria-hidden="true" />
+                  {downloadingDocumentId === document._id
+                    ? "Authorizing…"
+                    : "Download"}
+                </button>
+              </article>
+            ))}
+
+            {documentStatus === "CanLoadMore" ||
+            documentStatus === "LoadingMore" ? (
+              <button
+                type="button"
+                onClick={() => loadMoreDocuments(25)}
+                disabled={documentStatus === "LoadingMore"}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
+              >
+                {documentStatus === "LoadingMore"
+                  ? "Loading documents…"
+                  : "Load more documents"}
+              </button>
+            ) : null}
+          </div>
+        )}
+        {documentError ? (
+          <p className="mt-3 text-sm font-semibold text-destructive" role="alert">
+            {documentError}
+          </p>
+        ) : null}
+      </PortalSection>
     </div>
   );
 }

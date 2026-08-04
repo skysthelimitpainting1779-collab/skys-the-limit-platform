@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { MotionReveal } from "@/design/motion/Reveal";
-import { Badge } from "@/components/ui/badge";
 import { CustomerDashboard } from "@/components/customer/CustomerDashboard";
 
 export const metadata: Metadata = {
@@ -10,23 +8,20 @@ export const metadata: Metadata = {
 
 export default function CustomerPage() {
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <MotionReveal direction="down">
-          <div className="space-y-4">
-            <Badge variant="default">Customer Portal</Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">
-              Project Dashboard & Communication
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Track project progress, review color specifications, approve change orders, and view billing details.
-            </p>
-          </div>
-        </MotionReveal>
+    <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <header className="max-w-3xl">
+        <h1 className="text-3xl font-extrabold tracking-[-0.03em] text-foreground sm:text-4xl">
+          Your project record
+        </h1>
+        <p className="mt-3 max-w-[70ch] text-base leading-7 text-muted-foreground">
+          Estimates, scheduled work, property details, and customer-visible
+          updates are shown only when this WorkOS identity is explicitly linked
+          to the customer account.
+        </p>
+      </header>
 
-        <CustomerDashboard />
-      </div>
-    </div>
+      <CustomerDashboard />
+    </main>
   );
 }
 

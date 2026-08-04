@@ -1,0 +1,79 @@
+{
+  "node_id": "v4-security-review-fixes",
+  "title": "Independent Security Remediation Evaluation — Checklists, Files, WorkOS, and Legacy Convex RPCs",
+  "timestamp": "2026-08-02T09:04:00Z",
+  "status": "completed",
+  "evaluator": "v4_security_peer_evaluator",
+  "independent_evaluator": true,
+  "verdict": "pass",
+  "target": {
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform-v4-security",
+    "branch": "fix/v4-checklist-files-security",
+    "base_sha": "20e163d68cdac7afbaf2e762ba14650504e74609",
+    "candidate_commit": "137f2eebf899d4ccf101594063083529df039d9f",
+    "candidate_state": "committed source independently rechecked in a detached clean worktree",
+    "precommit_tracked_diff_blob": "fb62ae85fe7f0ba2ac3e6c6cdae8c8eae28f9ef9",
+    "precommit_untracked_manifest_blob": "ac2eb0199cff526febc1ad4b4a03cc0497356c62",
+    "precommit_candidate_digest": "ed4de4d8539672d1f166f5fd96bfc6318ae8f19d",
+    "precommit_candidate_digest_method": "git hash-object over base SHA, tracked binary diff, and sorted untracked path/blob manifest; this receipt is excluded"
+  },
+  "evidence": {
+    "review_comments": {
+      "schema_definitions": "pass — checklists, checklistItems, and documents tables and all used compound indexes are present; legacy membership role 'member' remains schema-compatible but receives no protected capability",
+      "checklist_rpc_authorization": "pass — every public checklist handler derives the authenticated user and checks active organization membership plus job/resource scope",
+      "completion_actor_integrity": "pass — completedBy is derived from the authenticated actor and is not a public argument",
+      "bounded_checklist_model": "pass — checklist items are child documents, creation is capped at 100 items, and indexed reads are bounded",
+      "vercel_blob_boundary": "pass — bytes use Vercel Blob only; Convex stores authorization metadata and contains no ctx.storage use",
+      "uploaded_by_integrity": "pass — uploadedBy is derived server-side after membership and resource authorization",
+      "authoritative_blob_metadata": "pass — finalizeUpload loads Vercel Blob head metadata and validates canonical pathname, MIME type, and size before registration",
+      "document_metadata_access": "pass — public reads expose a redacted projection without Blob, organization, or job locators; protected reads enforce membership/ownership",
+      "document_tenant_scope": "pass — upload, read, download, list, and deletion decisions bind to the document organization and job assignment where applicable",
+      "token_identifier_binding": "pass — authorization lookups use issuer-qualified tokenIdentifier; subject is limited to binding an unbound signature-verified WorkOS webhook profile",
+      "document_pagination": "pass — listings require tenant/access indexes and Convex pagination options",
+      "v4_002_governance": "superseded — the original 2026-08-02 claim was unsupported because the required v4-002 receipt/reviewer artifacts were absent from that exact candidate tree. A later independent evaluation at 2026-08-04T07:09:02.2103276Z now establishes the result in .agent/state/nodes/v4-002.json by reproducing the archive hash, 23/23 original ZIP-stream hashes, 23/23 extracted hashes, ordered reference review, visual contact-sheet inspection, and classifications."
+    },
+    "additional_hardening": {
+      "legacy_public_rpcs": "pass — lead, estimate, job, user, and audit endpoints fail closed except explicitly anonymous tenant-bound lead intake and a pure pricing calculation; audit append and provisioning seams are internal",
+      "role_administration": "pass — ordinary users cannot self-assign roles; active tenant membership is authoritative; admins cannot grant admin/owner or demote an owner; role writes are audited",
+      "crew_and_dashboard_capabilities": "pass — crew members are read-only, assigned crew leads may mutate, and dashboards skip unauthorized RPCs and hide mutation controls using server-derived capabilities",
+      "workos_authkit": "pass — official AuthKit Next.js and Convex component wiring, signed webhook lifecycle, disabled-user denial, issuer-qualified identity binding, protected-route proxy enforcement, and official callback handler are present",
+      "workos_fail_closed_configuration": "pass — copied placeholder API, client, cookie, webhook, action, redirect, Convex, tenant, and Blob values are rejected; webhook/action secrets use independent unpredictable fallbacks; deployment builds cannot bypass validation",
+      "migration_compatibility": "pass — legacy membership role member and unscoped leads are handled fail closed without making the new schema reject legacy rows",
+      "storage_roles": "pass — public publication is limited to owner/admin/content_approver and deletion to owner/admin; crew uploads require an assigned job and restricted access"
+    },
+    "verification": {
+      "source_commit_recheck": "pass — exact commit 137f2eebf899d4ccf101594063083529df039d9f was checked out detached and clean at E:/DevCaches/verify-v4-137f2ee with physical dependencies installed from its committed lockfile",
+      "final_delta_review": "pass — the delta after the prior source-lock pass is limited to five EOF blank-line removals and .husky/pre-commit hardening; the hook now scans added lines only and constructs prohibited credential prefixes dynamically without embedding forbidden literals",
+      "npm_run_verify": "pass — exact detached commit passed skills, environment, assets, ESLint, TypeScript, 17 Vitest suites / 100 tests, and Next.js 16.2.12 Turbopack production build",
+      "focused_security_tests": "pass — 7 suites / 50 tests covering checklist, file, WorkOS, legacy RPC, capability UI, proxy, and deployment environment boundaries",
+      "npm_audit_production": "pass — npm audit --omit=dev --audit-level=high reported 0 vulnerabilities",
+      "git_commit_cleanliness": "pass — detached verification worktree had empty git status and git show --check reported no whitespace errors",
+      "commit_hooks": "pass — .husky/pre-commit passed shell syntax validation, and the actual pre-commit and commit-msg hooks passed while creating the source commit",
+      "static_probes": "pass — no ctx.storage, subject fallback, caller-supplied uploadedBy/completedBy validators, unbounded collect in protected modules, or forbidden literal secret patterns",
+      "graphify": "pass — graphify update completed at 8523 nodes / 17967 edges and graphify reflect compiled corrected lessons after the final source changes",
+      "context7": "pass — implementation was checked against current official Convex, WorkOS AuthKit Next.js/Convex component, and Vercel Blob documentation"
+    }
+  },
+  "release_gates": [
+    "Regenerate and verify convex/_generated from the configured protected Convex deployment; local `npx convex codegen --dry-run` could not run because CONVEX_DEPLOYMENT is intentionally absent.",
+    "Apply schema/index changes and any identity, membership, and lead tenant backfill in protected non-production infrastructure before release.",
+    "Configure isolated Preview WorkOS and Vercel Blob credentials separately in Vercel and Convex; never reuse Production values.",
+    "Run signed WorkOS webhook create/update/delete, anonymous protected-route redirects, realistic hostile/cross-issuer identity tests, and disabled-user denial against the protected preview.",
+    "Run private Blob upload/head/finalize/download/delete and hostile MIME, size, pathname, tenant, role, and job-assignment tests against the protected preview.",
+    "Require green CI/security statuses, independent approval, and protected-preview anonymous smoke tests before merge or release."
+  ],
+  "governance_history_correction": {
+    "timestamp": "2026-08-04T07:09:02.2103276Z",
+    "corrected_by": "/root/customer_document_flow",
+    "preserved_original_claim": "pass — original v4-002 evidence names separate evaluator reviewer_v4_002 and its independent handoff verifies 23/23 source-pack checksums; implementing worker is no longer its final authority",
+    "reason": "At the exact 137f2eebf899d4ccf101594063083529df039d9f tree, the claimed independent v4-002 receipt and reviewer handoff were absent, so that part of the historical pass rationale was not auditable.",
+    "superseding_evidence": ".agent/state/nodes/v4-002.json",
+    "superseding_verdict": "pass",
+    "effect_on_security_node": "The unsupported historical governance assertion is corrected without erasing it. The later independent receipt now closes that governance dependency; the technical security findings and their original exact-commit verification remain unchanged."
+  },
+  "limitations": [
+    "No live Convex deployment, WorkOS tenant, Vercel Blob store, production credentials, or production data was accessed.",
+    "Cross-issuer subject collision was not reproduced against live accepted WorkOS issuers; tokenIdentifier binding and preview hostile-identity verification remain required."
+  ],
+  "notes": "Independent evaluation initially returned remediation for legacy public RPC authorization, role overgrant, role-aware UI query failures, legacy membership migration compatibility, public document association leakage, unenforced WorkOS route protection, copied placeholder signing/cookie secrets, dead deployment environment validation, redirect mismatch, and a TypeScript regression in the proxy tests. Each was corrected and independently reverified. The final committed source was rechecked at exact SHA 137f2eebf899d4ccf101594063083529df039d9f in a clean, lockfile-isolated detached worktree. The code-level node passes; deployment-effect validation remains explicitly gated."
+}

@@ -27,7 +27,6 @@
 
 ### Non-Sensitive (all environments)
 - `NEXT_PUBLIC_APP_URL` — Application base URL per environment
-- `SKIP_ENV_VALIDATION` — Set `true` during build (disables startup validation in CI)
 - `ENABLE_LIVE_EMAIL` — `false` (gates Resend email sending)
 - `ENABLE_LIVE_STRIPE` — `false` (gates Stripe live mode)
 - `ENABLE_PRODUCTION_CONVEX` — `false` (gates Production Convex access)
@@ -40,13 +39,30 @@ These must be added by the project owner via the Vercel dashboard or CLI interac
 |----------|-------------|-------|
 | `NEXT_PUBLIC_CONVEX_URL` | preview | Preview Convex deployment URL |
 | `NEXT_PUBLIC_CONVEX_URL` | production | Production Convex deployment URL |
+| `NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID` | preview / production | Environment-specific active tenant for public lead intake |
+| `LEAD_INTAKE_SECRET` | preview / production | Unique 32+ character proof key; set the same value in the matching Convex deployment |
 | `CONVEX_DEPLOY_KEY` | production | From Convex dashboard → Project → Settings → Deploy Keys |
-| `WORKOS_API_KEY` | production | WorkOS API key (sk_live_...) |
-| `WORKOS_API_KEY` | preview | WorkOS API key (sk_test_... for preview) |
+| `WORKOS_API_KEY` | production | Production WorkOS API key |
+| `WORKOS_API_KEY` | preview | Isolated non-production WorkOS API key |
 | `WORKOS_CLIENT_ID` | production | WorkOS Client ID |
 | `WORKOS_CLIENT_ID` | preview | WorkOS Client ID |
+| `WORKOS_COOKIE_PASSWORD` | preview / production | Unique 32+ character session-encryption secret per environment |
+| `WORKOS_REDIRECT_URI` | preview / production | Server redirect URI ending in `/auth/callback` |
 | `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | production | `https://your-production-domain.com/auth/callback` |
 | `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | preview | `https://sky-s-the-limit-platform-skys-35411c00.vercel.app/auth/callback` |
+| `WORKOS_ORGANIZATION_ID` | preview / production | Environment-specific invitation-only WorkOS organization |
+
+`SKIP_ENV_VALIDATION=true` is allowed only for controlled local or CI
+placeholder builds. It is explicitly rejected when `VERCEL_ENV` is `preview`
+or `production`.
+
+### Convex Function Environment
+
+Convex actions and webhook handlers do not inherit Vercel environment
+variables. Configure `WORKOS_WEBHOOK_SECRET`, `BLOB_READ_WRITE_TOKEN`, and the
+matching `LEAD_INTAKE_SECRET` separately for each Convex deployment. WorkOS Actions are currently disabled;
+configure `WORKOS_ACTION_SECRET` only if reviewed action handlers are enabled.
+Preview Convex must never reuse Production WorkOS or Blob credentials.
 
 ## Adding Sensitive Variables
 

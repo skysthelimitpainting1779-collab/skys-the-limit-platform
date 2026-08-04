@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ShieldCheck, MapPin, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, MapPin, CheckCircle2, Paintbrush } from "lucide-react";
 
 export function NavigationFooter() {
   return (
@@ -11,13 +10,9 @@ export function NavigationFooter() {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-background p-1 border border-border">
-              <Image
-                src="/brand/logo-illustrated-badge.webp"
-                alt="Sky's the Limit Painting LLC logo"
-                width={36}
-                height={32}
-                className="h-8 w-auto object-contain"
-              />
+              <span className="flex size-8 items-center justify-center" aria-hidden="true">
+                <Paintbrush className="size-5 text-primary" />
+              </span>
             </div>
             <span className="text-base font-extrabold tracking-tight">Sky&apos;s the Limit</span>
           </div>
@@ -56,9 +51,9 @@ export function NavigationFooter() {
         <div className="space-y-3">
           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Portals</h4>
           <ul className="space-y-2 text-xs text-muted-foreground">
-            <li><Link href="/customer" className="hover:text-primary transition-colors">Customer Portal</Link></li>
-            <li><Link href="/crew" className="hover:text-primary transition-colors">Crew Dashboard</Link></li>
-            <li><Link href="/operations" className="hover:text-primary transition-colors">Operations Command</Link></li>
+            <li><Link href="/customer" prefetch={false} className="hover:text-primary transition-colors">Customer Portal</Link></li>
+            <li><Link href="/crew" prefetch={false} className="hover:text-primary transition-colors">Crew Dashboard</Link></li>
+            <li><Link href="/operations" prefetch={false} className="hover:text-primary transition-colors">Operations Command</Link></li>
           </ul>
         </div>
       </div>

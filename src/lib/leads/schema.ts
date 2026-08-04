@@ -93,6 +93,7 @@ export interface LeadPersistenceInput {
   serviceAddress: string;
   projectDetails: string;
   desiredTimeframe?: string;
+  contactConsent: true;
   sourcePath: string;
   utmSource?: string;
   utmMedium?: string;
@@ -114,6 +115,7 @@ export function prepareLeadForPersistence(
     serviceAddress: submission.serviceAddress,
     projectDetails: submission.projectDetails,
     desiredTimeframe: submission.desiredTimeframe,
+    contactConsent: true,
     sourcePath: submission.sourcePath,
     utmSource: submission.utmSource,
     utmMedium: submission.utmMedium,

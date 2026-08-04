@@ -5,6 +5,10 @@ import {
   type LeadPersistenceResult,
 } from "@/lib/leads/submit";
 import type { LeadPersistenceInput } from "@/lib/leads/schema";
+import {
+  createLeadIntakeProof,
+  type LeadIntakePayload,
+} from "@/lib/leads/intakeProof";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,9 +33,16 @@ function getConvexClient(): ConvexHttpClient {
 async function persistLead(
   input: LeadPersistenceInput,
 ): Promise<LeadPersistenceResult> {
-  // Browser time is retained only for boundary-test evidence. Convex assigns
-  // authoritative timestamps, so the public mutation never accepts them.
-  const mutationInput = {
+  const orgId = process.env.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID;
+  if (!orgId || orgId.includes("REPLACE_ME")) {
+    throw new Error("LEAD_INTAKE_ORGANIZATION_NOT_CONFIGURED");
+  }
+  const secret = process.env.LEAD_INTAKE_SECRET;
+  if (!secret || secret.length < 32 || secret.includes("REPLACE_ME")) {
+    throw new Error("LEAD_INTAKE_SECRET_NOT_CONFIGURED");
+  }
+  const payload = {
+    orgId,
     idempotencyKey: input.idempotencyKey,
     fullName: input.fullName,
     email: input.email,
@@ -40,15 +51,19 @@ async function persistLead(
     serviceAddress: input.serviceAddress,
     projectDetails: input.projectDetails,
     desiredTimeframe: input.desiredTimeframe,
+    contactConsent: input.contactConsent,
     sourcePath: input.sourcePath,
     utmSource: input.utmSource,
     utmMedium: input.utmMedium,
     utmCampaign: input.utmCampaign,
-  };
-  const result = await getConvexClient().mutation(
-    anyApi.leads.create,
-    mutationInput,
-  );
+  } satisfies LeadIntakePayload;
+  const issuedAt = Date.now();
+  const proof = await createLeadIntakeProof(secret, payload, issuedAt);
+  const result = await getConvexClient().action(anyApi.leadActions.submit, {
+    ...payload,
+    issuedAt,
+    proof,
+  });
 
   if (
     !result ||

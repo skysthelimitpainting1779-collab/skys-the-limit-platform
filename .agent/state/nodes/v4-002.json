@@ -1,0 +1,73 @@
+{
+  "node_id": "v4-002",
+  "title": "Independent evaluation — signature design Drive source pack",
+  "timestamp": "2026-08-04T07:09:02.2103276Z",
+  "status": "passed",
+  "verdict": "pass",
+  "implementer": "/root/worker_v4_002",
+  "evaluator": "/root/customer_document_flow",
+  "independent_evaluator": true,
+  "implementer_is_evaluator": false,
+  "target": {
+    "archive": "E:/Downloads/skys-signature-design-drive-pack.zip",
+    "extracted_root": "C:/Users/Johnny Cage/Documents/antigravity/.source/skys-signature-design-drive-pack/skys-signature-design-drive-pack",
+    "archive_sha256_expected": "f73edca31da7202f2c992b39dfeba0ecf134e5d5f3044525b3de4e5d55e6da5d",
+    "archive_sha256_actual": "f73edca31da7202f2c992b39dfeba0ecf134e5d5f3044525b3de4e5d55e6da5d",
+    "production_effect": false,
+    "copied_into_repository": false
+  },
+  "evidence": {
+    "archive_integrity": {
+      "archive_hash": "pass",
+      "archive_file_entries": 24,
+      "sha256sums_manifest_entries": 23,
+      "zip_stream_hashes": "pass — 23/23 entries matched SHA256SUMS.txt by hashing each original ZIP entry stream",
+      "extracted_file_hashes": "pass — 23/23 corresponding files matched SHA256SUMS.txt",
+      "missing_or_mismatched_entries": []
+    },
+    "required_read_order": [
+      "00-guidance/00-START-HERE.md",
+      "00-guidance/LOCAL-CODEX-HANDOFF.md",
+      "03-reference/proof-permission-ledger.csv",
+      "00-guidance/asset-usage-matrix.md",
+      "00-guidance/drive-pack-manifest.json",
+      "03-reference/marketing-operating-system-canonical.txt",
+      "03-reference/capability-statement.txt",
+      "03-reference/website-seo-deployment-audit-2026-07-27.txt",
+      "00-guidance/missing-production-proof.md",
+      "04-contact-sheet/drive-assets-contact-sheet.jpg"
+    ],
+    "reference_review": "pass — all ten required references were read in the stated order from the extracted root; the contact sheet was inspected at original resolution",
+    "contact_sheet_visual_review": "pass — the sheet visibly contains the canonical illustrated badge plus branded equipment, residential, process, commercial, striping, light-pole, and exterior candidates. It also visibly includes both identical surface-preparation closeups; the manifest correctly excludes Closeup 2 as byte-identical rather than treating it as separate production proof.",
+    "classification_reconciliation": {
+      "manifest_assets": 12,
+      "approved_for_immediate_public_use": [
+        "BRAND-001 — 01-brand/approved/sky-logo-illustrated-badge.jpg"
+      ],
+      "candidate_assets_blocked_from_public_proof": 11,
+      "candidate_breakdown": {
+        "needs-source-verification": 6,
+        "needs-source-verification-high-risk": 1,
+        "unverified-unlisted-candidate": 4
+      },
+      "ledger_rows": 10,
+      "ledger_approved": 1,
+      "ledger_needs_source_verification": 7,
+      "ledger_not_captured": 2,
+      "result": "pass — START-HERE, the handoff, ledger, asset matrix, manifest, canonical marketing system, audit, and missing-proof file consistently state that only BRAND-001 is presently public-approved. Portfolio/action images remain layout-only or protected-preview candidates until provenance, project, property/customer, and person/model permissions are verified; light-pole and striping imagery must not imply a municipal award or contract."
+    },
+    "sensitive_material_boundary": "pass — the manifest expressly excludes EIN, vehicle-title, resident-ledger, customer-confidential, and other private business material; none was copied into the repository during this evaluation",
+    "repository_receipt_cross_check": "pass — docs/design/SOURCE_PACK_RECEIPT.md accurately reports the archive hash, 24 archive entries including SHA256SUMS.txt, 23/23 ZIP-stream and extracted checks, the duplicate exclusion, the visual contact-sheet content, and the public-use classification boundary"
+  },
+  "blocking_findings": [],
+  "residual_risks": [
+    "The pack is sufficient for protected concepts, not a final proof-led production site; owner media, verified project sequences, releases, source-linked reviews, public-sector documentation, and approved insurance/certification/pricing/warranty language remain missing.",
+    "The logo is an approved high-resolution raster badge, not a true vector; a simplified small-size and print-ready/vector source remain desired brand refinements."
+  ],
+  "release_gates": [
+    "Only BRAND-001 may enter a public governed asset path under its listed uses.",
+    "Keep all eleven candidate images out of production proof, case studies, testimonials, GBP, public-sector award claims, and ads until the Proof & Permission Ledger records the required verification and releases.",
+    "Record Drive provenance and real SHA-256 values in repository governance before any approved copy is introduced; preserve originals outside the repository and create separate optimized derivatives."
+  ],
+  "verdict_rationale": "Pass. The original ZIP hash is exact, every one of the 23 manifest entries matches both the original ZIP stream and extracted file, all ten mandated references were reviewed in order, the contact sheet was visually inspected, classifications reconcile across every source, sensitive documents are excluded, and nothing was copied. The evidence supports only BRAND-001 for immediate public use and correctly blocks all portfolio/action candidates pending proof and permission."
+}

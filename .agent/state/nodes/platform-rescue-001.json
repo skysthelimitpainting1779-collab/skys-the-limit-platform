@@ -1,0 +1,156 @@
+{
+  "node_id": "platform-rescue-001",
+  "title": "Independent final-panel evaluation — owner/staff platform rescue",
+  "timestamp": "2026-08-04T07:09:02.2103276Z",
+  "status": "passed",
+  "verdict": "pass",
+  "implementer": "/root (platform rescue implementer)",
+  "evaluator": "/root/customer_document_flow",
+  "independent_evaluator": true,
+  "implementer_is_evaluator": false,
+  "target": {
+    "branch": "fix/owner-staff-platform-rescue",
+    "candidate_sha": "106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "candidate_subject": "fix(platform): complete scoped portal workflows",
+    "base": "origin/dev",
+    "base_sha": "4e2e2bb5364ff27766f775a0dd45e737c868ade8",
+    "evaluated_range": "origin/dev..106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform-rescue",
+    "exact_tree_note": "HEAD was exact and the rescue worktree was clean except intentional untracked .playwright-cli/, which was ignored. No implementation code was edited by this evaluator."
+  },
+  "rollback": {
+    "last_known_good_sha": "723b5d4634cb565303a7f286917e1e4bfbb0aef5",
+    "command": "git revert 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "human_approval_required": false,
+    "production_effect": false,
+    "note": "Coordinate before reverting a pushed/shared multi-slice commit. Merging dev to main, deploying Production, changing DNS, or mutating Production data still requires owner approval."
+  },
+  "evaluation_history": [
+    {
+      "timestamp": "2026-08-04T05:32:39.3136402Z",
+      "candidate_sha": "723b5d4634cb565303a7f286917e1e4bfbb0aef5",
+      "evaluator": "/root/platform_rescue_evaluator",
+      "verdict": "remediate",
+      "preserved_finding_ids": [
+        "RBAC-CREW-WRITE-001",
+        "ASSIGNMENT-INDEX-001",
+        "CUSTOMER-DOCUMENTS-001",
+        "PORTAL-LIFECYCLE-UI-001",
+        "ROUTE-CAPABILITY-001",
+        "WCAG-CONTRAST-001",
+        "PORTAL-FAILURE-STATE-001",
+        "GOVERNANCE-V4-002-001",
+        "DIFF-HYGIENE-001"
+      ],
+      "preserved_findings": [
+        { "id": "RBAC-CREW-WRITE-001", "severity": "high", "summary": "crew_member could mutate task completion and project updates contrary to the committed matrix" },
+        { "id": "ASSIGNMENT-INDEX-001", "severity": "high", "summary": "the assignments entity/index was absent and crew listing filtered after a bounded organization slice" },
+        { "id": "CUSTOMER-DOCUMENTS-001", "severity": "high", "summary": "the secure customer Documents workflow had no explicit customer grant/list/download path" },
+        { "id": "PORTAL-LIFECYCLE-UI-001", "severity": "high", "summary": "customer onboarding, scheduling, assignment, and role mutations had no portal call sites" },
+        { "id": "ROUTE-CAPABILITY-001", "severity": "medium", "summary": "portal layouts did not reject a role directly opening another role's route" },
+        { "id": "WCAG-CONTRAST-001", "severity": "medium", "summary": "light-theme primary button text contrast was below WCAG 2.2 AA" },
+        { "id": "PORTAL-FAILURE-STATE-001", "severity": "medium", "summary": "terminal provisioning and route loading/error failures lacked recoverable user-facing states" },
+        { "id": "GOVERNANCE-V4-002-001", "severity": "high", "summary": "the source-pack node lacked an auditable independent receipt while a downstream state claimed one existed" },
+        { "id": "DIFF-HYGIENE-001", "severity": "low", "summary": "the origin/dev comparison failed git diff --check due to added EOF blank lines" }
+      ],
+      "prior_verdict_rationale": "The 723b5d4 candidate materially fixed PR #26 authorization findings but could not pass because its crew write contract, assignment model/query, customer Documents workflow, lifecycle UI, route guard, contrast, failure states, v4-002 governance, and diff hygiene remained incomplete.",
+      "history_note": "The prior remediate verdict remains part of the audit trail and is superseded only for the new immutable candidate after independent re-evaluation."
+    }
+  ],
+  "scope_and_abstention": {
+    "broad_evaluator_scope": "Full origin/dev comparison and the remediation delta outside the customer-document slice, including PR #26 authorization findings, WorkOS, lifecycle RPC/UI, assignments, crew writes, checklists, route guards, failure states, contrast, public prefetch, idempotency, tests, environment, dependency, and governance gates.",
+    "abstained_slice": "The evaluator implemented the customer-document slice and therefore explicitly abstained from judging its policy, specialized list/download actions, customer-document UI, and hostile customer-document tests.",
+    "required_dependency_receipt": ".agent/state/nodes/platform-rescue-customer-documents.json",
+    "dependency_evaluator": "/root/operations_lifecycle_ui",
+    "dependency_candidate_sha": "106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "dependency_verdict": "pass",
+    "dependency_blockers": 0,
+    "panel_reliance": "The whole-candidate verdict relies on that separate commit-exact receipt for the abstained slice; this evaluator makes no independent customer-document pass claim."
+  },
+  "evidence": {
+    "discovery_and_current_docs": {
+      "graphify_first": "pass — queried Graphify before targeted raw inspection and reviewed graphify-out/reflections/LESSONS.md",
+      "convex_guidelines": "pass — read convex/_generated/ai/guidelines.md and used the Convex reviewer contract",
+      "context7": "pass — resolved and queried current authoritative documentation for Convex, WorkOS AuthKit Next.js, Next.js 16.2.9 route/proxy/loading/error behavior, and Vercel Blob",
+      "github_pr_26": "pass — fetched PR #26 conversation, review, and thread data read-only with the bundled thread-aware helper. The original review contained eight categories and no inline review threads; all critical/high code findings were re-evaluated against the candidate rather than relying on the earlier different head."
+    },
+    "pr_26_and_security_recheck": {
+      "role_escalation": "pass — users.store binds only an active signature-verified webhook profile by canonical tokenIdentifier; users.updateRole requires active organization owner/admin authority, prevents admin owner/admin elevation and owner demotion, protects the last active owner, and audits the membership change",
+      "legacy_public_rpcs": "pass — explicit public API inventory and anonymous hostile tests keep only intended anonymous entry points and deny protected lead, estimate, job, user, audit, checklist, notification, customer, claim, file, and operations calls",
+      "cross_organization_operations": "pass — active organization membership and exact resource org checks protect reads/writes; indexed tenant reads replace global scans",
+      "mutable_email_claim": "pass — customer access is an explicit customers.by_org_and_user relationship; email is display/contact data and never ownership proof",
+      "cms_roles_and_lifecycle": "pass — CMS edits/publishing require active per-organization membership roles and an active organization; public reads expose only verified published pages",
+      "canonical_identity": "pass — protected identity lookup uses issuer-qualified tokenIdentifier with subject limited to verified initial binding",
+      "schema_and_query_correctness": "pass — legacy member remains compatible and capability-less; protected exports have return validators; bounded indexed reads are used; reactive operations queries do not depend on Date.now()"
+    },
+    "prior_blocker_resolution": {
+      "RBAC-CREW-WRITE-001": "closed — crew_member/legacy crew are read-only; assigned crew_lead may update field state; manager roles retain management writes; exact assignment, job org, status, creation-time, and embedded membership invariants are rechecked server-side and hostile tests cover denials",
+      "ASSIGNMENT-INDEX-001": "closed — assignments is a bounded indexed entity synchronized transactionally with crew assignment and job status; crew listing queries organization/user/status/time indexes before fetching exact jobs",
+      "CUSTOMER-DOCUMENTS-001": "closed only by dependency — separate evaluator receipt platform-rescue-customer-documents passes the exact SHA with zero blockers; this evaluator abstains",
+      "PORTAL-LIFECYCLE-UI-001": "closed — capability-gated UI now calls customers.createFromLead, customers.linkUser, jobs.createFromEstimate, jobs.assignCrew, users.updateRole, listAssignableCrew, and listTeamMemberships; behavioral component and Convex hostile tests cover owner, estimator, project manager, content role, invalid link, cross-org, and disabled identity cases",
+      "ROUTE-CAPABILITY-001": "closed — PortalShell withholds children until Convex membership verification and route-role approval; direct wrong-role navigation renders fail-closed guidance and tests cover operations, crew, and customer routes",
+      "WCAG-CONTRAST-001": "closed — semantic primary pairs are asserted at >=4.5:1 in light and dark themes and the test passes",
+      "PORTAL-FAILURE-STATE-001": "closed — terminal identity-binding failure renders an accessible retry state; App Router loading and error boundaries provide reduced-motion loading and recoverable fail-closed errors",
+      "GOVERNANCE-V4-002-001": "closed — independent v4-002 receipt reproduces exact archive, 23/23 ZIP-stream and extracted hashes, ordered reference review, contact-sheet inspection, and classification rules",
+      "DIFF-HYGIENE-001": "closed — git diff --check origin/dev..106175ce6a1af7e6fa925cc7fa38a3cf76a857bd and git show --check both pass"
+    },
+    "workos_and_route_boundary": {
+      "proxy_and_login": "pass — AuthKit proxy protects portal paths, preserves only an explicit public allowlist, login is a route handler that validates returnTo and constrains organizationId, and callback uses the official handler",
+      "wrong_organization": "pass — AuthenticatedPortal requires the configured WorkOS organization and reveals no protected records on a mismatch",
+      "public_portal_prefetch": "pass — public footer links to protected portals set prefetch=false, avoiding unauthenticated RSC prefetch through the WorkOS boundary",
+      "external_state": "No Production or live customer system was touched. The earlier read-only Staging snapshot remains a deployment gate rather than code evidence."
+    },
+    "verification": [
+      {
+        "command": "npm run verify",
+        "result": "pass — skills, environment, assets, ESLint, tsc --noEmit, 30 Vitest files / 178 tests, and Next.js 16.2.12 Turbopack production build; all public and portal routes compiled"
+      },
+      {
+        "command": "npm audit --omit=dev --audit-level=high",
+        "result": "pass — 0 vulnerabilities"
+      },
+      {
+        "command": "git diff --check origin/dev..106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+        "result": "pass"
+      },
+      {
+        "command": "git show --check --pretty= 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+        "result": "pass"
+      },
+      {
+        "command": "focused hostile suites included in the 178-test run",
+        "result": "pass — anonymous/public inventory, legacy RPC, owner/staff, WorkOS, job/crew assignment, operations lifecycle, checklist/file, capability/route, login/proxy, contrast/loading/error, and idempotent lifecycle coverage"
+      }
+    ],
+    "v4_002_dependency": ".agent/state/nodes/v4-002.json — pass; exact ZIP hash f73edca31da7202f2c992b39dfeba0ecf134e5d5f3044525b3de4e5d55e6da5d, 23/23 ZIP-stream hashes, 23/23 extracted hashes, ten references read in order, contact sheet visually inspected, only BRAND-001 public-approved"
+  },
+  "blocking_findings": [],
+  "residual_risks": [
+    {
+      "id": "EXACT-SHA-EXTERNAL-GATES",
+      "severity": "release_gate",
+      "summary": "The local immutable candidate is not yet backed by exact-SHA GitHub CI/Security/Vercel Preview results or isolated live WorkOS/Convex/Blob hostile smokes.",
+      "disposition": "Nonblocking for this code/evidence verdict; blocking for merge or release."
+    },
+    {
+      "id": "PRIVATE-REPO-BRANCH-PROTECTION",
+      "severity": "release_gate",
+      "summary": "The current GitHub plan previously rejected the requested private-repository branch protection configuration.",
+      "disposition": "Require an owner-approved equivalent or plan change before release; repository privacy must not be weakened merely to obtain protection."
+    },
+    {
+      "id": "PREVIEW-MIGRATION-AND-BACKFILL",
+      "severity": "release_gate",
+      "summary": "New assignment/customer-document indexes and identity/tenant relations require isolated Preview migration/backfill verification before rollout.",
+      "disposition": "No Production mutation is authorized."
+    }
+  ],
+  "release_gates": [
+    "Push the immutable candidate and require exact-SHA CI, Security, Lead Intake E2E, and Vercel Preview checks; results on PR #26's different head do not count.",
+    "Apply schema/index changes and required backfills only in isolated non-production Convex, then verify assignment, customer, document, identity, and organization lifecycle invariants.",
+    "Use isolated Preview WorkOS, Convex, and Vercel Blob credentials; seed hostile identities across two organizations and test wrong-org, disabled/tombstoned, webhook create/update/delete/reinvite, private upload/head/finalize/download, and revoked access.",
+    "Resolve the private-repository approval/check enforcement limitation with an owner-approved control before release.",
+    "Do not merge dev to main, deploy Production, attach/move a Production domain, change DNS, send real customer email/SMS, enable live Stripe charges, mutate Production Convex/Blob data, rotate credentials, or delete branches/data without human approval."
+  ],
+  "verdict_rationale": "Pass. The exact candidate closes every prior code and governance blocker, preserves fail-closed tenant and identity boundaries, supplies operational owner/staff lifecycle UI, aligns crew writes with the authorization matrix, adds indexed assignments and idempotent estimate-to-job creation, fixes route capability, contrast, loading/error, login/proxy, and prefetch behavior, and passes the complete 178-test/build/audit/hygiene gate. The evaluator explicitly abstained from its own customer-document slice and relied on a separate exact-SHA pass receipt with zero blockers. V4-002 is independently reproduced and passes. Remaining items are explicit external Preview/release gates, not contradictory code findings."
+}

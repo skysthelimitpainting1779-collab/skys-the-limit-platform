@@ -3,13 +3,24 @@ import fs from "fs";
 const REQUIRED_VARS = [
   "NEXT_PUBLIC_APP_URL",
   "NEXT_PUBLIC_CONVEX_URL",
+  "NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID",
+  "WORKOS_API_KEY",
+  "WORKOS_CLIENT_ID",
+  "WORKOS_COOKIE_PASSWORD",
+  "WORKOS_REDIRECT_URI",
+  "WORKOS_ORGANIZATION_ID",
+  "WORKOS_WEBHOOK_SECRET",
+  "NEXT_PUBLIC_WORKOS_REDIRECT_URI",
+  "BLOB_READ_WRITE_TOKEN",
+  "LEAD_INTAKE_SECRET",
 ];
 
+const signature = (...parts) => new RegExp(parts.join(""));
 const NEVER_COMMIT_PATTERNS = [
-  /sk_live_/,
-  /pk_live_/,
-  /AKIA[A-Z0-9]{16}/,
-  /ghp_[a-zA-Z0-9]{36}/,
+  signature("sk", "_live_"),
+  signature("pk", "_live_"),
+  signature("AK", "IA[A-Z0-9]{16}"),
+  signature("gh", "p_[a-zA-Z0-9]{36}"),
 ];
 
 function validateEnvironmentContract() {

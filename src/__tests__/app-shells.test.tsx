@@ -1,5 +1,24 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
+vi.mock("@workos-inc/authkit-nextjs", () => ({
+  authkitProxy: vi.fn(() => vi.fn()),
+  getSignInUrl: vi.fn(),
+  getSignUpUrl: vi.fn(),
+  signOut: vi.fn(),
+  withAuth: vi.fn(),
+}));
+
+vi.mock("@workos-inc/authkit-nextjs/components", () => ({
+  AuthKitProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAccessToken: () => ({
+    getAccessToken: vi.fn().mockResolvedValue(null),
+    refresh: vi.fn().mockResolvedValue(null),
+  }),
+  useAuth: () => ({ user: null, loading: false }),
+}));
+
 import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { EstimateForm } from "@/components/estimate/EstimateForm";
 import { CustomerDashboard } from "@/components/customer/CustomerDashboard";
@@ -9,34 +28,45 @@ import EstimatePage, { metadata as estMeta } from "@/app/estimate/page";
 import CustomerPage, { metadata as custMeta } from "@/app/customer/page";
 import CrewPage, { metadata as crewMeta } from "@/app/crew/page";
 import OperationsPage, { metadata as opsMeta } from "@/app/operations/page";
+import ApplicationError from "@/app/error";
+import ApplicationLoading from "@/app/loading";
 import { Id } from "@convex/_generated/dataModel";
 
 // Mock convex/react hooks for unit testing component logic
 vi.mock("convex/react", () => ({
   ConvexProvider: ({ children }: { children: React.ReactNode }) => children,
+  ConvexProviderWithAuth: ({ children }: { children: React.ReactNode }) =>
+    children,
   ConvexReactClient: vi.fn().mockImplementation((url: string) => ({
     url,
   })),
+  useConvexAuth: vi.fn(() => ({ isAuthenticated: false, isLoading: false })),
   useQuery: vi.fn((queryFn: unknown, args: unknown) => {
     if (args === "skip") return undefined;
     return [];
   }),
   useMutation: vi.fn(() => vi.fn().mockResolvedValue("mock_id_123")),
+  useAction: vi.fn(() => vi.fn().mockResolvedValue({})),
+  usePaginatedQuery: vi.fn(() => ({
+    results: [],
+    status: "Exhausted",
+    loadMore: vi.fn(),
+  })),
 }));
 
 describe("App Shells & Convex Integration Suite", () => {
-  it("establishes ConvexClientProvider with fallback/sandbox handling when env vars are unset", () => {
+  it("fails closed when the Convex deployment URL is unset", () => {
     expect(typeof ConvexClientProvider).toBe("function");
 
     // Test with process.env undefined
     const origEnv = process.env.NEXT_PUBLIC_CONVEX_URL;
     delete process.env.NEXT_PUBLIC_CONVEX_URL;
 
-    expect(() => {
-      const el = <ConvexClientProvider><div>test</div></ConvexClientProvider>;
-      expect(el).toBeDefined();
-      expect(el.type).toBe(ConvexClientProvider);
-    }).not.toThrow();
+    const html = renderToStaticMarkup(
+      <ConvexClientProvider><div>protected data</div></ConvexClientProvider>,
+    );
+    expect(html).toContain("application data connection is not configured");
+    expect(html).not.toContain("protected data");
 
     process.env.NEXT_PUBLIC_CONVEX_URL = origEnv;
   });
@@ -46,6 +76,19 @@ describe("App Shells & Convex Integration Suite", () => {
     expect(typeof CustomerDashboard).toBe("function");
     expect(typeof CrewDashboard).toBe("function");
     expect(typeof OperationsDashboard).toBe("function");
+  });
+
+  it("provides recoverable loading and fail-closed route boundaries", () => {
+    const loading = renderToStaticMarkup(<ApplicationLoading />);
+    expect(loading).toContain("Loading the requested workspace");
+    expect(loading).toContain('aria-busy="true"');
+
+    const failed = renderToStaticMarkup(
+      <ApplicationError error={new Error("sensitive detail")} reset={vi.fn()} />,
+    );
+    expect(failed).toContain("Protected records could not be loaded");
+    expect(failed).toContain("Try again");
+    expect(failed).not.toContain("sensitive detail");
   });
 
   it("verifies /estimate page metadata and route shell component", () => {
@@ -83,7 +126,7 @@ describe("App Shells & Convex Integration Suite", () => {
   });
 
   it("evaluates CustomerDashboard JSX node tree without throwing", () => {
-    const node = <CustomerDashboard defaultLeadId="leads_123" />;
+    const node = <CustomerDashboard />;
     expect(node).toBeDefined();
     expect(node.type).toBe(CustomerDashboard);
   });

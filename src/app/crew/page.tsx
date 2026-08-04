@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { MotionReveal } from "@/design/motion/Reveal";
-import { Badge } from "@/components/ui/badge";
 import { CrewDashboard } from "@/components/crew/CrewDashboard";
 
 export const metadata: Metadata = {
@@ -10,23 +8,19 @@ export const metadata: Metadata = {
 
 export default function CrewPage() {
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <MotionReveal direction="down">
-          <div className="space-y-4">
-            <Badge variant="default">Crew Workspace</Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">
-              Field Execution & Daily Operations
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Jobsite schedules, safety protocols, surface prep verification, and daily log submission.
-            </p>
-          </div>
-        </MotionReveal>
+    <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <header className="max-w-3xl">
+        <h1 className="text-3xl font-extrabold tracking-[-0.03em] text-foreground sm:text-4xl">
+          Today&apos;s field work
+        </h1>
+        <p className="mt-3 max-w-[70ch] text-base leading-7 text-muted-foreground">
+          Open an assigned job, complete its tasks and prep checks, record the
+          day&apos;s update, and attach authorized evidence from the jobsite.
+        </p>
+      </header>
 
-        <CrewDashboard />
-      </div>
-    </div>
+      <CrewDashboard />
+    </main>
   );
 }
 
