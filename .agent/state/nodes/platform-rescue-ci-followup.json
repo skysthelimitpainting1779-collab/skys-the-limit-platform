@@ -1,0 +1,119 @@
+{
+  "node_id": "platform-rescue-ci-followup",
+  "title": "Independent Lead Intake E2E CI follow-up evaluation",
+  "timestamp": "2026-08-04T07:37:04.4430165Z",
+  "status": "passed",
+  "verdict": "pass",
+  "implementer": "/root",
+  "evaluator": "/root/pr26_gap_audit",
+  "independent_evaluator": true,
+  "implementer_is_evaluator": false,
+  "target": {
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform-rescue",
+    "branch": "fix/owner-staff-platform-rescue",
+    "evaluated_sha": "5556dafc23d962759059354ce6cc3c010cafbf43",
+    "evaluated_subject": "fix(ci): provision lead intake proof in e2e",
+    "evaluated_range": "1e40a409b3f2035afa9bbc72787deded9e9e6016..5556dafc23d962759059354ce6cc3c010cafbf43",
+    "exact_tree_note": "HEAD matched the evaluated SHA. The worktree was clean except the pre-existing intentional untracked .playwright-cli/ directory before this uncommitted receipt was written."
+  },
+  "evaluation_history": [
+    {
+      "evaluated_sha": "1e40a409b3f2035afa9bbc72787deded9e9e6016",
+      "verdict": "remediate",
+      "reason": "Lead Intake E2E run 83 progressed beyond the WorkOS organization configuration fix but failed the first persistence request with HTTP 503 because LEAD_INTAKE_SECRET was not provisioned to the anonymous Convex deployment. No pass receipt was written for that SHA."
+    },
+    {
+      "evaluated_sha": "5556dafc23d962759059354ce6cc3c010cafbf43",
+      "verdict": "pass",
+      "reason": "The superseding commit supplies an obvious local-only placeholder to the job environment, writes the same value into anonymous Convex before dev starts, contract-tests the wiring, and passes the exact-head runtime workflow."
+    }
+  ],
+  "evidence": {
+    "discovery_and_current_docs": {
+      "graphify_first": "pass — queried the refreshed Graphify graph before targeted raw inspection and reviewed graphify-out/reflections/LESSONS.md",
+      "peer_evaluator_skill": "pass — followed the independent peer-evaluator contract without an instruction to preserve the implementation",
+      "context7": "pass — resolved and queried current WorkOS AuthKit Next.js documentation; AuthKit consumes its documented WorkOS credentials while LEAD_INTAKE_SECRET is an application-owned server input"
+    },
+    "exact_diff_review": {
+      "changed_files": [
+        ".github/workflows/lead-intake-e2e.yml",
+        "src/__tests__/lead-intake-workflow.test.ts",
+        "graphify-out/graph.json"
+      ],
+      "ci_contract": "pass — LEAD_INTAKE_SECRET is job-scoped and therefore available to the Next.js build/start steps; the workflow writes it to the isolated anonymous Convex deployment before `convex dev`; external effects remain disabled",
+      "secret_review": "pass — the value `local_ci_lead_intake_proof_key_32_chars_minimum` is an obvious non-secret local-only placeholder, contains no credential interpolation, and is not sourced from GitHub secrets",
+      "test_strength": "pass — the workflow contract test requires both the job-level variable and exact `npx convex env set LEAD_INTAKE_SECRET \"$LEAD_INTAKE_SECRET\"` command; exact-head E2E independently proves build, server startup, persistence, and idempotency",
+      "graph_churn": "reviewed — the generated graph has large textual churn (1560 additions, 1406 deletions) but only eight net nodes and six net links, all non-runtime Graphify memory metadata; no executable or secret-bearing surface was introduced"
+    },
+    "local_commands": [
+      {
+        "command": "npx vitest run src/__tests__/lead-intake-workflow.test.ts",
+        "result": "pass — 1 file, 3 tests"
+      },
+      {
+        "command": "git diff --check 1e40a409b3f2035afa9bbc72787deded9e9e6016..5556dafc23d962759059354ce6cc3c010cafbf43",
+        "result": "pass"
+      },
+      {
+        "command": "static workflow placeholder/order check",
+        "result": "pass — exact local-only placeholder, no GitHub secret reference, job-scoped for Next, and written to Convex before dev"
+      }
+    ],
+    "exact_head_github": {
+      "ci": {
+        "run_number": 143,
+        "database_id": 30888219639,
+        "conclusion": "success",
+        "url": "https://github.com/skysthelimitpainting1779-collab/skys-the-limit-platform/actions/runs/30888219639"
+      },
+      "security": {
+        "run_number": 119,
+        "database_id": 30888219620,
+        "conclusion": "success",
+        "url": "https://github.com/skysthelimitpainting1779-collab/skys-the-limit-platform/actions/runs/30888219620"
+      },
+      "lead_intake_e2e": {
+        "run_number": 85,
+        "database_id": 30888219749,
+        "conclusion": "success",
+        "url": "https://github.com/skysthelimitpainting1779-collab/skys-the-limit-platform/actions/runs/30888219749",
+        "step_evidence": "anonymous Convex startup, Next.js build/start, real lead persistence/idempotency exercise, and service cleanup all completed successfully"
+      },
+      "preview_verification": {
+        "run_number": 95,
+        "database_id": 30888220933,
+        "conclusion": "skipped",
+        "url": "https://github.com/skysthelimitpainting1779-collab/skys-the-limit-platform/actions/runs/30888220933"
+      }
+    }
+  },
+  "blocking_findings": [],
+  "residual_risks": [
+    {
+      "id": "LIVE-PREVIEW-NOT-PROVEN",
+      "severity": "release_gate",
+      "summary": "Vercel Preview Verification run 95 was skipped. This receipt does not claim that Vercel or any live Preview deployment passed.",
+      "disposition": "Require protected Preview verification before merge or release."
+    },
+    {
+      "id": "LIVE-WORKOS-CONVEX-NOT-EXERCISED",
+      "severity": "release_gate",
+      "summary": "The successful E2E uses dummy local-only WorkOS values and an anonymous isolated Convex deployment; it does not prove live WorkOS tenant, webhook, or deployed Convex behavior.",
+      "disposition": "Run isolated non-production hostile-identity and webhook smokes before release; do not use Production credentials."
+    },
+    {
+      "id": "GENERATED-GRAPH-NOISE",
+      "severity": "low",
+      "summary": "The tracked graph update is textually noisy and incorporates local Graphify memory metadata, although it has no runtime effect and contains no secret.",
+      "disposition": "Nonblocking; consider excluding ignored local memory from future tracked graph rebuilds."
+    }
+  ],
+  "rollback": {
+    "parent_sha": "1e40a409b3f2035afa9bbc72787deded9e9e6016",
+    "command": "git revert 5556dafc23d962759059354ce6cc3c010cafbf43",
+    "human_approval_required": false,
+    "production_effect": false,
+    "warning": "The parent SHA has a known Lead Intake E2E HTTP 503 defect; this command is a mechanical rollback reference, not a recommendation or a known-good release target."
+  },
+  "verdict_rationale": "Pass. The exact superseding commit closes the reproduced 503 root cause by provisioning the same clearly non-secret local CI proof key to both Next.js and anonymous Convex before function startup, adds a regression contract, exposes no credential, preserves local isolation and disabled external effects, and passes exact-head CI 143, Security 119, and Lead Intake E2E 85. Vercel and live Preview remain explicitly unproven external release gates."
+}
