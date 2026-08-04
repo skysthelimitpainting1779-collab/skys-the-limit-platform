@@ -15,6 +15,7 @@ export const OPERATIONS_MANAGER_ROLES: readonly AppRole[] = [
   "owner",
   "admin",
   "project_manager",
+  "staff",
 ];
 
 export const OPERATIONS_ROLES: readonly AppRole[] = [
@@ -22,6 +23,7 @@ export const OPERATIONS_ROLES: readonly AppRole[] = [
   "admin",
   "estimator",
   "project_manager",
+  "staff",
 ];
 
 export const ROLE_ADMIN_ROLES: readonly AppRole[] = ["owner", "admin"];
@@ -39,6 +41,21 @@ export const FILE_PUBLICATION_ROLES: readonly AppRole[] = [
   "admin",
   "content_approver",
 ];
+
+export const CONTENT_EDITOR_ROLES: readonly AppRole[] = [
+  "owner",
+  "admin",
+  "content_editor",
+  "content_approver",
+];
+
+export const CONTENT_APPROVER_ROLES: readonly AppRole[] = [
+  "owner",
+  "admin",
+  "content_approver",
+];
+
+export const CUSTOMER_ROLES: readonly AppRole[] = ["customer"];
 
 type AuthContext =
   | Pick<QueryCtx, "auth" | "db">
@@ -69,7 +86,9 @@ export async function requireAuthenticatedUser(
     .unique();
 
   if (!user) throw new Error("USER_NOT_PROVISIONED");
-  if (user.identityStatus === "disabled") throw new Error("USER_DISABLED");
+  if (user.identityStatus === "disabled" || user.workosDeletedAt) {
+    throw new Error("USER_DISABLED");
+  }
   return user;
 }
 
@@ -99,7 +118,16 @@ export async function requireActiveMembership(
     )
     .unique();
 
-  if (!membership || membership.status !== "active") {
+  const memberUser = await ctx.db.get(userId);
+
+  if (
+    !membership ||
+    membership.status !== "active" ||
+    membership.workosDeletedAt ||
+    !memberUser ||
+    memberUser.identityStatus === "disabled" ||
+    memberUser.workosDeletedAt
+  ) {
     throw new Error("FORBIDDEN");
   }
   if (allowedRoles) assertAllowedRole(membership.role, allowedRoles);
@@ -120,7 +148,14 @@ export async function getActiveMembership(
       query.eq("userId", userId).eq("orgId", orgId),
     )
     .unique();
-  return membership?.status === "active" ? membership : null;
+  const memberUser = await ctx.db.get(userId);
+  return membership?.status === "active" &&
+    !membership.workosDeletedAt &&
+    memberUser &&
+    memberUser.identityStatus !== "disabled" &&
+    !memberUser.workosDeletedAt
+    ? membership
+    : null;
 }
 
 export function requireCrewAssignment(

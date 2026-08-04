@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 vi.mock("@workos-inc/authkit-nextjs", () => ({
   authkitProxy: vi.fn(() => vi.fn()),
   getSignInUrl: vi.fn(),
   getSignUpUrl: vi.fn(),
+  signOut: vi.fn(),
   withAuth: vi.fn(),
 }));
 
@@ -42,21 +44,27 @@ vi.mock("convex/react", () => ({
     return [];
   }),
   useMutation: vi.fn(() => vi.fn().mockResolvedValue("mock_id_123")),
+  useAction: vi.fn(() => vi.fn().mockResolvedValue({})),
+  usePaginatedQuery: vi.fn(() => ({
+    results: [],
+    status: "Exhausted",
+    loadMore: vi.fn(),
+  })),
 }));
 
 describe("App Shells & Convex Integration Suite", () => {
-  it("establishes ConvexClientProvider with fallback/sandbox handling when env vars are unset", () => {
+  it("fails closed when the Convex deployment URL is unset", () => {
     expect(typeof ConvexClientProvider).toBe("function");
 
     // Test with process.env undefined
     const origEnv = process.env.NEXT_PUBLIC_CONVEX_URL;
     delete process.env.NEXT_PUBLIC_CONVEX_URL;
 
-    expect(() => {
-      const el = <ConvexClientProvider><div>test</div></ConvexClientProvider>;
-      expect(el).toBeDefined();
-      expect(el.type).toBe(ConvexClientProvider);
-    }).not.toThrow();
+    const html = renderToStaticMarkup(
+      <ConvexClientProvider><div>protected data</div></ConvexClientProvider>,
+    );
+    expect(html).toContain("application data connection is not configured");
+    expect(html).not.toContain("protected data");
 
     process.env.NEXT_PUBLIC_CONVEX_URL = origEnv;
   });
@@ -103,7 +111,7 @@ describe("App Shells & Convex Integration Suite", () => {
   });
 
   it("evaluates CustomerDashboard JSX node tree without throwing", () => {
-    const node = <CustomerDashboard defaultLeadId="leads_123" />;
+    const node = <CustomerDashboard />;
     expect(node).toBeDefined();
     expect(node.type).toBe(CustomerDashboard);
   });

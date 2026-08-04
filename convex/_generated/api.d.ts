@@ -11,11 +11,16 @@
 import type * as auditEvents from "../auditEvents.js";
 import type * as auth from "../auth.js";
 import type * as checklists from "../checklists.js";
+import type * as claims from "../claims.js";
+import type * as cms from "../cms.js";
+import type * as customers from "../customers.js";
 import type * as estimates from "../estimates.js";
 import type * as fileActions from "../fileActions.js";
 import type * as files from "../files.js";
 import type * as jobs from "../jobs.js";
+import type * as leadActions from "../leadActions.js";
 import type * as leads from "../leads.js";
+import type * as notifications from "../notifications.js";
 import type * as users from "../users.js";
 
 import type {
@@ -28,11 +33,16 @@ declare const fullApi: ApiFromModules<{
   auditEvents: typeof auditEvents;
   auth: typeof auth;
   checklists: typeof checklists;
+  claims: typeof claims;
+  cms: typeof cms;
+  customers: typeof customers;
   estimates: typeof estimates;
   fileActions: typeof fileActions;
   files: typeof files;
   jobs: typeof jobs;
+  leadActions: typeof leadActions;
   leads: typeof leads;
+  notifications: typeof notifications;
   users: typeof users;
 }>;
 

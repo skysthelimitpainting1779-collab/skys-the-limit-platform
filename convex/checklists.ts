@@ -171,6 +171,15 @@ export const create = mutation({
     if (!job) throw new Error("JOB_NOT_FOUND");
     const actor = await requireJobAccess(ctx, job, "manage");
     const input = validateChecklistInput(args.title, args.items);
+    const existingChecklists = await ctx.db
+      .query("checklists")
+      .withIndex("by_job_and_created_at", (index) =>
+        index.eq("jobId", job._id),
+      )
+      .take(MAX_CHECKLISTS_PER_JOB);
+    if (existingChecklists.length >= MAX_CHECKLISTS_PER_JOB) {
+      throw new Error("CHECKLIST_LIMIT_EXCEEDED");
+    }
     const now = Date.now();
 
     const checklistId = await ctx.db.insert("checklists", {

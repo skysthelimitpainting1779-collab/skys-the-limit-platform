@@ -22,10 +22,15 @@
    - WorkOS roles and organization claims never create Convex grants. Active Convex memberships remain authoritative.
 
 4. **Staff vs Customer Access Control:**
-   - Staff roles (`crew_member`, `crew_lead`, `estimator`, `project_manager`, `content_editor`, `content_approver`, `admin`, `owner`) are invitation-only.
-   - Customer accounts allow self-serve registration tied to customer job portals.
+   - AuthKit sign-up is disabled. Staff roles (`crew_member`, `crew_lead`, `estimator`, `project_manager`, `content_editor`, `content_approver`, `admin`, `owner`) are invitation-only.
+   - Customer portal identities are also invited and receive access only after a separate, audited Convex `customers.userId` binding. Matching email addresses never grant ownership.
 
 5. **Environment Isolation:**
    - WorkOS Client ID and API Keys are scoped separately per environment (Local, Preview, Production).
-   - Webhook and action secrets are server-only and independently scoped per environment.
-   - The registered `/workos/action` route receives a randomized fail-closed secret until Actions are explicitly enabled with a non-placeholder `WORKOS_ACTION_SECRET` and reviewed handlers.
+   - The WorkOS webhook secret and Vercel Blob token live in the matching Convex deployment, not Vercel's Next.js environment.
+   - WorkOS Actions are not registered. `WORKOS_ACTION_SECRET` remains unset unless reviewed action handlers are deliberately enabled later.
+
+6. **Organization Lifecycle Synchronization:**
+   - Signature-verified WorkOS organization and membership webhooks synchronize identity lifecycle metadata.
+   - A new WorkOS membership is quarantined as a non-privileged Convex `member`; it cannot grant staff, admin, or owner authority.
+   - An existing privileged Convex membership retains its role across metadata sync, while disabled/deleted WorkOS memberships fail closed.

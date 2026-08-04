@@ -1,9 +1,15 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
+import type { MutationCtx } from "./_generated/server";
 import { internalMutation, mutation, query } from "./_generated/server";
 import {
   AUDIT_READER_ROLES,
+  CONTENT_APPROVER_ROLES,
+  CONTENT_EDITOR_ROLES,
   CREW_ROLES,
+  CUSTOMER_ROLES,
   OPERATIONS_MANAGER_ROLES,
+  OPERATIONS_READ_ROLES,
   OPERATIONS_ROLES,
   ROLE_ADMIN_ROLES,
   requireActiveMembership,
@@ -38,6 +44,8 @@ const userValidator = v.object({
   identityStatus: v.optional(
     v.union(v.literal("active"), v.literal("disabled")),
   ),
+  workosUpdatedAt: v.optional(v.string()),
+  workosDeletedAt: v.optional(v.string()),
   email: v.string(),
   role: userRoleValidator,
   name: v.string(),
@@ -50,6 +58,10 @@ const membershipValidator = v.object({
   _creationTime: v.number(),
   userId: v.id("users"),
   orgId: v.id("organizations"),
+  workosMembershipId: v.optional(v.string()),
+  workosRoleSlug: v.optional(v.string()),
+  workosUpdatedAt: v.optional(v.string()),
+  workosDeletedAt: v.optional(v.string()),
   role: membershipRoleValidator,
   status: v.union(
     v.literal("active"),
@@ -58,14 +70,122 @@ const membershipValidator = v.object({
   ),
 });
 
+const organizationSummaryValidator = v.object({
+  _id: v.id("organizations"),
+  name: v.string(),
+  slug: v.string(),
+  status: v.union(
+    v.literal("active"),
+    v.literal("inactive"),
+    v.literal("suspended"),
+  ),
+});
+
+async function countUsableActiveOwners(
+  ctx: Pick<MutationCtx, "db">,
+  orgId: Id<"organizations">,
+) {
+  const ownerMemberships = await ctx.db
+    .query("memberships")
+    .withIndex("by_org_and_role_and_status", (index) =>
+      index
+        .eq("orgId", orgId)
+        .eq("role", "owner")
+        .eq("status", "active"),
+    )
+    .take(100);
+  let usable = 0;
+  for (const membership of ownerMemberships) {
+    const user = await ctx.db.get(membership.userId);
+    if (
+      user?.identityStatus === "active" &&
+      !user.workosDeletedAt &&
+      ++usable >= 2
+    ) {
+      return usable;
+    }
+  }
+  return usable;
+}
+
+export const getMyContext = query({
+  args: {},
+  returns: v.object({
+    user: v.object({
+      _id: v.id("users"),
+      name: v.string(),
+      email: v.string(),
+      avatarUrl: v.optional(v.string()),
+      identityStatus: v.optional(
+        v.union(v.literal("active"), v.literal("disabled")),
+      ),
+    }),
+    memberships: v.array(
+      v.object({
+        membershipId: v.id("memberships"),
+        orgId: v.id("organizations"),
+        role: membershipRoleValidator,
+        organization: organizationSummaryValidator,
+      }),
+    ),
+    defaultOrgId: v.union(v.id("organizations"), v.null()),
+  }),
+  handler: async (ctx) => {
+    const actor = await requireAuthenticatedUser(ctx);
+    const candidates = await ctx.db
+      .query("memberships")
+      .withIndex("by_user", (index) => index.eq("userId", actor._id))
+      .order("asc")
+      .take(50);
+
+    const memberships = [];
+    for (const membership of candidates) {
+      if (membership.status !== "active" || membership.workosDeletedAt) continue;
+      const organization = await ctx.db.get(membership.orgId);
+      if (!organization || organization.status !== "active") continue;
+      memberships.push({
+        membershipId: membership._id,
+        orgId: organization._id,
+        role: membership.role,
+        organization: {
+          _id: organization._id,
+          name: organization.name,
+          slug: organization.slug,
+          status: organization.status,
+        },
+      });
+    }
+
+    return {
+      user: {
+        _id: actor._id,
+        name: actor.name,
+        email: actor.email,
+        avatarUrl: actor.avatarUrl,
+        identityStatus: actor.identityStatus,
+      },
+      memberships,
+      defaultOrgId: memberships[0]?.orgId ?? null,
+    };
+  },
+});
+
 export const getMyCapabilities = query({
   args: { orgId: v.id("organizations") },
   returns: v.object({
     role: membershipRoleValidator,
     canManageLeads: v.boolean(),
+    canManageEstimates: v.boolean(),
     canReadJobs: v.boolean(),
     canUpdateJobs: v.boolean(),
+    canManageJobs: v.boolean(),
+    canManageCrew: v.boolean(),
+    canEditContent: v.boolean(),
+    canPublishContent: v.boolean(),
+    canManageTeam: v.boolean(),
     canReadAudit: v.boolean(),
+    canManageDocuments: v.boolean(),
+    canAccessCustomerPortal: v.boolean(),
   }),
   handler: async (ctx, args) => {
     const actor = await requireAuthenticatedUser(ctx);
@@ -73,13 +193,23 @@ export const getMyCapabilities = query({
     return {
       role: membership.role,
       canManageLeads: OPERATIONS_ROLES.includes(membership.role),
+      canManageEstimates: OPERATIONS_ROLES.includes(membership.role),
       canReadJobs:
-        OPERATIONS_MANAGER_ROLES.includes(membership.role) ||
+        OPERATIONS_READ_ROLES.includes(membership.role) ||
         CREW_ROLES.includes(membership.role),
       canUpdateJobs:
         OPERATIONS_MANAGER_ROLES.includes(membership.role) ||
         membership.role === "crew_lead",
+      canManageJobs: OPERATIONS_MANAGER_ROLES.includes(membership.role),
+      canManageCrew: OPERATIONS_MANAGER_ROLES.includes(membership.role),
+      canEditContent: CONTENT_EDITOR_ROLES.includes(membership.role),
+      canPublishContent: CONTENT_APPROVER_ROLES.includes(membership.role),
+      canManageTeam: ROLE_ADMIN_ROLES.includes(membership.role),
       canReadAudit: AUDIT_READER_ROLES.includes(membership.role),
+      canManageDocuments:
+        OPERATIONS_READ_ROLES.includes(membership.role) ||
+        CONTENT_EDITOR_ROLES.includes(membership.role),
+      canAccessCustomerPortal: CUSTOMER_ROLES.includes(membership.role),
     };
   },
 });
@@ -180,7 +310,11 @@ export const updateRole = mutation({
         index.eq("userId", args.userId).eq("orgId", args.orgId),
       )
       .unique();
-    if (!membership || membership.status === "disabled") {
+    if (
+      !membership ||
+      membership.status === "disabled" ||
+      membership.workosDeletedAt
+    ) {
       throw new Error("MEMBERSHIP_NOT_FOUND");
     }
     if (
@@ -190,6 +324,15 @@ export const updateRole = mutation({
       actorMembership.role !== "owner"
     ) {
       throw new Error("FORBIDDEN");
+    }
+    if (
+      membership.role === "owner" &&
+      membership.status === "active" &&
+      args.role !== "owner"
+    ) {
+      if ((await countUsableActiveOwners(ctx, args.orgId)) < 2) {
+        throw new Error("LAST_ACTIVE_OWNER");
+      }
     }
     await ctx.db.patch(membership._id, { role: args.role });
     await ctx.db.insert("auditEvents", {
@@ -227,12 +370,18 @@ export const list = query({
     const selected = memberships.filter(
       (membership) =>
         membership.status === "active" &&
+        !membership.workosDeletedAt &&
         (!args.role || membership.role === args.role),
     );
     const users = await Promise.all(
       selected.map((membership) => ctx.db.get(membership.userId)),
     );
-    return users.filter((user): user is NonNullable<typeof user> => user !== null);
+    return users.filter(
+      (user): user is NonNullable<typeof user> =>
+        user !== null &&
+        user.identityStatus !== "disabled" &&
+        !user.workosDeletedAt,
+    );
   },
 });
 
@@ -253,6 +402,12 @@ export const provisionMembership = internalMutation({
     const user = await ctx.db.get(args.userId);
     const organization = await ctx.db.get(args.orgId);
     if (!user || !organization) throw new Error("PROVISIONING_TARGET_NOT_FOUND");
+    if (
+      args.status !== "disabled" &&
+      (user.identityStatus !== "active" || user.workosDeletedAt)
+    ) {
+      throw new Error("PROVISIONING_USER_NOT_ACTIVE");
+    }
     if (args.status === "active" && organization.status !== "active") {
       throw new Error("FORBIDDEN");
     }
@@ -263,6 +418,18 @@ export const provisionMembership = internalMutation({
         index.eq("userId", args.userId).eq("orgId", args.orgId),
       )
       .unique();
+    if (existing?.workosDeletedAt) {
+      throw new Error("WORKOS_MEMBERSHIP_TOMBSTONED");
+    }
+    if (
+      existing?.role === "owner" &&
+      existing.status === "active" &&
+      (args.role !== "owner" || args.status !== "active")
+    ) {
+      if ((await countUsableActiveOwners(ctx, args.orgId)) < 2) {
+        throw new Error("LAST_ACTIVE_OWNER");
+      }
+    }
     const membershipId = existing
       ? existing._id
       : await ctx.db.insert("memberships", {

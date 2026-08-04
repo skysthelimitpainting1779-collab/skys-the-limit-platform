@@ -20,6 +20,7 @@ import {
   requireAuthenticatedUser,
   requireCrewAssignment,
 } from "./lib/authorization";
+import { appendAuditEvent } from "./lib/audit";
 import {
   accessLevelValidator,
   ALLOWED_MIME_TYPES,
@@ -151,6 +152,11 @@ async function authorizeRead(
     actor._id,
     document.orgId,
   );
+  if (CREW_ROLES.includes(membership.role)) {
+    const job = await loadAuthorizedJob(ctx, document.orgId, document.jobId);
+    if (!job) throw new Error("FORBIDDEN");
+    requireCrewAssignment(job, actor._id);
+  }
   if (document.accessLevel === "restricted") {
     if (
       document.uploadedBy !== actor._id &&
@@ -163,11 +169,6 @@ async function authorizeRead(
 
   if (!FILE_INTERNAL_READ_ROLES.includes(membership.role)) {
     throw new Error("FORBIDDEN");
-  }
-  if (CREW_ROLES.includes(membership.role)) {
-    const job = await loadAuthorizedJob(ctx, document.orgId, document.jobId);
-    if (!job) throw new Error("FORBIDDEN");
-    requireCrewAssignment(job, actor._id);
   }
   return actor;
 }
@@ -231,7 +232,8 @@ export const registerDocument = internalMutation({
       .unique();
     if (existing) throw new Error("DOCUMENT_ALREADY_REGISTERED");
 
-    return await ctx.db.insert("documents", {
+    const now = Date.now();
+    const documentId = await ctx.db.insert("documents", {
       blobUrl: args.blobUrl,
       blobPathname: args.blobPathname,
       name,
@@ -241,8 +243,21 @@ export const registerDocument = internalMutation({
       uploadedBy: actor._id,
       accessLevel: args.accessLevel,
       jobId: args.jobId,
-      createdAt: Date.now(),
+      createdAt: now,
     });
+    await appendAuditEvent(ctx, {
+      orgId: args.orgId,
+      actorId: actor._id,
+      action: "document.registered",
+      targetResource: documentId,
+      metadata: {
+        jobId: args.jobId,
+        accessLevel: args.accessLevel,
+        blobPathname: args.blobPathname,
+      },
+      timestamp: now,
+    });
+    return documentId;
   },
 });
 
@@ -282,8 +297,19 @@ export const deleteDocumentMetadata = internalMutation({
   handler: async (ctx, args) => {
     const document = await ctx.db.get(args.documentId);
     if (!document) return null;
-    await authorizeDelete(ctx, document);
+    const actor = await authorizeDelete(ctx, document);
     await ctx.db.delete(document._id);
+    await appendAuditEvent(ctx, {
+      orgId: document.orgId,
+      actorId: actor._id,
+      action: "document.metadata_deleted",
+      targetResource: document._id,
+      metadata: {
+        jobId: document.jobId,
+        accessLevel: document.accessLevel,
+        blobPathname: document.blobPathname,
+      },
+    });
     return null;
   },
 });

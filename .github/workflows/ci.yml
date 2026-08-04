@@ -42,12 +42,12 @@ jobs:
         run: npm test
 
       - name: Build
-        # Uses SKIP_ENV_VALIDATION to bypass WorkOS/Stripe checks (not configured in CI)
-        # NEXT_PUBLIC_CONVEX_URL points at the real cloud deployment (neighborly-seahorse-366)
+        # CI renders the explicit fail-closed configuration state and never
+        # couples a build to a persistent Convex or WorkOS environment.
         run: npm run build
         env:
           SKIP_ENV_VALIDATION: "true"
-          NEXT_PUBLIC_CONVEX_URL: "https://neighborly-seahorse-366.convex.cloud"
+          NEXT_PUBLIC_CONVEX_URL: "https://ci-placeholder.convex.cloud"
 
   branch-policy:
     name: Branch Policy

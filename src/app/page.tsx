@@ -41,7 +41,6 @@ const jsonLd = {
   "@type": "PaintingContractor",
   name: "Sky's the Limit Painting LLC",
   url: "https://skysthelimitpaintingllc.com",
-  logo: "https://skysthelimitpaintingllc.com/brand/logo-illustrated-badge.webp",
   description:
     "Prep-first painting estimates for Twin Cities homes, commercial properties, and public assets.",
   address: {
@@ -149,7 +148,7 @@ export default function HomePage() {
 
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-foreground leading-[1.1]">
                 Careful Prep. <br />
-                <span className="bg-gradient-to-r from-primary via-orange-500 to-amber-600 bg-clip-text text-transparent">
+                <span className="text-primary">
                   Flawless Finish.
                 </span>{" "}
                 <br />

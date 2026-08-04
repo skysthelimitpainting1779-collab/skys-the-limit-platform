@@ -14,8 +14,6 @@ import {
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 
-const FALLBACK_CONVEX_URL = "https://sandbox-placeholder.convex.cloud";
-
 function isConfiguredConvexUrl(value: string | undefined): value is string {
   if (!value) return false;
   try {
@@ -34,14 +32,35 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
   return (
     <AuthKitProvider>
-      <ConfiguredConvexProvider
-        convexUrl={
-          isConfiguredConvexUrl(convexUrl) ? convexUrl : FALLBACK_CONVEX_URL
-        }
-      >
-        {children}
-      </ConfiguredConvexProvider>
+      {isConfiguredConvexUrl(convexUrl) ? (
+        <ConfiguredConvexProvider convexUrl={convexUrl}>
+          {children}
+        </ConfiguredConvexProvider>
+      ) : (
+        <ConvexConfigurationError />
+      )}
     </AuthKitProvider>
+  );
+}
+
+export function ConvexConfigurationError() {
+  return (
+    <main
+      className="flex min-h-screen items-center justify-center bg-background px-4 py-16 text-foreground"
+      data-testid="convex-configuration-error"
+    >
+      <section className="w-full max-w-xl rounded-xl border border-border bg-card p-6 shadow-sm">
+        <p className="text-sm font-semibold text-primary">Workspace unavailable</p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight">
+          The application data connection is not configured
+        </h1>
+        <p className="mt-3 max-w-prose text-sm leading-6 text-muted-foreground">
+          This environment is missing a valid Convex endpoint. No operational
+          data has been loaded or changed. An administrator must configure the
+          environment before this workspace can be used.
+        </p>
+      </section>
+    </main>
   );
 }
 
@@ -67,9 +86,28 @@ function ProvisionAuthenticatedUser() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    void bindAuthenticatedUser({}).catch(() => {
-      console.error("[AuthKit] Convex identity binding failed.");
-    });
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const bind = async (attempt: number) => {
+      try {
+        await bindAuthenticatedUser({});
+      } catch {
+        if (cancelled) return;
+        if (attempt >= 4) {
+          console.error("[AuthKit] Convex identity binding failed.");
+          return;
+        }
+        retryTimer = setTimeout(
+          () => void bind(attempt + 1),
+          500 * 2 ** attempt,
+        );
+      }
+    };
+    void bind(0);
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [bindAuthenticatedUser, isAuthenticated]);
   return null;
 }

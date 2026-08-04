@@ -13,22 +13,25 @@ describe("Environment Schema & Isolation Guards", () => {
     ENABLE_PRODUCTION_CONVEX: "false",
   };
   const productionRequirements = {
+    NEXT_PUBLIC_APP_URL: "https://example.com",
     WORKOS_API_KEY: liveWorkOSKey,
     WORKOS_CLIENT_ID: "client_production",
     WORKOS_COOKIE_PASSWORD: "a-secure-cookie-password-over-32-characters",
     WORKOS_REDIRECT_URI: "https://example.com/auth/callback",
     NEXT_PUBLIC_WORKOS_REDIRECT_URI: "https://example.com/auth/callback",
-    WORKOS_WEBHOOK_SECRET: "environment-specific-webhook-secret",
+    WORKOS_ORGANIZATION_ID: "org_production",
     NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_production",
-    BLOB_READ_WRITE_TOKEN: "environment-specific-blob-token",
+    LEAD_INTAKE_SECRET: "production-lead-intake-secret-over-32-characters",
   };
   const previewRequirements = {
     ...productionRequirements,
+    NEXT_PUBLIC_APP_URL: "https://preview.example.com",
     WORKOS_API_KEY: `${["sk", "test"].join("_")}_preview_key`,
     WORKOS_CLIENT_ID: "client_preview",
     WORKOS_REDIRECT_URI: "https://preview.example.com/auth/callback",
     NEXT_PUBLIC_WORKOS_REDIRECT_URI:
       "https://preview.example.com/auth/callback",
+    WORKOS_ORGANIZATION_ID: "org_preview",
     NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_preview",
   };
 
@@ -124,7 +127,7 @@ describe("Environment Schema & Isolation Guards", () => {
     expect(validated.ENABLE_LIVE_EMAIL).toBe("true");
   });
 
-  it("fails closed when production WorkOS, tenant, or Blob configuration is incomplete", () => {
+  it("fails closed when deployment WorkOS or tenant configuration is incomplete", () => {
     const result = EnvironmentSchema.safeParse({
       ...validBaseEnv,
       NODE_ENV: "production",
@@ -143,12 +146,61 @@ describe("Environment Schema & Isolation Guards", () => {
       WORKOS_COOKIE_PASSWORD: "generate_32_character_secret_password_here",
       WORKOS_REDIRECT_URI: "http://localhost:3000/auth/callback",
       NEXT_PUBLIC_WORKOS_REDIRECT_URI: "http://localhost:3000/auth/callback",
+      WORKOS_ORGANIZATION_ID: "org_REPLACE_ME",
       WORKOS_WEBHOOK_SECRET: "replace_with_environment_specific_webhook_secret",
       WORKOS_ACTION_SECRET: "replace_with_environment_specific_action_secret",
       NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_REPLACE_ME",
       BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_REPLACE_ME",
+      LEAD_INTAKE_SECRET: "generate_32_character_lead_intake_secret_here",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("blocks a test WorkOS key in production", () => {
+    const result = EnvironmentSchema.safeParse({
+      ...validBaseEnv,
+      ...productionRequirements,
+      WORKOS_API_KEY: `${["sk", "test"].join("_")}_production_key`,
+      NODE_ENV: "production",
+      VERCEL_ENV: "production",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("does not require Convex-only webhook and Blob secrets in Vercel", () => {
+    const result = EnvironmentSchema.safeParse({
+      ...validBaseEnv,
+      ...previewRequirements,
+      NODE_ENV: "production",
+      VERCEL_ENV: "preview",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("requires an explicit WorkOS organization in deployments", () => {
+    const env = {
+      ...validBaseEnv,
+      ...previewRequirements,
+      NODE_ENV: "production",
+      VERCEL_ENV: "preview",
+    } as Record<string, string>;
+    delete env.WORKOS_ORGANIZATION_ID;
+
+    expect(EnvironmentSchema.safeParse(env).success).toBe(false);
+  });
+
+  it("requires the shared lead-intake secret in deployments", () => {
+    const env = {
+      ...validBaseEnv,
+      ...previewRequirements,
+      NODE_ENV: "production",
+      VERCEL_ENV: "preview",
+    } as Record<string, string>;
+    delete env.LEAD_INTAKE_SECRET;
+
+    expect(EnvironmentSchema.safeParse(env).success).toBe(false);
   });
 
   it("rejects mismatched server and AuthKit redirect URIs", () => {
@@ -160,6 +212,30 @@ describe("Environment Schema & Isolation Guards", () => {
       NEXT_PUBLIC_WORKOS_REDIRECT_URI:
         "https://other-preview.example.com/auth/callback",
     });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a deployment redirect on a different application origin", () => {
+    const result = EnvironmentSchema.safeParse({
+      ...validBaseEnv,
+      ...previewRequirements,
+      VERCEL_ENV: "preview",
+      WORKOS_REDIRECT_URI: "https://other-preview.example.com/auth/callback",
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI:
+        "https://other-preview.example.com/auth/callback",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects localhost as a deployment application URL", () => {
+    const result = EnvironmentSchema.safeParse({
+      ...validBaseEnv,
+      ...previewRequirements,
+      VERCEL_ENV: "preview",
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000",
+    });
+
     expect(result.success).toBe(false);
   });
 

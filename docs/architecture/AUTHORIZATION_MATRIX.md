@@ -131,16 +131,36 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   return identity;
 }
 
-export async function requireRole(ctx: QueryCtx | MutationCtx, allowedRoles: Role[]) {
+export async function requireOrganizationRole(
+  ctx: QueryCtx | MutationCtx,
+  orgId: Id<"organizations">,
+  allowedRoles: Role[],
+) {
   const identity = await requireAuth(ctx);
   const user = await ctx.db
     .query("users")
-    .withIndex("by_external_id", (q) => q.eq("externalId", identity.subject))
+    .withIndex("by_tokenIdentifier", (q) =>
+      q.eq("tokenIdentifier", identity.tokenIdentifier),
+    )
     .unique();
 
-  if (!user || !allowedRoles.includes(user.role as Role)) {
+  if (!user) {
+    throw new ConvexError({ code: "FORBIDDEN", message: "User not provisioned" });
+  }
+  const membership = await ctx.db
+    .query("memberships")
+    .withIndex("by_user_org", (q) => q.eq("userId", user._id).eq("orgId", orgId))
+    .unique();
+  const organization = await ctx.db.get(orgId);
+
+  if (
+    !membership ||
+    membership.status !== "active" ||
+    organization?.status !== "active" ||
+    !allowedRoles.includes(membership.role as Role)
+  ) {
     throw new ConvexError({ code: "FORBIDDEN", message: "Insufficient role permissions" });
   }
-  return { identity, user };
+  return { identity, user, membership, organization };
 }
 ```

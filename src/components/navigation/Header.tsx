@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, Menu, X, ShieldCheck } from "lucide-react";
+import { ArrowRight, Menu, Paintbrush, X, ShieldCheck } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MotionPressable } from "@/design/motion/Pressable";
@@ -24,14 +23,9 @@ export function NavigationHeader() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group focus-visible:outline-none">
           <div className="rounded-lg bg-card p-1 shadow-sm border border-border/60 group-hover:border-primary/40 transition-colors">
-            <Image
-              src="/brand/logo-illustrated-badge.webp"
-              alt="Sky's the Limit Painting LLC logo"
-              width={36}
-              height={32}
-              className="h-8 w-auto object-contain"
-              priority
-            />
+            <span className="flex size-8 items-center justify-center" aria-hidden="true">
+              <Paintbrush className="size-5 text-primary" />
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-base font-extrabold tracking-tight text-foreground group-hover:text-primary transition-colors">

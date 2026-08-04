@@ -6,6 +6,7 @@ import {
   requireAuthenticatedUser,
 } from "./lib/authorization";
 import { estimateValidator } from "./lib/returnValidators";
+import { appendAuditEvent } from "./lib/audit";
 
 export const estimateStatusValidator = v.union(
   v.literal("draft"),
@@ -20,6 +21,43 @@ export const pricingValidator = v.union(
   v.record(v.string(), v.any()),
 );
 
+const MAX_SCOPE_LENGTH = 20_000;
+const MAX_PRICING_BYTES = 100_000;
+
+function normalizeScope(scope: string) {
+  const normalized = scope.trim();
+  if (!normalized || normalized.length > MAX_SCOPE_LENGTH) {
+    throw new Error("INVALID_ESTIMATE_SCOPE");
+  }
+  return normalized;
+}
+
+function validatePricing(
+  pricing: number | Record<string, unknown>,
+): number | Record<string, unknown> {
+  if (typeof pricing === "number") {
+    if (!Number.isFinite(pricing) || pricing < 0) {
+      throw new Error("INVALID_ESTIMATE_PRICING");
+    }
+    return pricing;
+  }
+
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(pricing);
+  } catch {
+    throw new Error("INVALID_ESTIMATE_PRICING");
+  }
+  if (new TextEncoder().encode(serialized).byteLength > MAX_PRICING_BYTES) {
+    throw new Error("ESTIMATE_PRICING_LIMIT_EXCEEDED");
+  }
+  const total = computeTotalFromPricing(pricing);
+  if (!Number.isFinite(total) || total < 0) {
+    throw new Error("INVALID_ESTIMATE_PRICING");
+  }
+  return pricing;
+}
+
 export const create = mutation({
   args: {
     leadId: v.id("leads"),
@@ -33,17 +71,30 @@ export const create = mutation({
     const actor = await requireAuthenticatedUser(ctx);
     await requireActiveMembership(ctx, actor._id, args.orgId, OPERATIONS_ROLES);
     const lead = await ctx.db.get(args.leadId);
-    if (!lead?.orgId || lead.orgId !== args.orgId) {
+    if (!lead || lead.orgId !== args.orgId) {
       throw new Error("LEAD_NOT_FOUND");
     }
-    return await ctx.db.insert("estimates", {
+    const now = Date.now();
+    const estimateId = await ctx.db.insert("estimates", {
       leadId: lead._id,
       orgId: args.orgId,
-      scope: args.scope,
-      pricing: args.pricing,
+      customerId: lead.customerId,
+      propertyId: lead.propertyId,
+      scope: normalizeScope(args.scope),
+      pricing: validatePricing(args.pricing),
       status: args.status ?? "draft",
-      createdAt: Date.now(),
+      createdAt: now,
+      updatedAt: now,
     });
+    await appendAuditEvent(ctx, {
+      orgId: args.orgId,
+      actorId: actor._id,
+      action: "estimate.created",
+      targetResource: estimateId,
+      metadata: { leadId: lead._id, customerId: lead.customerId },
+      timestamp: now,
+    });
+    return estimateId;
   },
 });
 
@@ -128,11 +179,21 @@ export const update = mutation({
       scope?: string;
       pricing?: number | Record<string, unknown>;
       status?: "draft" | "sent" | "accepted" | "declined" | "expired";
+      updatedAt?: number;
     } = {};
-    if (args.scope !== undefined) updates.scope = args.scope;
-    if (args.pricing !== undefined) updates.pricing = args.pricing;
+    if (args.scope !== undefined) updates.scope = normalizeScope(args.scope);
+    if (args.pricing !== undefined) updates.pricing = validatePricing(args.pricing);
     if (args.status !== undefined) updates.status = args.status;
+    updates.updatedAt = Date.now();
     await ctx.db.patch(estimate._id, updates);
+    await appendAuditEvent(ctx, {
+      orgId: estimate.orgId,
+      actorId: actor._id,
+      action: "estimate.updated",
+      targetResource: estimate._id,
+      metadata: { status: args.status },
+      timestamp: updates.updatedAt,
+    });
     const updated = await ctx.db.get(estimate._id);
     if (!updated) throw new Error("ESTIMATE_NOT_FOUND");
     return updated;
@@ -165,5 +226,7 @@ export const calculateTotal = query({
   args: { pricing: v.optional(pricingValidator) },
   returns: v.number(),
   handler: async (_ctx, args) =>
-    args.pricing === undefined ? 0 : computeTotalFromPricing(args.pricing),
+    args.pricing === undefined
+      ? 0
+      : computeTotalFromPricing(validatePricing(args.pricing)),
 });

@@ -4,6 +4,7 @@
 import { convexTest } from "convex-test";
 import { anyApi } from "convex/server";
 import { describe, expect, it } from "vitest";
+import { createLeadIntakeProof } from "../src/lib/leads/intakeProof";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
@@ -372,9 +373,49 @@ describe("legacy public Convex RPC boundary", () => {
       serviceAddress: "199 Public Way, Minneapolis MN",
       projectDetails: "Full exterior painting project",
       sourcePath: "/estimate",
+      contactConsent: true as const,
     };
-    const first = await t.mutation(anyApi.leads.create, input);
-    const duplicate = await t.mutation(anyApi.leads.create, input);
+
+    const { contactConsent, ...withoutConsent } = input;
+    expect(contactConsent).toBe(true);
+    await expect(
+      t.action(anyApi.leadActions.submit, {
+        ...withoutConsent,
+        issuedAt: Date.now(),
+        proof: "0".repeat(64),
+      }),
+    ).rejects.toThrow();
+    await expect(
+      t.action(anyApi.leadActions.submit, {
+        ...withoutConsent,
+        contactConsent: false,
+        issuedAt: Date.now(),
+        proof: "0".repeat(64),
+      }),
+    ).rejects.toThrow();
+
+    const secret = "local-test-only-lead-intake-secret-32-chars";
+    process.env.LEAD_INTAKE_SECRET = secret;
+    const issuedAt = Date.now();
+    const proof = await createLeadIntakeProof(secret, input, issuedAt);
+    await expect(
+      t.action(anyApi.leadActions.submit, {
+        ...input,
+        issuedAt,
+        proof: "0".repeat(64),
+      }),
+    ).rejects.toThrow("INVALID_INTAKE_PROOF");
+
+    const first = await t.action(anyApi.leadActions.submit, {
+      ...input,
+      issuedAt,
+      proof,
+    });
+    const duplicate = await t.action(anyApi.leadActions.submit, {
+      ...input,
+      issuedAt,
+      proof,
+    });
     expect(first.created).toBe(true);
     expect(duplicate).toEqual({ id: first.id, created: false });
     await expect(
@@ -382,6 +423,51 @@ describe("legacy public Convex RPC boundary", () => {
         leadId: first.id,
       }),
     ).resolves.toMatchObject({ orgId: orgA, email: input.email });
+  });
+
+  it("caps signed anonymous intake across rotated contact details", async () => {
+    const { t, orgA } = await seedTenantScopedRpcFixture();
+    const now = Date.now();
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 100; index += 1) {
+        await ctx.db.insert("leads", {
+          orgId: orgA,
+          idempotencyKey: `seed-${index}`,
+          fullName: `Rotated Caller ${index}`,
+          email: `rotated-${index}@example.com`,
+          phone: `+155500${String(index).padStart(5, "0")}`,
+          segment: "residential",
+          serviceAddress: `${index} Rotated Way, Minneapolis MN`,
+          projectDetails: "A syntactically valid but automated intake request.",
+          sourcePath: "/estimate",
+          contactConsentAt: now,
+          status: "new",
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+    });
+
+    const input = {
+      orgId: orgA,
+      idempotencyKey: "00000000-0000-4000-8000-000000000100",
+      fullName: "Rotated Caller 101",
+      email: "rotated-101@example.com",
+      phone: "+15555550200",
+      segment: "residential" as const,
+      serviceAddress: "200 Rotated Way, Minneapolis MN",
+      projectDetails: "Another syntactically valid automated intake request.",
+      contactConsent: true as const,
+      sourcePath: "/estimate",
+    };
+    const secret = "local-test-only-lead-intake-secret-32-chars";
+    process.env.LEAD_INTAKE_SECRET = secret;
+    const issuedAt = Date.now();
+    const proof = await createLeadIntakeProof(secret, input, issuedAt);
+
+    await expect(
+      t.action(anyApi.leadActions.submit, { ...input, issuedAt, proof }),
+    ).rejects.toThrow("RATE_LIMITED");
   });
 
   it("allows authorized estimate and job write paths", async () => {
@@ -483,7 +569,7 @@ describe("legacy public Convex RPC boundary", () => {
       ),
     ).resolves.toMatchObject({
       canManageLeads: true,
-      canReadJobs: false,
+      canReadJobs: true,
       canUpdateJobs: false,
       canReadAudit: false,
     });
@@ -523,9 +609,17 @@ describe("legacy public Convex RPC boundary", () => {
     ).resolves.toEqual({
       role: "member",
       canManageLeads: false,
+      canManageEstimates: false,
       canReadJobs: false,
       canUpdateJobs: false,
+      canManageJobs: false,
+      canManageCrew: false,
+      canEditContent: false,
+      canPublishContent: false,
+      canManageTeam: false,
       canReadAudit: false,
+      canManageDocuments: false,
+      canAccessCustomerPortal: false,
     });
   });
 });

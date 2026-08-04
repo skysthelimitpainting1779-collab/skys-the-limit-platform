@@ -13,6 +13,7 @@ const validInput: LeadMutationInput = {
   serviceAddress: "123 Main St, Saint Paul, MN",
   projectDetails: "Paint the living room and repair minor wall damage.",
   desiredTimeframe: "Within 30 days",
+  contactConsent: true,
   sourcePath: "/estimate",
   utmSource: "google",
   utmMedium: "cpc",
@@ -29,11 +30,12 @@ describe("direct Convex lead mutation validation", () => {
     ["email", { email: "not-an-email" }],
     ["phone", { phone: "6514104196" }],
     ["project details", { projectDetails: "too short" }],
+    ["contact consent", { contactConsent: false }],
     ["source path", { sourcePath: "https://evil.example/estimate" }],
     ["utm source", { utmSource: "x".repeat(121) }],
   ])("rejects invalid %s when the Route Handler is bypassed", (_label, patch) => {
     expect(() =>
-      assertLeadMutationInput({ ...validInput, ...patch }),
+      assertLeadMutationInput({ ...validInput, ...patch } as LeadMutationInput),
     ).toThrow("INVALID_LEAD_INPUT");
   });
 });

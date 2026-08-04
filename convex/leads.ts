@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import {
   OPERATIONS_ROLES,
   requireActiveMembership,
@@ -8,6 +8,7 @@ import {
 } from "./lib/authorization";
 import { normalizeLeadMutationInput } from "./lib/leadValidation";
 import { leadValidator } from "./lib/returnValidators";
+import { appendAuditEvent } from "./lib/audit";
 
 export const leadStatusValidator = v.union(
   v.literal("new"),
@@ -24,8 +25,11 @@ export const projectTypeValidator = v.union(
   v.literal("public-sector"),
 );
 
-/** Intentionally anonymous lead intake, bound to one active organization. */
-export const create = mutation({
+const INTAKE_WINDOW_MS = 15 * 60 * 1_000;
+const MAX_INTAKES_PER_ORG_WINDOW = 100;
+
+/** Trusted persistence seam reached only after leadActions verifies a server proof. */
+export const create = internalMutation({
   args: {
     orgId: v.id("organizations"),
     idempotencyKey: v.string(),
@@ -36,6 +40,7 @@ export const create = mutation({
     serviceAddress: v.string(),
     projectDetails: v.string(),
     desiredTimeframe: v.optional(v.string()),
+    contactConsent: v.literal(true),
     sourcePath: v.string(),
     utmSource: v.optional(v.string()),
     utmMedium: v.optional(v.string()),
@@ -57,7 +62,16 @@ export const create = mutation({
     if (existing) return { id: existing._id, created: false };
 
     const now = Date.now();
-    const windowStart = now - 15 * 60 * 1_000;
+    const windowStart = now - INTAKE_WINDOW_MS;
+    const recentForOrganization = await ctx.db
+      .query("leads")
+      .withIndex("by_org_and_created_at", (index) =>
+        index.eq("orgId", args.orgId).gte("createdAt", windowStart),
+      )
+      .take(MAX_INTAKES_PER_ORG_WINDOW);
+    if (recentForOrganization.length >= MAX_INTAKES_PER_ORG_WINDOW) {
+      throw new Error("RATE_LIMITED");
+    }
     const recentFromEmail = await ctx.db
       .query("leads")
       .withIndex("by_org_and_email_and_created_at", (index) =>
@@ -98,6 +112,14 @@ export const create = mutation({
       status: "new",
       createdAt: now,
       updatedAt: now,
+    });
+    await appendAuditEvent(ctx, {
+      orgId: args.orgId,
+      actorId: "anonymous",
+      action: "lead.created",
+      targetResource: id,
+      metadata: { sourcePath: input.sourcePath },
+      timestamp: now,
     });
     return { id, created: true };
   },
@@ -148,7 +170,16 @@ export const updateStatus = mutation({
     const lead = await ctx.db.get(args.leadId);
     if (!lead?.orgId) throw new Error("LEAD_NOT_FOUND");
     await requireActiveMembership(ctx, actor._id, lead.orgId, OPERATIONS_ROLES);
-    await ctx.db.patch(lead._id, { status: args.status, updatedAt: Date.now() });
+    const now = Date.now();
+    await ctx.db.patch(lead._id, { status: args.status, updatedAt: now });
+    await appendAuditEvent(ctx, {
+      orgId: lead.orgId,
+      actorId: actor._id,
+      action: "lead.status_updated",
+      targetResource: lead._id,
+      metadata: { status: args.status },
+      timestamp: now,
+    });
     const updated = await ctx.db.get(lead._id);
     if (!updated) throw new Error("LEAD_NOT_FOUND");
     return updated;

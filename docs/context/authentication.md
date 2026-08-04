@@ -6,5 +6,6 @@
 - **Decision Affected**: Identity provider, JWT verification in Convex, user onboarding flows.
 - **Important Constraints**:
   - Invitation-only staff access for operations/crew portals.
-  - Customer self-serve identity creation for project portal.
+  - Invitation-only customer identity followed by an audited, exact Convex customer binding.
+  - AuthKit authenticates identities; active Convex organization memberships and object bindings authorize access.
   - Isolated Preview credentials from Production environment.

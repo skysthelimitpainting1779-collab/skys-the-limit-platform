@@ -94,6 +94,7 @@ describe("estimate request boundary", () => {
         serviceAddress: "123 Main St, Saint Paul, MN",
         projectDetails: "Paint the living room and repair minor wall damage.",
         desiredTimeframe: "Within 30 days",
+        contactConsent: true,
         sourcePath: "/estimate",
         utmSource: "google",
         consentAt: 1_785_700_000_000,

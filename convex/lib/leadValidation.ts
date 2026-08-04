@@ -9,6 +9,7 @@ export interface LeadMutationInput {
   serviceAddress: string;
   projectDetails: string;
   desiredTimeframe?: string;
+  contactConsent: true;
   sourcePath: string;
   utmSource?: string;
   utmMedium?: string;
@@ -60,6 +61,7 @@ export function assertLeadMutationInput(input: LeadMutationInput): void {
   assertText(input.serviceAddress, 5, 240);
   assertText(input.projectDetails, 20, 4000);
   assertOptionalText(input.desiredTimeframe, 120);
+  if (input.contactConsent !== true) invalid();
   assertText(input.sourcePath, 1, 300);
   if (!SOURCE_PATH_PATTERN.test(input.sourcePath)) invalid();
   assertOptionalText(input.utmSource, 120);
@@ -79,6 +81,7 @@ export function normalizeLeadMutationInput(
     serviceAddress: compactWhitespace(input.serviceAddress),
     projectDetails: compactWhitespace(input.projectDetails),
     desiredTimeframe: optionalCompactWhitespace(input.desiredTimeframe),
+    contactConsent: input.contactConsent,
     sourcePath: input.sourcePath.trim(),
     utmSource: optionalCompactWhitespace(input.utmSource),
     utmMedium: optionalCompactWhitespace(input.utmMedium),

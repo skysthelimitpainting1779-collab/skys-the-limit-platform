@@ -101,6 +101,7 @@ async function seedTenantFixture() {
     });
 
     const leadId = await ctx.db.insert("leads", {
+      orgId: orgA,
       idempotencyKey: "fixture-lead",
       fullName: "Fixture Customer",
       email: "fixture@example.com",
@@ -233,10 +234,54 @@ describe("checklist authorization and integrity", () => {
         })),
       }),
     ).rejects.toThrow("CHECKLIST_ITEM_LIMIT_EXCEEDED");
+
+    const owner = t.withIdentity(identity("owner-a"));
+    for (let index = 0; index < 20; index += 1) {
+      await owner.mutation(anyApi.checklists.create, {
+        jobId: jobA,
+        title: `Checklist ${index + 1}`,
+        items: [],
+      });
+    }
+    await expect(
+      owner.mutation(anyApi.checklists.create, {
+        jobId: jobA,
+        title: "Checklist 21",
+        items: [],
+      }),
+    ).rejects.toThrow("CHECKLIST_LIMIT_EXCEEDED");
   });
 });
 
 describe("document metadata authorization", () => {
+  it("revokes direct restricted-file access when crew assignment ends", async () => {
+    const { t, orgA, crewA, jobA } = await seedTenantFixture();
+    let documentId!: Id<"documents">;
+    await t.run(async (ctx) => {
+      documentId = await ctx.db.insert("documents", {
+        blobUrl: "https://blob.example/revoked-crew",
+        blobPathname: `organizations/${orgA}/users/${crewA}/revoked.pdf`,
+        name: "Revoked assignment.pdf",
+        mimeType: "application/pdf",
+        size: 20,
+        orgId: orgA,
+        uploadedBy: crewA,
+        accessLevel: "restricted",
+        jobId: jobA,
+        createdAt: 1,
+      });
+      await ctx.db.patch(jobA, { crewIds: [] });
+    });
+
+    const revokedCrew = t.withIdentity(identity("crew-a"));
+    await expect(
+      revokedCrew.query(anyApi.files.getDocument, { documentId }),
+    ).rejects.toThrow("FORBIDDEN");
+    await expect(
+      revokedCrew.query(internal.files.getAuthorizedBlob, { documentId }),
+    ).rejects.toThrow("FORBIDDEN");
+  });
+
   it("exposes only public metadata anonymously", async () => {
     const { t, orgA, ownerA } = await seedTenantFixture();
     let publicId!: Id<"documents">;

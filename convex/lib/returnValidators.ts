@@ -4,6 +4,8 @@ export const leadValidator = v.object({
   _id: v.id("leads"),
   _creationTime: v.number(),
   orgId: v.optional(v.id("organizations")),
+  customerId: v.optional(v.id("customers")),
+  propertyId: v.optional(v.id("properties")),
   idempotencyKey: v.string(),
   fullName: v.string(),
   email: v.string(),
@@ -39,6 +41,8 @@ export const estimateValidator = v.object({
   _creationTime: v.number(),
   leadId: v.id("leads"),
   orgId: v.id("organizations"),
+  customerId: v.optional(v.id("customers")),
+  propertyId: v.optional(v.id("properties")),
   scope: v.string(),
   pricing: v.union(v.number(), v.record(v.string(), v.any())),
   status: v.union(
@@ -49,13 +53,18 @@ export const estimateValidator = v.object({
     v.literal("expired"),
   ),
   createdAt: v.number(),
+  updatedAt: v.optional(v.number()),
 });
 
 export const jobValidator = v.object({
   _id: v.id("jobs"),
   _creationTime: v.number(),
-  estimateId: v.id("estimates"),
+  estimateId: v.optional(v.id("estimates")),
   orgId: v.id("organizations"),
+  customerId: v.optional(v.id("customers")),
+  propertyId: v.optional(v.id("properties")),
+  title: v.optional(v.string()),
+  address: v.optional(v.string()),
   status: v.union(
     v.literal("scheduled"),
     v.literal("in_progress"),
@@ -65,6 +74,7 @@ export const jobValidator = v.object({
   schedule: v.union(v.number(), v.record(v.string(), v.any()), v.string()),
   crewIds: v.array(v.id("users")),
   createdAt: v.number(),
+  updatedAt: v.optional(v.number()),
 });
 
 export const auditEventValidator = v.object({
