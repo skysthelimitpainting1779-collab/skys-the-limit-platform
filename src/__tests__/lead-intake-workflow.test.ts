@@ -41,6 +41,7 @@ describe("lead-intake CI isolation contract", () => {
       "WORKOS_COOKIE_PASSWORD",
       "WORKOS_REDIRECT_URI",
       "NEXT_PUBLIC_WORKOS_REDIRECT_URI",
+      "WORKOS_ORGANIZATION_ID",
     ]) {
       expect(workflow).toMatch(new RegExp(`^\\s{6}${variable}:`, "m"));
     }

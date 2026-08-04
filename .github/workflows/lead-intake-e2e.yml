@@ -24,6 +24,7 @@ jobs:
       WORKOS_COOKIE_PASSWORD: local_ci_cookie_password_is_at_least_32_chars
       WORKOS_REDIRECT_URI: http://127.0.0.1:3100/auth/callback
       NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://127.0.0.1:3100/auth/callback
+      WORKOS_ORGANIZATION_ID: org_local_ci_fail_closed
       WORKOS_WEBHOOK_SECRET: whsec_local_ci_fail_closed
       WORKOS_ACTION_SECRET: action_local_ci_fail_closed
     steps:
