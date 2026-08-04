@@ -51,9 +51,9 @@ export function NavigationFooter() {
         <div className="space-y-3">
           <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">Portals</h4>
           <ul className="space-y-2 text-xs text-muted-foreground">
-            <li><Link href="/customer" className="hover:text-primary transition-colors">Customer Portal</Link></li>
-            <li><Link href="/crew" className="hover:text-primary transition-colors">Crew Dashboard</Link></li>
-            <li><Link href="/operations" className="hover:text-primary transition-colors">Operations Command</Link></li>
+            <li><Link href="/customer" prefetch={false} className="hover:text-primary transition-colors">Customer Portal</Link></li>
+            <li><Link href="/crew" prefetch={false} className="hover:text-primary transition-colors">Crew Dashboard</Link></li>
+            <li><Link href="/operations" prefetch={false} className="hover:text-primary transition-colors">Operations Command</Link></li>
           </ul>
         </div>
       </div>

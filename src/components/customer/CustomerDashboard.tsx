@@ -2,10 +2,11 @@
 
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useAction, usePaginatedQuery, useQuery } from "convex/react";
 import {
   CalendarDays,
   CircleDollarSign,
+  Download,
   FileLock2,
   Home,
   Mail,
@@ -14,7 +15,7 @@ import {
   Phone,
   ShieldCheck,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { usePortalWorkspace } from "@/components/portal/PortalShell";
 import { Badge } from "@/components/ui/badge";
 import { MotionReveal } from "@/design/motion/Reveal";
@@ -91,6 +92,12 @@ function formatSchedule(schedule: CustomerPortalResult["jobs"][number]["schedule
   return "Schedule details are being finalized";
 }
 
+function formatFileSize(size: number) {
+  if (size < 1_024) return `${size} B`;
+  if (size < 1_024 * 1_024) return `${(size / 1_024).toFixed(1)} KB`;
+  return `${(size / (1_024 * 1_024)).toFixed(1)} MB`;
+}
+
 function PortalSection({
   id,
   icon,
@@ -143,6 +150,41 @@ export function CustomerDashboard() {
     | CustomerPortalResult
     | null
     | undefined;
+  const shouldLoadDocuments =
+    orgId !== null &&
+    hasCustomerRole &&
+    result !== undefined &&
+    result !== null;
+  const {
+    results: documents,
+    status: documentStatus,
+    loadMore: loadMoreDocuments,
+  } = usePaginatedQuery(
+    api.files.listMyCustomerDocuments,
+    shouldLoadDocuments && orgId ? { orgId } : "skip",
+    { initialNumItems: 25 },
+  );
+  const getCustomerDownloadUrl = useAction(
+    api.fileActions.getCustomerDownloadUrl,
+  );
+  const [downloadingDocumentId, setDownloadingDocumentId] =
+    useState<Id<"documents"> | null>(null);
+  const [documentError, setDocumentError] = useState<string | null>(null);
+
+  async function downloadDocument(documentId: Id<"documents">) {
+    setDownloadingDocumentId(documentId);
+    setDocumentError(null);
+    try {
+      const { url } = await getCustomerDownloadUrl({ documentId });
+      window.location.assign(url);
+    } catch {
+      setDocumentError(
+        "This document could not be authorized. Refresh the page or contact the office.",
+      );
+    } finally {
+      setDownloadingDocumentId(null);
+    }
+  }
 
   if (!orgId && workspace?.context !== undefined) {
     return (
@@ -372,15 +414,62 @@ export function CustomerDashboard() {
         id="documents"
         icon={<FileLock2 className="size-5" aria-hidden="true" />}
         title="Documents"
-        description="Private files remain hidden until document grants are bound to this exact customer record."
+        description="Document downloads fail closed unless a customer-visible file is bound through a project on this exact customer record."
       >
-        <div className="rounded-lg border border-border bg-muted/30 p-4">
-          <p className="text-sm font-bold">No customer document grant is active</p>
-          <p className="mt-2 max-w-[65ch] text-sm leading-6 text-muted-foreground">
-            Document downloads fail closed here. The portal will not infer file
-            ownership from an email address, project ID, or organization membership.
+        {documentStatus === "LoadingFirstPage" ? (
+          <p className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            Verifying document grants…
           </p>
-        </div>
+        ) : documents.length === 0 && documentStatus === "Exhausted" ? (
+          <EmptyState>No customer-visible documents are available.</EmptyState>
+        ) : (
+          <div className="space-y-3">
+            {documents.map((document) => (
+              <article
+                key={document._id}
+                className="flex flex-col gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <h3 className="truncate font-bold">{document.name}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatFileSize(document.size)} · Added {" "}
+                    {new Date(document.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void downloadDocument(document._id)}
+                  disabled={downloadingDocumentId === document._id}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-sm font-bold text-background transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
+                >
+                  <Download className="size-4" aria-hidden="true" />
+                  {downloadingDocumentId === document._id
+                    ? "Authorizing…"
+                    : "Download"}
+                </button>
+              </article>
+            ))}
+
+            {documentStatus === "CanLoadMore" ||
+            documentStatus === "LoadingMore" ? (
+              <button
+                type="button"
+                onClick={() => loadMoreDocuments(25)}
+                disabled={documentStatus === "LoadingMore"}
+                className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
+              >
+                {documentStatus === "LoadingMore"
+                  ? "Loading documents…"
+                  : "Load more documents"}
+              </button>
+            ) : null}
+          </div>
+        )}
+        {documentError ? (
+          <p className="mt-3 text-sm font-semibold text-destructive" role="alert">
+            {documentError}
+          </p>
+        ) : null}
       </PortalSection>
     </div>
   );

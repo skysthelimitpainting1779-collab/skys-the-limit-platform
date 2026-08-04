@@ -223,6 +223,7 @@ export function CrewDashboard() {
   const isCrew = role ? CREW_ROLES.has(role) : false;
   const canManageWork = capabilities?.canManageJobs === true;
   const canUpdateFieldState = capabilities?.canUpdateJobs === true;
+  const canAddProjectUpdate = canUpdateFieldState;
   const uploadAccessLevel = isCrew ? ("restricted" as const) : ("internal" as const);
 
   const runAction = async (key: string, task: () => Promise<void>) => {
@@ -262,7 +263,7 @@ export function CrewDashboard() {
       await addProjectUpdate({
         jobId: selectedJob._id,
         message: updateMessage.trim(),
-        customerVisible,
+        customerVisible: canManageWork ? customerVisible : false,
       });
       setUpdateMessage("");
       setCustomerVisible(false);
@@ -343,6 +344,14 @@ export function CrewDashboard() {
       anchor.click();
     });
   };
+
+  if (workspace?.context === undefined) {
+    return (
+      <div className="mt-8 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground" aria-busy="true" aria-live="polite">
+        Loading your secure workspace…
+      </div>
+    );
+  }
 
   if (!orgId) {
     return (
@@ -515,7 +524,7 @@ export function CrewDashboard() {
               <li key={task._id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
                 <button
                   type="button"
-                  disabled={busyKey === `task-${task._id}`}
+                  disabled={!canUpdateFieldState || busyKey === `task-${task._id}`}
                   onClick={() =>
                     void runAction(`task-${task._id}`, async () => {
                       await updateTask({ taskId: task._id, completed: !task.completed });
@@ -665,7 +674,8 @@ export function CrewDashboard() {
           </ol>
         )}
 
-        <form onSubmit={submitUpdate} className="mt-5 space-y-3 border-t border-border pt-5">
+        {canAddProjectUpdate ? (
+          <form onSubmit={submitUpdate} className="mt-5 space-y-3 border-t border-border pt-5">
           <label className="block text-sm font-bold" htmlFor="project-update">
             Add an update
           </label>
@@ -678,19 +688,27 @@ export function CrewDashboard() {
             maxLength={2_000}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-          <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
-            <input
-              type="checkbox"
-              checked={customerVisible}
-              onChange={(event) => setCustomerVisible(event.target.checked)}
-              className="size-5 rounded border-input"
-            />
-            Share this update with the bound customer account
-          </label>
+          {canManageWork ? (
+            <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+              <input
+                type="checkbox"
+                checked={customerVisible}
+                onChange={(event) => setCustomerVisible(event.target.checked)}
+                className="size-5 rounded border-input"
+              />
+              Share this update with the bound customer account
+            </label>
+          ) : (
+            <p className="text-xs leading-5 text-muted-foreground">
+              Crew updates are internal until an authorized project manager
+              explicitly shares them with the customer.
+            </p>
+          )}
           <Button type="submit" disabled={busyKey === "add-update"}>
             Record update
           </Button>
-        </form>
+          </form>
+        ) : null}
       </Section>
 
       <Section

@@ -92,7 +92,8 @@ Legend:
 
 ### 4.3 Operational Data Domain Rules
 - **Lead Capture:** `anonymous` users can call `leads:submit` mutation; all other lead management queries require `estimator`, `project_manager`, `admin`, or `owner`.
-- **Field Crew Scoping:** `crew_member` can view assigned daily jobs; `crew_lead` can update task completion status and log hours/materials for their assigned crew.
+- **Field Crew Scoping:** `crew_member` can only view assigned daily jobs and is denied task-completion, job-status, and project-update writes. An assigned `crew_lead` can update task completion status and log field work for that job.
+- **Assignment Authority:** Crew access is authorized through the indexed `assignments` relation. The embedded `jobs.crewIds` array is compatibility/display data and must agree with the relation. Legacy array-only jobs fail closed for crew callers until an authorized operations manager re-saves or migrates their assignments.
 - **Project Scheduling:** `project_manager` has full scheduling control over crew assignments and project timelines.
 
 ### 4.4 Files Domain Rules

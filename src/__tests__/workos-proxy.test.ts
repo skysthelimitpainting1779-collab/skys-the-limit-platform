@@ -41,9 +41,6 @@ describe("WorkOS AuthKit proxy enforcement", () => {
             "/api/estimate",
             "/auth/callback",
             "/login",
-            "/operations",
-            "/crew",
-            "/customer",
           ],
         },
       }),
@@ -51,7 +48,7 @@ describe("WorkOS AuthKit proxy enforcement", () => {
   });
 
   it.each(["/operations", "/crew", "/customer"])(
-    "defers anonymous %s to the organization-scoped server layout",
+    "rejects anonymous %s before rendering a portal layout",
     async (pathname) => {
       const response = await proxy(
         new NextRequest(`http://localhost:3000${pathname}`),
@@ -60,8 +57,10 @@ describe("WorkOS AuthKit proxy enforcement", () => {
       if (!(response instanceof Response)) {
         throw new Error("AuthKit proxy did not return a response");
       }
-      expect(response.status).toBe(200);
-      expect(response.headers.get("location")).toBeNull();
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        "https://api.workos.com/user_management/authorize",
+      );
     },
   );
 

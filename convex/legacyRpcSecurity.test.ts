@@ -175,6 +175,16 @@ async function seedTenantScopedRpcFixture() {
       crewIds: [crewMemberA, crewLeadA],
       createdAt: 1,
     });
+    for (const userId of [crewMemberA, crewLeadA]) {
+      await ctx.db.insert("assignments", {
+        orgId: orgA,
+        jobId: jobA,
+        userId,
+        jobStatus: "scheduled",
+        jobCreatedAt: 1,
+        assignedAt: 1,
+      });
+    }
     await ctx.db.insert("auditEvents", {
       orgId: orgA,
       actorId: ownerA,

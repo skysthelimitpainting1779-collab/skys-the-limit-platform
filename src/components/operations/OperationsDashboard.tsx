@@ -37,6 +37,18 @@ type EstimateStatus = "draft" | "sent" | "accepted" | "declined" | "expired";
 type JobStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 type ClaimStatus = "candidate" | "verified" | "rejected";
 type PageStatus = "draft" | "in_review" | "published" | "archived";
+type AppRole =
+  | "owner"
+  | "admin"
+  | "estimator"
+  | "project_manager"
+  | "crew_lead"
+  | "crew_member"
+  | "crew"
+  | "staff"
+  | "customer"
+  | "content_editor"
+  | "content_approver";
 
 type LeadRow = {
   _id: Id<"leads">;
@@ -44,6 +56,7 @@ type LeadRow = {
   email: string;
   phone: string;
   serviceAddress?: string;
+  customerId?: Id<"customers">;
   segment: string;
   status: LeadStatus;
 };
@@ -66,10 +79,26 @@ type JobRow = {
 };
 type CustomerRow = {
   _id: Id<"customers">;
+  userId?: Id<"users">;
   name: string;
   email: string;
   phone?: string;
   status?: string;
+};
+type AssignableCrewRow = {
+  userId: Id<"users">;
+  name: string;
+  email: string;
+  role: "crew_lead" | "crew_member" | "crew";
+};
+type TeamMembershipRow = {
+  membershipId: Id<"memberships">;
+  userId: Id<"users">;
+  name: string;
+  email: string;
+  role: AppRole | "member";
+  status: "active" | "invited";
+  workosRoleSlug?: string;
 };
 type ClaimRow = {
   _id: Id<"claims">;
@@ -109,6 +138,18 @@ const OPERATIONS_ROLES = new Set([
   "project_manager",
   "staff",
 ]);
+const ROLE_OPTIONS: Array<{ value: AppRole; label: string }> = [
+  { value: "owner", label: "Owner" },
+  { value: "admin", label: "Administrator" },
+  { value: "project_manager", label: "Project manager" },
+  { value: "estimator", label: "Estimator" },
+  { value: "staff", label: "Staff" },
+  { value: "crew_lead", label: "Crew lead" },
+  { value: "crew_member", label: "Crew member" },
+  { value: "content_approver", label: "Content approver" },
+  { value: "content_editor", label: "Content editor" },
+  { value: "customer", label: "Customer" },
+];
 function formatMoney(pricing: number | Record<string, unknown>) {
   const total =
     typeof pricing === "number"
@@ -178,6 +219,19 @@ export function OperationsDashboard() {
     scope: string;
     total: string;
   } | null>(null);
+  const [jobDraft, setJobDraft] = useState<{
+    estimateId: Id<"estimates">;
+    startsAt: string;
+  } | null>(null);
+  const [crewDraft, setCrewDraft] = useState<{
+    jobId: Id<"jobs">;
+    crewIds: Id<"users">[];
+  } | null>(null);
+  const [customerLinkDraft, setCustomerLinkDraft] = useState<{
+    customerId: Id<"customers">;
+    userId: string;
+  } | null>(null);
+  const [roleDrafts, setRoleDrafts] = useState<Record<string, AppRole>>({});
 
   const capabilities = useQuery(
     api.users.getMyCapabilities,
@@ -188,6 +242,11 @@ export function OperationsDashboard() {
   const canManageContent = capabilities?.canEditContent === true;
   const canApproveContent = capabilities?.canPublishContent === true;
   const canReadDocuments = capabilities?.canManageDocuments === true;
+  const canManageJobs = capabilities?.canManageJobs === true;
+  const canManageCrew = capabilities?.canManageCrew === true;
+  const canManageTeam = capabilities?.canManageTeam === true;
+  const canAccessOperationsWorkspace =
+    canOperate || canManageContent || canReadDocuments;
 
   const leadsList = useQuery(
     api.leads.list,
@@ -219,6 +278,14 @@ export function OperationsDashboard() {
     api.customers.list,
     activeOrgId && canOperate ? { orgId: activeOrgId } : "skip",
   ) as CustomerRow[] | undefined;
+  const assignableCrew = useQuery(
+    api.users.listAssignableCrew,
+    activeOrgId && canManageCrew ? { orgId: activeOrgId } : "skip",
+  ) as AssignableCrewRow[] | undefined;
+  const teamMemberships = useQuery(
+    api.users.listTeamMemberships,
+    activeOrgId && canManageTeam ? { orgId: activeOrgId } : "skip",
+  ) as TeamMembershipRow[] | undefined;
   const claims = useQuery(
     api.claims.list,
     activeOrgId && canManageContent ? { orgId: activeOrgId } : "skip",
@@ -229,11 +296,15 @@ export function OperationsDashboard() {
   ) as CmsPageRow[] | undefined;
   const notifications = useQuery(
     api.notifications.listMine,
-    activeOrgId ? { orgId: activeOrgId, limit: 12 } : "skip",
+    activeOrgId && canAccessOperationsWorkspace
+      ? { orgId: activeOrgId, limit: 12 }
+      : "skip",
   ) as NotificationRow[] | undefined;
   const unreadCount = useQuery(
     api.notifications.getUnreadCount,
-    activeOrgId ? { orgId: activeOrgId } : "skip",
+    activeOrgId && canAccessOperationsWorkspace
+      ? { orgId: activeOrgId }
+      : "skip",
   ) as
     | number
     | undefined;
@@ -244,9 +315,23 @@ export function OperationsDashboard() {
       : "skip",
     { initialNumItems: 12 },
   );
+  const linkedCustomerUserIds = useMemo(
+    () =>
+      new Set(
+        (customers ?? []).flatMap((customer) =>
+          customer.userId ? [customer.userId] : [],
+        ),
+      ),
+    [customers],
+  );
 
   const updateLeadStatus = useMutation(api.leads.updateStatus);
   const createEstimate = useMutation(api.estimates.create);
+  const createCustomerFromLead = useMutation(api.customers.createFromLead);
+  const createJobFromEstimate = useMutation(api.jobs.createFromEstimate);
+  const assignCrew = useMutation(api.jobs.assignCrew);
+  const linkCustomerUser = useMutation(api.customers.linkUser);
+  const updateMembershipRole = useMutation(api.users.updateRole);
   const updateEstimate = useMutation(api.estimates.update);
   const updateJobStatus = useMutation(api.jobs.updateStatus);
   const updateClaimStatus = useMutation(api.claims.updateStatus);
@@ -325,6 +410,7 @@ export function OperationsDashboard() {
     canOperate && { href: "#estimates", label: "Estimates" },
     capabilities?.canReadJobs && { href: "#jobs", label: "Jobs" },
     canOperate && { href: "#customers", label: "Customers" },
+    canManageTeam && { href: "#team", label: "Team" },
     canManageContent && { href: "#claims", label: "Proof" },
     canManageContent && { href: "#content", label: "Content" },
     canReadDocuments && { href: "#documents", label: "Documents" },
@@ -335,19 +421,21 @@ export function OperationsDashboard() {
     key: string,
     action: () => Promise<unknown>,
     success: string,
-  ) {
+  ): Promise<boolean> {
     setBusyKey(key);
     setError(null);
     setNotice(null);
     try {
       await action();
       setNotice(success);
+      return true;
     } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
           : "The action could not be completed. Try again.",
       );
+      return false;
     } finally {
       setBusyKey(null);
     }
@@ -361,7 +449,7 @@ export function OperationsDashboard() {
       setError("Enter a scope and a valid non-negative estimate total.");
       return;
     }
-    await run(
+    const created = await run(
       `estimate-create-${estimateDraft.leadId}`,
       () =>
         createEstimate({
@@ -373,7 +461,107 @@ export function OperationsDashboard() {
         }),
       "Draft estimate created.",
     );
-    setEstimateDraft(null);
+    if (created) setEstimateDraft(null);
+  }
+
+  async function createCustomer(leadId: Id<"leads">) {
+    await run(
+      `customer-create-${leadId}`,
+      () => createCustomerFromLead({ leadId }),
+      "Customer and primary property created.",
+    );
+  }
+
+  async function submitJobSchedule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!jobDraft) return;
+    const startsAt = new Date(jobDraft.startsAt).getTime();
+    if (!jobDraft.startsAt || !Number.isFinite(startsAt)) {
+      setError("Choose a valid start date and time for this job.");
+      return;
+    }
+    const created = await run(
+      `job-create-${jobDraft.estimateId}`,
+      () =>
+        createJobFromEstimate({
+          estimateId: jobDraft.estimateId,
+          schedule: startsAt,
+          status: "scheduled",
+        }),
+      "Job scheduled from the accepted estimate.",
+    );
+    if (created) setJobDraft(null);
+  }
+
+  async function submitCrewAssignment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!crewDraft) return;
+    const assigned = await run(
+      `crew-${crewDraft.jobId}`,
+      () =>
+        assignCrew({
+          jobId: crewDraft.jobId,
+          crewIds: crewDraft.crewIds,
+        }),
+      crewDraft.crewIds.length === 0
+        ? "Crew assignments cleared."
+        : "Crew assignments updated.",
+    );
+    if (assigned) setCrewDraft(null);
+  }
+
+  async function submitCustomerLink(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!customerLinkDraft?.userId) {
+      setError("Choose an active customer membership to link.");
+      return;
+    }
+    const linked = await run(
+      `customer-link-${customerLinkDraft.customerId}`,
+      () =>
+        linkCustomerUser({
+          customerId: customerLinkDraft.customerId,
+          userId: customerLinkDraft.userId as Id<"users">,
+        }),
+      "Customer portal access linked to the verified membership.",
+    );
+    if (linked) setCustomerLinkDraft(null);
+  }
+
+  async function changeMembershipRole(
+    member: TeamMembershipRow,
+    nextRole: AppRole,
+  ) {
+    if (!activeOrgId) {
+      setError("Select an active organization before changing a role.");
+      return;
+    }
+    setRoleDrafts((current) => ({ ...current, [member.userId]: nextRole }));
+    const updated = await run(
+      `role-${member.userId}`,
+      () =>
+        updateMembershipRole({
+          userId: member.userId,
+          orgId: activeOrgId,
+          role: nextRole,
+        }),
+      `Application role updated for ${member.name}.`,
+    );
+    if (updated) {
+      setRoleDrafts((current) => {
+        const next = { ...current };
+        delete next[member.userId];
+        return next;
+      });
+    }
+  }
+
+  if (workspace?.context === undefined) {
+    return (
+      <div className="mt-8 rounded-xl border border-border bg-card px-5 py-10 text-sm text-muted-foreground" aria-busy="true" aria-live="polite">
+        Loading your secure workspace…
+      </div>
+    );
   }
 
   if (!activeOrgId) {
@@ -392,10 +580,21 @@ export function OperationsDashboard() {
     );
   }
 
+  if (!canAccessOperationsWorkspace) {
+    return (
+      <div className="mt-8 rounded-xl border border-border bg-card p-6">
+        <h2 className="font-bold">Operations workspace is not available for this role</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This organization membership does not grant an operations capability.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8 space-y-8" data-testid="operations-dashboard">
       <nav
-        className="sticky top-[73px] z-30 -mx-4 flex gap-1 overflow-x-auto border-y border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0 sm:rounded-xl sm:border"
+        className="-mx-4 flex gap-1 overflow-x-auto border-y border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0 sm:rounded-xl sm:border lg:sticky lg:top-[65px] lg:z-30"
         aria-label="Operations sections"
       >
         {sections.map((section) => (
@@ -484,6 +683,18 @@ export function OperationsDashboard() {
                       <select aria-label={`Status for ${lead.fullName}`} value={lead.status} disabled={busyKey === `lead-${lead._id}`} onChange={(event) => void run(`lead-${lead._id}`, () => updateLeadStatus({ leadId: lead._id, status: event.target.value as LeadStatus }), "Lead status updated.")} className="h-10 rounded-lg border border-input bg-background px-3 text-sm font-semibold capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                         {(["new", "contacted", "qualified", "scheduled", "closed", "lost"] as LeadStatus[]).map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}
                       </select>
+                      {lead.customerId ? (
+                        <Badge variant="outline">Customer ready</Badge>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={busyKey === `customer-create-${lead._id}`}
+                          onClick={() => void createCustomer(lead._id)}
+                        >
+                          Create customer
+                        </Button>
+                      )}
                       <Button type="button" variant="outline" onClick={() => setEstimateDraft({ leadId: lead._id, scope: "", total: "" })}>Draft estimate</Button>
                     </div>
                   </div>
@@ -504,7 +715,120 @@ export function OperationsDashboard() {
       {canOperate ? (
         <Section id="estimates" title="Estimates" description="Move proposals through their real lifecycle; totals and scope come directly from the estimate record.">
           {estimates === undefined ? <EmptyState>Loading estimates…</EmptyState> : estimates.length === 0 ? <EmptyState>No estimates are recorded for this organization.</EmptyState> : (
-            <div className="overflow-x-auto rounded-xl border border-border bg-card"><table className="w-full min-w-[44rem] text-left text-sm"><thead className="bg-muted/70 text-xs uppercase tracking-wide text-muted-foreground"><tr><th className="px-4 py-3">Scope</th><th className="px-4 py-3">Total</th><th className="px-4 py-3">Created</th><th className="px-4 py-3">Status</th></tr></thead><tbody className="divide-y divide-border">{estimates.map((estimate) => <tr key={estimate._id}><td className="max-w-md px-4 py-3 font-semibold">{estimate.scope}</td><td className="px-4 py-3 tabular-nums">{formatMoney(estimate.pricing)}</td><td className="px-4 py-3 text-muted-foreground">{new Date(estimate.createdAt).toLocaleDateString()}</td><td className="px-4 py-3"><select aria-label={`Status for ${estimate.scope}`} value={estimate.status} disabled={busyKey === `estimate-${estimate._id}`} onChange={(event) => void run(`estimate-${estimate._id}`, () => updateEstimate({ estimateId: estimate._id, status: event.target.value as EstimateStatus }), "Estimate status updated.")} className="h-9 rounded-lg border border-input bg-background px-2 text-sm font-semibold capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{(["draft", "sent", "accepted", "declined", "expired"] as EstimateStatus[]).map((status) => <option key={status} value={status}>{status}</option>)}</select></td></tr>)}</tbody></table></div>
+            <div className="divide-y divide-border rounded-xl border border-border bg-card">
+              {estimates.map((estimate) => {
+                const matchingJob = jobs?.find(
+                  (job) => job.estimateId === estimate._id,
+                );
+                return (
+                  <article key={estimate._id} className="p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold">{estimate.scope}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {formatMoney(estimate.pricing)} · Created{" "}
+                          {new Date(estimate.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          aria-label={`Status for ${estimate.scope}`}
+                          value={estimate.status}
+                          disabled={busyKey === `estimate-${estimate._id}`}
+                          onChange={(event) =>
+                            void run(
+                              `estimate-${estimate._id}`,
+                              () =>
+                                updateEstimate({
+                                  estimateId: estimate._id,
+                                  status: event.target.value as EstimateStatus,
+                                }),
+                              "Estimate status updated.",
+                            )
+                          }
+                          className="h-10 rounded-lg border border-input bg-background px-3 text-sm font-semibold capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {(
+                            [
+                              "draft",
+                              "sent",
+                              "accepted",
+                              "declined",
+                              "expired",
+                            ] as EstimateStatus[]
+                          ).map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                        {canManageJobs ? (
+                          jobs === undefined ? (
+                            <span className="text-sm text-muted-foreground">
+                              Checking job link…
+                            </span>
+                          ) : matchingJob ? (
+                            <Badge variant="outline">Job scheduled</Badge>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                setJobDraft({
+                                  estimateId: estimate._id,
+                                  startsAt: "",
+                                })
+                              }
+                            >
+                              Schedule job
+                            </Button>
+                          )
+                        ) : null}
+                      </div>
+                    </div>
+                    {jobDraft?.estimateId === estimate._id ? (
+                      <form
+                        onSubmit={submitJobSchedule}
+                        className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-end"
+                      >
+                        <label className="flex-1 text-sm font-semibold">
+                          Job start
+                          <Input
+                            type="datetime-local"
+                            required
+                            value={jobDraft.startsAt}
+                            onChange={(event) =>
+                              setJobDraft({
+                                ...jobDraft,
+                                startsAt: event.target.value,
+                              })
+                            }
+                            className="mt-1"
+                          />
+                        </label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="submit"
+                            disabled={
+                              busyKey === `job-create-${estimate._id}`
+                            }
+                          >
+                            Confirm schedule
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setJobDraft(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
           )}
         </Section>
       ) : null}
@@ -512,14 +836,367 @@ export function OperationsDashboard() {
       {capabilities.canReadJobs ? (
         <Section id="jobs" title="Jobs and schedule" description="See field readiness at a glance and advance job status only when your organization role allows it.">
           {jobs === undefined ? <EmptyState>Loading jobs…</EmptyState> : jobs.length === 0 ? <EmptyState>No jobs are scheduled.</EmptyState> : (
-            <div className="grid gap-3 lg:grid-cols-2">{jobs.map((job) => <article key={job._id} className="rounded-xl border border-border bg-card p-4"><div className="flex items-start gap-3"><BriefcaseBusiness className="mt-0.5 size-5 text-primary" /><div className="min-w-0 flex-1"><p className="font-bold">{job.title ?? job.address ?? "Assigned job"}</p><p className="mt-1 text-sm text-muted-foreground">{formatSchedule(job.schedule)}</p></div><Badge variant={job.crewIds.length === 0 ? "destructive" : "outline"}>{job.crewIds.length === 0 ? "Crew needed" : `${job.crewIds.length} assigned`}</Badge></div>{capabilities.canUpdateJobs ? <select aria-label={`Status for job ${job._id}`} value={job.status} disabled={busyKey === `job-${job._id}`} onChange={(event) => void run(`job-${job._id}`, () => updateJobStatus({ jobId: job._id, status: event.target.value as JobStatus }), "Job status updated.")} className="mt-4 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-semibold capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{(["scheduled", "in_progress", "completed", "cancelled"] as JobStatus[]).map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}</select> : null}</article>)}</div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {jobs.map((job) => (
+                <article
+                  key={job._id}
+                  className="rounded-xl border border-border bg-card p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <BriefcaseBusiness
+                      className="mt-0.5 size-5 text-primary"
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold">
+                        {job.title ?? job.address ?? "Assigned job"}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatSchedule(job.schedule)}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        job.crewIds.length === 0 ? "destructive" : "outline"
+                      }
+                    >
+                      {job.crewIds.length === 0
+                        ? "Crew needed"
+                        : `${job.crewIds.length} assigned`}
+                    </Badge>
+                  </div>
+                  {capabilities.canUpdateJobs ? (
+                    <select
+                      aria-label={`Status for job ${job._id}`}
+                      value={job.status}
+                      disabled={busyKey === `job-${job._id}`}
+                      onChange={(event) =>
+                        void run(
+                          `job-${job._id}`,
+                          () =>
+                            updateJobStatus({
+                              jobId: job._id,
+                              status: event.target.value as JobStatus,
+                            }),
+                          "Job status updated.",
+                        )
+                      }
+                      className="mt-4 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm font-semibold capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {(
+                        [
+                          "scheduled",
+                          "in_progress",
+                          "completed",
+                          "cancelled",
+                        ] as JobStatus[]
+                      ).map((status) => (
+                        <option key={status} value={status}>
+                          {status.replaceAll("_", " ")}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                  {canManageCrew ? (
+                    <div className="mt-3 border-t border-border pt-3">
+                      {crewDraft?.jobId === job._id ? (
+                        <form onSubmit={submitCrewAssignment}>
+                          <fieldset>
+                            <legend className="text-sm font-bold">
+                              Assigned crew
+                            </legend>
+                            {assignableCrew === undefined ? (
+                              <p
+                                className="mt-2 text-sm text-muted-foreground"
+                                aria-live="polite"
+                              >
+                                Loading active crew…
+                              </p>
+                            ) : assignableCrew.length === 0 ? (
+                              <p className="mt-2 text-sm text-muted-foreground">
+                                No active crew memberships are available.
+                              </p>
+                            ) : (
+                              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                                {assignableCrew.map((crew) => {
+                                  const checked = crewDraft.crewIds.includes(
+                                    crew.userId,
+                                  );
+                                  return (
+                                    <label
+                                      key={crew.userId}
+                                      className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2 text-sm"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={(event) =>
+                                          setCrewDraft({
+                                            ...crewDraft,
+                                            crewIds: event.target.checked
+                                              ? [
+                                                  ...crewDraft.crewIds,
+                                                  crew.userId,
+                                                ]
+                                              : crewDraft.crewIds.filter(
+                                                  (userId) =>
+                                                    userId !== crew.userId,
+                                                ),
+                                          })
+                                        }
+                                        className="size-4 accent-primary"
+                                      />
+                                      <span className="min-w-0">
+                                        <span className="block truncate font-semibold">
+                                          {crew.name}
+                                        </span>
+                                        <span className="block capitalize text-muted-foreground">
+                                          {crew.role.replaceAll("_", " ")}
+                                        </span>
+                                      </span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </fieldset>
+                          <div className="mt-3 flex gap-2">
+                            <Button
+                              type="submit"
+                              disabled={busyKey === `crew-${job._id}`}
+                            >
+                              Save crew
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => setCrewDraft(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </form>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() =>
+                            setCrewDraft({
+                              jobId: job._id,
+                              crewIds: [...job.crewIds],
+                            })
+                          }
+                        >
+                          Manage crew
+                        </Button>
+                      )}
+                    </div>
+                  ) : null}
+                </article>
+              ))}
+            </div>
           )}
         </Section>
       ) : null}
 
       {canOperate ? (
-        <Section id="customers" title="Customers" description="Directory records are tenant-scoped and shown as operational reference, never as proof of account ownership.">
-          {customers === undefined ? <EmptyState>Loading customer records…</EmptyState> : customers.length === 0 ? <EmptyState>No customers are linked to this organization.</EmptyState> : <div className="divide-y divide-border rounded-xl border border-border bg-card">{customers.map((customer) => <div key={customer._id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center"><Users className="size-4 text-primary" /><p className="font-semibold">{customer.name}</p><a href={`mailto:${customer.email}`} className="text-sm text-muted-foreground hover:text-primary sm:ml-auto">{customer.email}</a>{customer.status ? <Badge variant="outline" className="w-fit capitalize">{customer.status}</Badge> : null}</div>)}</div>}
+        <Section id="customers" title="Customers" description="Create the operational record first, then explicitly bind portal access to an active customer membership. Email addresses never establish ownership.">
+          {customers === undefined ? (
+            <EmptyState>Loading customer records…</EmptyState>
+          ) : customers.length === 0 ? (
+            <EmptyState>No customers are linked to this organization.</EmptyState>
+          ) : (
+            <div className="divide-y divide-border rounded-xl border border-border bg-card">
+              {customers.map((customer) => {
+                const eligibleMemberships = (teamMemberships ?? []).filter(
+                  (member) =>
+                    member.role === "customer" &&
+                    member.status === "active" &&
+                    (!linkedCustomerUserIds.has(member.userId) ||
+                      member.userId === customer.userId),
+                );
+                return (
+                  <div key={customer._id} className="p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <Users
+                        className="size-4 text-primary"
+                        aria-hidden="true"
+                      />
+                      <div className="min-w-0">
+                        <p className="font-semibold">{customer.name}</p>
+                        <a
+                          href={`mailto:${customer.email}`}
+                          className="text-sm text-muted-foreground hover:text-primary"
+                        >
+                          {customer.email}
+                        </a>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                        {customer.status ? (
+                          <Badge variant="outline" className="w-fit capitalize">
+                            {customer.status}
+                          </Badge>
+                        ) : null}
+                        {customer.userId ? (
+                          <Badge variant="outline">Portal linked</Badge>
+                        ) : canManageTeam ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() =>
+                              setCustomerLinkDraft({
+                                customerId: customer._id,
+                                userId: "",
+                              })
+                            }
+                          >
+                            Link portal access
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                    {customerLinkDraft?.customerId === customer._id ? (
+                      <form
+                        onSubmit={submitCustomerLink}
+                        className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-end"
+                      >
+                        <label className="flex-1 text-sm font-semibold">
+                          Active customer membership
+                          <select
+                            required
+                            value={customerLinkDraft.userId}
+                            onChange={(event) =>
+                              setCustomerLinkDraft({
+                                ...customerLinkDraft,
+                                userId: event.target.value,
+                              })
+                            }
+                            className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <option value="">Choose membership</option>
+                            {eligibleMemberships.map((member) => (
+                              <option key={member.membershipId} value={member.userId}>
+                                {member.name} · {member.email}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="submit"
+                            disabled={
+                              busyKey === `customer-link-${customer._id}` ||
+                              eligibleMemberships.length === 0
+                            }
+                          >
+                            Confirm link
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setCustomerLinkDraft(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                        {teamMemberships !== undefined &&
+                        eligibleMemberships.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            No unlinked active customer membership is available.
+                          </p>
+                        ) : null}
+                      </form>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Section>
+      ) : null}
+
+      {canManageTeam ? (
+        <Section
+          id="team"
+          title="Team roles"
+          description="Application authorization is organization-scoped and audited. WorkOS remains the source of identity and membership lifecycle."
+        >
+          {teamMemberships === undefined ? (
+            <EmptyState>Loading team memberships…</EmptyState>
+          ) : teamMemberships.length === 0 ? (
+            <EmptyState>No active or invited memberships are available.</EmptyState>
+          ) : (
+            <div className="divide-y divide-border rounded-xl border border-border bg-card">
+              {teamMemberships.map((member) => {
+                const actorIsOwner = role === "owner";
+                const roleOptions = actorIsOwner
+                  ? ROLE_OPTIONS
+                  : ROLE_OPTIONS.filter(
+                      (option) =>
+                        option.value !== "owner" && option.value !== "admin",
+                    );
+                const currentRole = roleDrafts[member.userId] ?? member.role;
+                const cannotAdministerOwner =
+                  !actorIsOwner && member.role === "owner";
+                const hasCurrentOption = roleOptions.some(
+                  (option) => option.value === currentRole,
+                );
+                return (
+                  <div
+                    key={member.membershipId}
+                    className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold">{member.name}</p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {member.email}
+                      </p>
+                      {member.workosRoleSlug ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          WorkOS role: {member.workosRoleSlug}
+                        </p>
+                      ) : null}
+                    </div>
+                    <Badge variant="outline" className="w-fit capitalize">
+                      {member.status}
+                    </Badge>
+                    {cannotAdministerOwner ? (
+                      <Badge variant="outline">Owner managed</Badge>
+                    ) : (
+                      <label className="text-sm font-semibold">
+                        <span className="sr-only">
+                          Application role for {member.name}
+                        </span>
+                        <select
+                          value={currentRole}
+                          disabled={busyKey === `role-${member.userId}`}
+                          onChange={(event) =>
+                            void changeMembershipRole(
+                              member,
+                              event.target.value as AppRole,
+                            )
+                          }
+                          className="h-10 min-w-48 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {!hasCurrentOption ? (
+                            <option value={currentRole} disabled>
+                              {currentRole.replaceAll("_", " ")}
+                            </option>
+                          ) : null}
+                          {roleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Section>
       ) : null}
 

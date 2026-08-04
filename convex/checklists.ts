@@ -105,7 +105,7 @@ async function requireJobAccess(
     return actor;
   }
   if (CREW_ROLES.includes(membership.role)) {
-    requireCrewAssignment(job, actor._id);
+    await requireCrewAssignment(ctx, job, actor._id);
     if (access === "read" || (access === "toggle" && membership.role === "crew_lead")) {
       return actor;
     }

@@ -379,6 +379,21 @@ describe("anonymous protected API denial receipts", () => {
           }),
       ],
       [
+        "fileActions.getCustomerDownloadUrl",
+        () =>
+          t.action(anyApi.fileActions.getCustomerDownloadUrl, {
+            documentId: ids.document,
+          }),
+      ],
+      [
+        "files.listMyCustomerDocuments",
+        () =>
+          t.query(anyApi.files.listMyCustomerDocuments, {
+            orgId: ids.org,
+            paginationOpts: { numItems: 25, cursor: null },
+          }),
+      ],
+      [
         "jobs.addProjectUpdate",
         () =>
           t.mutation(anyApi.jobs.addProjectUpdate, {
@@ -495,6 +510,14 @@ describe("anonymous protected API denial receipts", () => {
         () => t.query(anyApi.users.getMyCapabilities, { orgId: ids.org }),
       ],
       ["users.getMyContext", () => t.query(anyApi.users.getMyContext, {})],
+      [
+        "users.listAssignableCrew",
+        () => t.query(anyApi.users.listAssignableCrew, { orgId: ids.org }),
+      ],
+      [
+        "users.listTeamMemberships",
+        () => t.query(anyApi.users.listTeamMemberships, { orgId: ids.org }),
+      ],
       ["users.list", () => t.query(anyApi.users.list, { orgId: ids.org })],
       ["users.store", () => t.mutation(anyApi.users.store, {})],
       [
@@ -513,7 +536,7 @@ describe("anonymous protected API denial receipts", () => {
       await expect(invoke(), name).rejects.toThrow("UNAUTHENTICATED");
       receipts.push(name);
     }
-    expect(receipts).toHaveLength(53);
+    expect(receipts).toHaveLength(57);
     expect(new Set(receipts).size).toBe(receipts.length);
   });
 });

@@ -81,6 +81,27 @@ const organizationSummaryValidator = v.object({
   ),
 });
 
+const assignableCrewValidator = v.object({
+  userId: v.id("users"),
+  name: v.string(),
+  email: v.string(),
+  role: v.union(
+    v.literal("crew_lead"),
+    v.literal("crew_member"),
+    v.literal("crew"),
+  ),
+});
+
+const teamMembershipSummaryValidator = v.object({
+  membershipId: v.id("memberships"),
+  userId: v.id("users"),
+  name: v.string(),
+  email: v.string(),
+  role: membershipRoleValidator,
+  status: v.union(v.literal("active"), v.literal("invited")),
+  workosRoleSlug: v.optional(v.string()),
+});
+
 async function countUsableActiveOwners(
   ctx: Pick<MutationCtx, "db">,
   orgId: Id<"organizations">,
@@ -382,6 +403,107 @@ export const list = query({
         user.identityStatus !== "disabled" &&
         !user.workosDeletedAt,
     );
+  },
+});
+
+/** Active crew options for job assignment, scoped to the actor's organization. */
+export const listAssignableCrew = query({
+  args: { orgId: v.id("organizations") },
+  returns: v.array(assignableCrewValidator),
+  handler: async (ctx, args) => {
+    const actor = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      actor._id,
+      args.orgId,
+      OPERATIONS_MANAGER_ROLES,
+    );
+
+    const roles = ["crew_lead", "crew_member", "crew"] as const;
+    const membershipGroups = await Promise.all(
+      roles.map((role) =>
+        ctx.db
+          .query("memberships")
+          .withIndex("by_org_and_role_and_status", (index) =>
+            index
+              .eq("orgId", args.orgId)
+              .eq("role", role)
+              .eq("status", "active"),
+          )
+          .take(50),
+      ),
+    );
+
+    const directory = [];
+    for (const membership of membershipGroups.flat()) {
+      if (membership.workosDeletedAt) continue;
+      const user = await ctx.db.get(membership.userId);
+      if (
+        !user ||
+        user.identityStatus === "disabled" ||
+        user.workosDeletedAt
+      ) {
+        continue;
+      }
+      directory.push({
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: membership.role as "crew_lead" | "crew_member" | "crew",
+      });
+    }
+
+    return directory
+      .sort((left, right) => left.name.localeCompare(right.name))
+      .slice(0, 100);
+  },
+});
+
+/** Role-administration directory; never exposes users from another organization. */
+export const listTeamMemberships = query({
+  args: { orgId: v.id("organizations") },
+  returns: v.array(teamMembershipSummaryValidator),
+  handler: async (ctx, args) => {
+    const actor = await requireAuthenticatedUser(ctx);
+    await requireActiveMembership(
+      ctx,
+      actor._id,
+      args.orgId,
+      ROLE_ADMIN_ROLES,
+    );
+
+    const memberships = await ctx.db
+      .query("memberships")
+      .withIndex("by_org", (index) => index.eq("orgId", args.orgId))
+      .take(100);
+    const directory = [];
+    for (const membership of memberships) {
+      if (
+        membership.status === "disabled" ||
+        membership.workosDeletedAt
+      ) {
+        continue;
+      }
+      const user = await ctx.db.get(membership.userId);
+      if (
+        !user ||
+        user.identityStatus === "disabled" ||
+        user.workosDeletedAt
+      ) {
+        continue;
+      }
+      directory.push({
+        membershipId: membership._id,
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: membership.role,
+        status: membership.status,
+        workosRoleSlug: membership.workosRoleSlug,
+      });
+    }
+
+    return directory.sort((left, right) => left.name.localeCompare(right.name));
   },
 });
 

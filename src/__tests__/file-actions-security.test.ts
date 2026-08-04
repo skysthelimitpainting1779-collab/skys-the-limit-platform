@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const blobMocks = vi.hoisted(() => ({
   del: vi.fn(),
+  getDownloadUrl: vi.fn((url: string) => `${url}?download=1`),
   head: vi.fn(),
   issueSignedToken: vi.fn(),
   presignUrl: vi.fn(),
@@ -158,5 +159,44 @@ describe("Vercel Blob action boundary", () => {
       ),
     ).rejects.toThrow("INVALID_BLOB_PATH");
     expect(runMutation).not.toHaveBeenCalled();
+  });
+
+  it("issues a short-lived private download only after customer authorization", async () => {
+    const runQuery = vi.fn().mockResolvedValue({
+      blobUrl: "https://blob.example/customer-document",
+      blobPathname: `${prefix}customer-document.pdf`,
+      name: "customer-document.pdf",
+    });
+    const handler = getHandler(fileActions.getCustomerDownloadUrl);
+
+    const result = await handler({ runQuery }, { documentId });
+
+    expect(runQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      { documentId },
+    );
+    expect(blobMocks.issueSignedToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: `${prefix}customer-document.pdf`,
+        operations: ["get"],
+      }),
+    );
+    expect(blobMocks.presignUrl).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        operation: "get",
+        access: "private",
+        pathname: `${prefix}customer-document.pdf`,
+        useCache: false,
+      }),
+    );
+    expect(result).toMatchObject({
+      url: "https://blob.example/presigned?download=1",
+      name: "customer-document.pdf",
+    });
+    expect(blobMocks.getDownloadUrl).toHaveBeenCalledWith(
+      "https://blob.example/presigned",
+    );
+    expect(result.expiresAt).toBeGreaterThan(Date.now());
   });
 });

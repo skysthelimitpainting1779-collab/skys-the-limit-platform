@@ -41,6 +41,7 @@ const membershipStatus = v.union(
 
 const documentAccessLevel = v.union(
   v.literal("public"),
+  v.literal("customer"),
   v.literal("internal"),
   v.literal("restricted"),
 );
@@ -239,11 +240,34 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
+    .index("by_estimate", ["estimateId"])
     .index("by_org", ["orgId"])
     .index("by_org_and_status", ["orgId", "status"])
     .index("by_org_and_customer", ["orgId", "customerId"])
     .index("by_customer", ["customerId"])
     .index("by_status", ["status"]),
+
+  assignments: defineTable({
+    orgId: v.id("organizations"),
+    jobId: v.id("jobs"),
+    userId: v.id("users"),
+    jobStatus,
+    jobCreatedAt: v.number(),
+    assignedAt: v.number(),
+  })
+    .index("by_job", ["jobId"])
+    .index("by_job_and_user", ["jobId", "userId"])
+    .index("by_org_and_user_and_job_created_at", [
+      "orgId",
+      "userId",
+      "jobCreatedAt",
+    ])
+    .index("by_org_and_user_and_job_status_and_job_created_at", [
+      "orgId",
+      "userId",
+      "jobStatus",
+      "jobCreatedAt",
+    ]),
 
   tasks: defineTable({
     orgId: v.id("organizations"),

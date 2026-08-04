@@ -12,6 +12,7 @@ import {
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import {
   CREW_ROLES,
+  CUSTOMER_ROLES,
   FILE_PUBLICATION_ROLES,
   OPERATIONS_MANAGER_ROLES,
   OPERATIONS_READ_ROLES,
@@ -24,11 +25,13 @@ import { appendAuditEvent } from "./lib/audit";
 import {
   accessLevelValidator,
   ALLOWED_MIME_TYPES,
+  genericAccessLevelValidator,
   MAX_FILE_SIZE_BYTES,
 } from "./lib/filePolicy";
 
 export { accessLevelValidator, ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES };
 const MAX_FILE_NAME_LENGTH = 255;
+const MAX_CUSTOMER_DOCUMENTS_PER_PAGE = 50;
 
 const documentMetadataValidator = v.object({
   _id: v.id("documents"),
@@ -38,6 +41,10 @@ const documentMetadataValidator = v.object({
   size: v.number(),
   accessLevel: accessLevelValidator,
   createdAt: v.number(),
+});
+
+const customerDocumentMetadataValidator = documentMetadataValidator.extend({
+  jobId: v.id("jobs"),
 });
 
 type FileContext = QueryCtx | MutationCtx;
@@ -68,6 +75,15 @@ function publicMetadata(document: Doc<"documents">) {
     size: document.size,
     accessLevel: document.accessLevel,
     createdAt: document.createdAt,
+  };
+}
+
+function customerMetadata(
+  document: Doc<"documents"> & { jobId: Id<"jobs"> },
+) {
+  return {
+    ...publicMetadata(document),
+    jobId: document.jobId,
   };
 }
 
@@ -123,6 +139,19 @@ async function authorizeUpload(
   );
   const job = await loadAuthorizedJob(ctx, args.orgId, args.jobId);
 
+  if (args.accessLevel === "customer") {
+    if (
+      !OPERATIONS_READ_ROLES.includes(membership.role) ||
+      !job?.customerId
+    ) {
+      throw new Error("FORBIDDEN");
+    }
+    const customer = await ctx.db.get(job.customerId);
+    if (!customer || customer.orgId !== args.orgId) {
+      throw new Error("FORBIDDEN");
+    }
+  }
+
   if (
     args.accessLevel === "public" &&
     !FILE_PUBLICATION_ROLES.includes(membership.role)
@@ -133,7 +162,7 @@ async function authorizeUpload(
     if (!job || args.accessLevel !== "restricted") {
       throw new Error("FORBIDDEN");
     }
-    requireCrewAssignment(job, actor._id);
+    await requireCrewAssignment(ctx, job, actor._id);
   }
 
   return { actor, membership, job };
@@ -145,6 +174,7 @@ async function authorizeRead(
 ) {
   await requireActiveOrganization(ctx, document.orgId);
   if (document.accessLevel === "public") return null;
+  if (document.accessLevel === "customer") throw new Error("FORBIDDEN");
 
   const actor = await requireAuthenticatedUser(ctx);
   const membership = await requireActiveMembership(
@@ -155,7 +185,7 @@ async function authorizeRead(
   if (CREW_ROLES.includes(membership.role)) {
     const job = await loadAuthorizedJob(ctx, document.orgId, document.jobId);
     if (!job) throw new Error("FORBIDDEN");
-    requireCrewAssignment(job, actor._id);
+    await requireCrewAssignment(ctx, job, actor._id);
   }
   if (document.accessLevel === "restricted") {
     if (
@@ -171,6 +201,41 @@ async function authorizeRead(
     throw new Error("FORBIDDEN");
   }
   return actor;
+}
+
+async function requireBoundCustomer(
+  ctx: FileContext,
+  actorId: Id<"users">,
+  orgId: Id<"organizations">,
+) {
+  await requireActiveMembership(ctx, actorId, orgId, CUSTOMER_ROLES);
+  const customer = await ctx.db
+    .query("customers")
+    .withIndex("by_org_and_user", (index) =>
+      index.eq("orgId", orgId).eq("userId", actorId),
+    )
+    .unique();
+  if (!customer) throw new Error("FORBIDDEN");
+  return customer;
+}
+
+async function authorizeCustomerRead(
+  ctx: FileContext,
+  document: Doc<"documents">,
+) {
+  const actor = await requireAuthenticatedUser(ctx);
+  const customer = await requireBoundCustomer(
+    ctx,
+    actor._id,
+    document.orgId,
+  );
+  if (document.accessLevel !== "customer" || !document.jobId) {
+    throw new Error("FORBIDDEN");
+  }
+
+  const job = await loadAuthorizedJob(ctx, document.orgId, document.jobId);
+  if (!job || job.customerId !== customer._id) throw new Error("FORBIDDEN");
+  return { actor, customer, job };
 }
 
 async function authorizeDelete(
@@ -280,6 +345,25 @@ export const getAuthorizedBlob = internalQuery({
   },
 });
 
+export const getCustomerAuthorizedBlob = internalQuery({
+  args: { documentId: v.id("documents") },
+  returns: v.object({
+    blobUrl: v.string(),
+    blobPathname: v.string(),
+    name: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.documentId);
+    if (!document) throw new Error("DOCUMENT_NOT_FOUND");
+    await authorizeCustomerRead(ctx, document);
+    return {
+      blobUrl: document.blobUrl,
+      blobPathname: document.blobPathname,
+      name: document.name,
+    };
+  },
+});
+
 export const getDeletableBlob = internalQuery({
   args: { documentId: v.id("documents") },
   returns: v.object({ blobUrl: v.string() }),
@@ -328,7 +412,7 @@ export const getDocument = query({
 export const listDocuments = query({
   args: {
     orgId: v.id("organizations"),
-    accessLevel: accessLevelValidator,
+    accessLevel: genericAccessLevelValidator,
     jobId: v.optional(v.id("jobs")),
     paginationOpts: paginationOptsValidator,
   },
@@ -357,7 +441,7 @@ export const listDocuments = query({
       if (CREW_ROLES.includes(membership.role)) {
         const job = await loadAuthorizedJob(ctx, args.orgId, args.jobId);
         if (!job) throw new Error("FORBIDDEN");
-        requireCrewAssignment(job, actor._id);
+        await requireCrewAssignment(ctx, job, actor._id);
       }
     }
 
@@ -418,5 +502,54 @@ export const listDocuments = query({
     }
 
     return { ...result, page: result.page.map(publicMetadata) };
+  },
+});
+
+export const listMyCustomerDocuments = query({
+  args: {
+    orgId: v.id("organizations"),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: paginationResultValidator(customerDocumentMetadataValidator),
+  handler: async (ctx, args) => {
+    if (
+      !Number.isSafeInteger(args.paginationOpts.numItems) ||
+      args.paginationOpts.numItems < 1 ||
+      args.paginationOpts.numItems > MAX_CUSTOMER_DOCUMENTS_PER_PAGE
+    ) {
+      throw new Error("INVALID_PAGINATION");
+    }
+
+    const actor = await requireAuthenticatedUser(ctx);
+    const customer = await requireBoundCustomer(ctx, actor._id, args.orgId);
+    const result = await ctx.db
+      .query("documents")
+      .withIndex("by_org_and_access_level", (index) =>
+        index.eq("orgId", args.orgId).eq("accessLevel", "customer"),
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
+
+    // Reactive pages can grow after their initial read. Fail closed before
+    // hydrating an unexpectedly large page so customer reads remain bounded.
+    if (result.page.length > MAX_CUSTOMER_DOCUMENTS_PER_PAGE) {
+      throw new Error("PAGINATION_LIMIT_EXCEEDED");
+    }
+
+    const page = [];
+    for (const document of result.page) {
+      if (!document.jobId) continue;
+      const job = await ctx.db.get(document.jobId);
+      if (
+        !job ||
+        job.orgId !== args.orgId ||
+        job.customerId !== customer._id
+      ) {
+        continue;
+      }
+      page.push(customerMetadata({ ...document, jobId: document.jobId }));
+    }
+
+    return { ...result, page };
   },
 });

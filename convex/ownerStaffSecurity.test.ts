@@ -414,7 +414,7 @@ describe("customer ownership", () => {
 });
 
 describe("job, notification, and publication boundaries", () => {
-  it("allows only assigned crew to read and update job work", async () => {
+  it("keeps assigned crew members read-only for job work", async () => {
     const { t, orgA, leadA, crewA } = await seed();
     const owner = t.withIdentity(identity("owner-a"));
     const estimateId = await owner.mutation(anyApi.estimates.create, {
@@ -458,10 +458,10 @@ describe("job, notification, and publication boundaries", () => {
     await expect(
       t.withIdentity(identity("crew-a")).mutation(anyApi.jobs.addProjectUpdate, {
         jobId,
-        message: "Prep complete",
+        message: "Crew members must not write project updates",
         customerVisible: false,
       }),
-    ).resolves.toBeDefined();
+    ).rejects.toThrow("FORBIDDEN");
   });
 
   it("keeps notifications bound to the exact recipient", async () => {

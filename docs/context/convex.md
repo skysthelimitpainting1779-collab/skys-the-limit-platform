@@ -1,8 +1,8 @@
 # Convex Backend Architecture — Context7 Research Record
 
-- **Research Date:** 2026-08-02
-- **Library ID:** `/get-convex/convex`
-- **Version:** Convex 1.42.x
+- **Research Date:** 2026-08-03
+- **Library ID:** `/websites/convex_dev`
+- **Version:** Convex 1.43.x (project dependency; guidance applies to 1.41+)
 - **Official Source:** https://docs.convex.dev
 - **Decision Affected:** Backend data persistence, server functions, real-time sync, and index definitions.
 
@@ -24,3 +24,10 @@
 
 5. **Server Timestamps:**
    - Server mutations generate authoritative timestamps rather than trusting client-provided timestamps.
+
+6. **Customer Document Reads:**
+   - Customer identity is derived from `ctx.auth.getUserIdentity()` and resolved through the server-side user, active membership, and exact customer-record binding.
+   - Customer-visible project files use the distinct `customer` access level. They are not `public`, and the generic document metadata/list/download functions reject or cannot accept that access class.
+   - Only operations staff may create `customer` documents, and each upload must reference a same-organization job with an exact customer record.
+   - Customer document lists use `paginationOptsValidator`, an indexed organization/access-level read, a maximum requested page size of 50, and fail closed if a reactive page grows past that bound.
+   - Specialized customer query results expose metadata only; Blob URLs and pathnames remain inside exact-bound internal queries and actions.

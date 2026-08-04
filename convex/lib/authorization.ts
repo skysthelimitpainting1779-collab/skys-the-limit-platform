@@ -158,9 +158,25 @@ export async function getActiveMembership(
     : null;
 }
 
-export function requireCrewAssignment(
+export async function requireCrewAssignment(
+  ctx: Pick<QueryCtx, "db"> | Pick<MutationCtx, "db">,
   job: Doc<"jobs">,
   userId: Id<"users">,
-): void {
-  if (!job.crewIds.includes(userId)) throw new Error("FORBIDDEN");
+): Promise<Doc<"assignments">> {
+  const assignment = await ctx.db
+    .query("assignments")
+    .withIndex("by_job_and_user", (query) =>
+      query.eq("jobId", job._id).eq("userId", userId),
+    )
+    .unique();
+  if (
+    !assignment ||
+    assignment.orgId !== job.orgId ||
+    assignment.jobStatus !== job.status ||
+    assignment.jobCreatedAt !== job.createdAt ||
+    !job.crewIds.includes(userId)
+  ) {
+    throw new Error("FORBIDDEN");
+  }
+  return assignment;
 }

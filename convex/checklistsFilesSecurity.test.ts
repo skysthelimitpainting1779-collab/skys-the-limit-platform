@@ -131,6 +131,16 @@ async function seedTenantFixture() {
       crewIds: [crewA, crewLeadA],
       createdAt: 1,
     });
+    for (const userId of [crewA, crewLeadA]) {
+      await ctx.db.insert("assignments", {
+        orgId: orgA,
+        jobId: jobA,
+        userId,
+        jobStatus: "scheduled",
+        jobCreatedAt: 1,
+        assignedAt: 1,
+      });
+    }
   });
 
   return { t, orgA, orgB, ownerA, ownerB, crewA, crewLeadA, jobA };

@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
   redirect: authMocks.redirect,
 }));
 
-import LoginPage from "@/app/login/page";
+import { GET } from "@/app/login/route";
 
 describe("WorkOS login organization boundary", () => {
   const originalOrganizationId = process.env.WORKOS_ORGANIZATION_ID;
@@ -33,7 +33,7 @@ describe("WorkOS login organization boundary", () => {
   });
 
   it("passes the server-configured organization to AuthKit", async () => {
-    await LoginPage({ searchParams: Promise.resolve({ returnTo: "/crew" }) });
+    await GET(new Request("http://localhost/login?returnTo=%2Fcrew"));
 
     expect(authMocks.getSignInUrl).toHaveBeenCalledWith({
       organizationId: "org_trusted_server_config",
@@ -45,9 +45,11 @@ describe("WorkOS login organization boundary", () => {
   });
 
   it("rejects an arbitrary return path", async () => {
-    await LoginPage({
-      searchParams: Promise.resolve({ returnTo: "https://evil.example.test" }),
-    });
+    await GET(
+      new Request(
+        "http://localhost/login?returnTo=https%3A%2F%2Fevil.example.test",
+      ),
+    );
 
     expect(authMocks.getSignInUrl).toHaveBeenCalledWith({
       organizationId: "org_trusted_server_config",
@@ -59,7 +61,7 @@ describe("WorkOS login organization boundary", () => {
     delete process.env.WORKOS_ORGANIZATION_ID;
 
     await expect(
-      LoginPage({ searchParams: Promise.resolve({ returnTo: "/operations" }) }),
+      GET(new Request("http://localhost/login?returnTo=%2Foperations")),
     ).rejects.toThrow("WORKOS_ORGANIZATION_ID must be configured");
     expect(authMocks.getSignInUrl).not.toHaveBeenCalled();
   });

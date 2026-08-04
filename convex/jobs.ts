@@ -56,6 +56,7 @@ const projectUpdateValidator = v.object({
 });
 
 type JobContext = QueryCtx | MutationCtx;
+const MAX_CREW_ASSIGNMENTS_PER_JOB = 50;
 
 function boundedLimit(value: number | undefined, fallback = 50) {
   return Math.min(Math.max(Math.floor(value ?? fallback), 1), 100);
@@ -91,8 +92,69 @@ function normalizeSchedule(
 
 function uniqueCrewIds(crewIds: Id<"users">[]) {
   const unique = [...new Set(crewIds)];
-  if (unique.length > 50) throw new Error("CREW_ASSIGNMENT_LIMIT_EXCEEDED");
+  if (unique.length > MAX_CREW_ASSIGNMENTS_PER_JOB) {
+    throw new Error("CREW_ASSIGNMENT_LIMIT_EXCEEDED");
+  }
   return unique;
+}
+
+async function syncCrewAssignments(
+  ctx: MutationCtx,
+  job: Doc<"jobs">,
+  crewIds: Id<"users">[],
+  now: number,
+) {
+  const desiredCrewIds = uniqueCrewIds(crewIds);
+  const existingAssignments = await ctx.db
+    .query("assignments")
+    .withIndex("by_job", (index) => index.eq("jobId", job._id))
+    .take(MAX_CREW_ASSIGNMENTS_PER_JOB + 1);
+  if (existingAssignments.length > MAX_CREW_ASSIGNMENTS_PER_JOB) {
+    throw new Error("CREW_ASSIGNMENT_RELATION_LIMIT_EXCEEDED");
+  }
+
+  const existingByUser = new Map<
+    Id<"users">,
+    Doc<"assignments">
+  >();
+  for (const assignment of existingAssignments) {
+    if (existingByUser.has(assignment.userId)) {
+      throw new Error("CREW_ASSIGNMENT_RELATION_INVALID");
+    }
+    existingByUser.set(assignment.userId, assignment);
+  }
+
+  const desired = new Set(desiredCrewIds);
+  for (const assignment of existingAssignments) {
+    if (!desired.has(assignment.userId)) {
+      await ctx.db.delete(assignment._id);
+    }
+  }
+  for (const userId of desiredCrewIds) {
+    const existing = existingByUser.get(userId);
+    if (existing) {
+      if (
+        existing.orgId !== job.orgId ||
+        existing.jobStatus !== job.status ||
+        existing.jobCreatedAt !== job.createdAt
+      ) {
+        await ctx.db.patch(existing._id, {
+          orgId: job.orgId,
+          jobStatus: job.status,
+          jobCreatedAt: job.createdAt,
+        });
+      }
+      continue;
+    }
+    await ctx.db.insert("assignments", {
+      orgId: job.orgId,
+      jobId: job._id,
+      userId,
+      jobStatus: job.status,
+      jobCreatedAt: job.createdAt,
+      assignedAt: now,
+    });
+  }
 }
 
 async function requireJobRead(ctx: JobContext, job: Doc<"jobs">) {
@@ -103,7 +165,7 @@ async function requireJobRead(ctx: JobContext, job: Doc<"jobs">) {
     return { actor, membership };
   }
   if (CREW_ROLES.includes(membership.role)) {
-    requireCrewAssignment(job, actor._id);
+    await requireCrewAssignment(ctx, job, actor._id);
     return { actor, membership };
   }
   throw new Error("FORBIDDEN");
@@ -116,8 +178,8 @@ async function requireJobWork(ctx: JobContext, job: Doc<"jobs">) {
   if (OPERATIONS_MANAGER_ROLES.includes(membership.role)) {
     return { actor, membership };
   }
-  if (CREW_ROLES.includes(membership.role)) {
-    requireCrewAssignment(job, actor._id);
+  if (membership.role === "crew_lead") {
+    await requireCrewAssignment(ctx, job, actor._id);
     return { actor, membership };
   }
   throw new Error("FORBIDDEN");
@@ -235,6 +297,19 @@ export const createFromEstimate = mutation({
       estimate.orgId,
       OPERATIONS_MANAGER_ROLES,
     );
+    const existingJobs = await ctx.db
+      .query("jobs")
+      .withIndex("by_estimate", (index) =>
+        index.eq("estimateId", estimate._id),
+      )
+      .take(2);
+    if (existingJobs.length > 1) throw new Error("JOB_ESTIMATE_DUPLICATE");
+    if (existingJobs[0]) {
+      if (existingJobs[0].orgId !== estimate.orgId) {
+        throw new Error("RESOURCE_ORG_MISMATCH");
+      }
+      return existingJobs[0]._id;
+    }
     const crewIds = uniqueCrewIds(args.crewIds ?? []);
     for (const crewId of crewIds) {
       await requireActiveMembership(ctx, crewId, estimate.orgId, CREW_ROLES);
@@ -257,6 +332,9 @@ export const createFromEstimate = mutation({
       createdAt: now,
       updatedAt: now,
     });
+    const job = await ctx.db.get(jobId);
+    if (!job) throw new Error("JOB_NOT_FOUND");
+    await syncCrewAssignments(ctx, job, crewIds, now);
     if (estimate.status !== "accepted") {
       await ctx.db.patch(estimate._id, { status: "accepted", updatedAt: now });
     }
@@ -300,8 +378,8 @@ export const list = query({
       throw new Error("FORBIDDEN");
     }
     const limit = boundedLimit(args.limit);
-    const jobs =
-      args.status === undefined
+    if (OPERATIONS_READ_ROLES.includes(membership.role)) {
+      return args.status === undefined
         ? await ctx.db
             .query("jobs")
             .withIndex("by_org", (index) => index.eq("orgId", args.orgId))
@@ -314,9 +392,44 @@ export const list = query({
             )
             .order("desc")
             .take(limit);
-    return OPERATIONS_READ_ROLES.includes(membership.role)
-      ? jobs
-      : jobs.filter((job) => job.crewIds.includes(actor._id));
+    }
+
+    const assignments =
+      args.status === undefined
+        ? await ctx.db
+            .query("assignments")
+            .withIndex("by_org_and_user_and_job_created_at", (index) =>
+              index.eq("orgId", args.orgId).eq("userId", actor._id),
+            )
+            .order("desc")
+            .take(limit)
+        : await ctx.db
+            .query("assignments")
+            .withIndex(
+              "by_org_and_user_and_job_status_and_job_created_at",
+              (index) =>
+                index
+                  .eq("orgId", args.orgId)
+                  .eq("userId", actor._id)
+                  .eq("jobStatus", args.status!),
+            )
+            .order("desc")
+            .take(limit);
+    const jobs = await Promise.all(
+      assignments.map((assignment) => ctx.db.get(assignment.jobId)),
+    );
+    return jobs.filter(
+      (job): job is Doc<"jobs"> =>
+        job !== null &&
+        job.orgId === args.orgId &&
+        job.crewIds.includes(actor._id) &&
+        assignments.some(
+          (assignment) =>
+            assignment.jobId === job._id &&
+            assignment.jobStatus === job.status &&
+            assignment.jobCreatedAt === job.createdAt,
+        ),
+    );
   },
 });
 
@@ -363,6 +476,9 @@ export const update = mutation({
       propertyId: links.propertyId,
       updatedAt: now,
     });
+    const updated = await ctx.db.get(job._id);
+    if (!updated) throw new Error("JOB_NOT_FOUND");
+    await syncCrewAssignments(ctx, updated, updated.crewIds, now);
     await appendAuditEvent(ctx, {
       orgId: job.orgId,
       actorId: actor._id,
@@ -371,8 +487,6 @@ export const update = mutation({
       metadata: { status: args.status },
       timestamp: now,
     });
-    const updated = await ctx.db.get(job._id);
-    if (!updated) throw new Error("JOB_NOT_FOUND");
     return updated;
   },
 });
@@ -389,8 +503,14 @@ export const updateStatus = mutation({
       OPERATIONS_MANAGER_ROLES.includes(membership.role) ||
       (membership.role === "crew_lead" && job.crewIds.includes(actor._id));
     if (!mayUpdate) throw new Error("FORBIDDEN");
+    if (membership.role === "crew_lead") {
+      await requireCrewAssignment(ctx, job, actor._id);
+    }
     const now = Date.now();
     await ctx.db.patch(job._id, { status: args.status, updatedAt: now });
+    const updated = await ctx.db.get(job._id);
+    if (!updated) throw new Error("JOB_NOT_FOUND");
+    await syncCrewAssignments(ctx, updated, updated.crewIds, now);
     await appendAuditEvent(ctx, {
       orgId: job.orgId,
       actorId: actor._id,
@@ -399,8 +519,6 @@ export const updateStatus = mutation({
       metadata: { status: args.status },
       timestamp: now,
     });
-    const updated = await ctx.db.get(job._id);
-    if (!updated) throw new Error("JOB_NOT_FOUND");
     return updated;
   },
 });
@@ -424,6 +542,9 @@ export const assignCrew = mutation({
     }
     const now = Date.now();
     await ctx.db.patch(job._id, { crewIds, updatedAt: now });
+    const updated = await ctx.db.get(job._id);
+    if (!updated) throw new Error("JOB_NOT_FOUND");
+    await syncCrewAssignments(ctx, updated, crewIds, now);
     await appendAuditEvent(ctx, {
       orgId: job.orgId,
       actorId: actor._id,
@@ -432,8 +553,6 @@ export const assignCrew = mutation({
       metadata: { crewIds },
       timestamp: now,
     });
-    const updated = await ctx.db.get(job._id);
-    if (!updated) throw new Error("JOB_NOT_FOUND");
     return updated;
   },
 });
@@ -490,6 +609,9 @@ export const createTask = mutation({
       ) {
         throw new Error("INVALID_TASK_ASSIGNEE");
       }
+      if (CREW_ROLES.includes(assignee.role)) {
+        await requireCrewAssignment(ctx, job, args.assigneeId);
+      }
     }
     const now = Date.now();
     const taskId = await ctx.db.insert("tasks", {
@@ -526,11 +648,8 @@ export const updateTask = mutation({
     if (!job || job.orgId !== task.orgId) throw new Error("TASK_RESOURCE_INVALID");
     const membership = await requireActiveMembership(ctx, actor._id, job.orgId);
     if (!OPERATIONS_MANAGER_ROLES.includes(membership.role)) {
-      if (!CREW_ROLES.includes(membership.role)) throw new Error("FORBIDDEN");
-      requireCrewAssignment(job, actor._id);
-      if (task.assigneeId && task.assigneeId !== actor._id && membership.role !== "crew_lead") {
-        throw new Error("FORBIDDEN");
-      }
+      if (membership.role !== "crew_lead") throw new Error("FORBIDDEN");
+      await requireCrewAssignment(ctx, job, actor._id);
     }
     const now = Date.now();
     await ctx.db.patch(task._id, {

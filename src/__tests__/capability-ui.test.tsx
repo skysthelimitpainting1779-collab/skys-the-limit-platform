@@ -24,7 +24,7 @@ describe("authenticated portal UI contracts", () => {
   });
 
   it("scopes login to the trusted WorkOS organization configuration", () => {
-    const login = source("src/app/login/page.tsx");
+    const login = source("src/app/login/route.ts");
     expect(login).toContain("process.env.WORKOS_ORGANIZATION_ID");
     expect(login).toContain("organizationId");
     expect(login).toContain("ALLOWED_RETURN_PATHS");
@@ -35,6 +35,14 @@ describe("authenticated portal UI contracts", () => {
     expect(proxy).not.toContain('"/logout"');
   });
 
+  it("does not prefetch protected portals from the anonymous footer", () => {
+    const footer = source("src/components/navigation/Footer.tsx");
+
+    for (const path of ["/operations", "/crew", "/customer"]) {
+      expect(footer).toContain(`href="${path}" prefetch={false}`);
+    }
+  });
+
   it("renders only canonical role-appropriate portal destinations", () => {
     const shell = source("src/components/portal/PortalShell.tsx");
     expect(shell).toContain(
@@ -43,6 +51,9 @@ describe("authenticated portal UI contracts", () => {
     expect(shell).toContain('href: "/operations"');
     expect(shell).toContain('href: "/crew"');
     expect(shell).toContain('href: "/customer"');
+    expect(shell).toContain("canAccessActiveRoute");
+    expect(shell).toContain("context === undefined");
+    expect(shell).toContain("!canAccessActiveRoute");
     expect(shell).not.toContain("href: \"/settings\"");
   });
 
@@ -67,6 +78,9 @@ describe("authenticated portal UI contracts", () => {
     expect(crew).not.toContain("completedBy:");
     expect(crew).not.toContain("CREW_JOBS");
     expect(crew).not.toContain("weather");
+    expect(crew).toContain("customerVisible: canManageWork ? customerVisible : false");
+    expect(crew).toContain("const canAddProjectUpdate = canUpdateFieldState");
+    expect(crew).toContain("!canUpdateFieldState || busyKey");
   });
 
   it("keeps operations queries and publication controls capability-scoped", () => {
@@ -74,7 +88,7 @@ describe("authenticated portal UI contracts", () => {
     expect(operations).toContain("capabilities?.canEditContent === true");
     expect(operations).toContain("capabilities?.canPublishContent === true");
     expect(operations).toContain("capabilities?.canManageDocuments === true");
-    expect(operations).toContain("activeOrgId ? { orgId: activeOrgId, limit: 12 }");
+    expect(operations).toContain("activeOrgId && canOperate");
     expect(operations).toContain("markAllNotificationsRead({ orgId: activeOrgId })");
     expect(operations).toContain("canApproveContent ?");
     expect(operations).toContain("export function OperationsDashboard()");
@@ -92,7 +106,15 @@ describe("authenticated portal UI contracts", () => {
   it("does not substitute a fake Convex endpoint", () => {
     const provider = source("src/components/providers/ConvexClientProvider.tsx");
     expect(provider).toContain("ConvexConfigurationError");
+    expect(provider).toContain("Retry secure setup");
     expect(provider).not.toContain("sandbox-placeholder");
     expect(provider).not.toContain("your-deployment.convex.cloud");
+  });
+
+  it("keeps primary action contrast and route recovery explicit", () => {
+    const globalStyles = source("src/app/globals.css");
+    expect(globalStyles).toContain("--primary: oklch(0.5 0.17 46)");
+    expect(source("src/app/loading.tsx")).toContain('aria-busy="true"');
+    expect(source("src/app/error.tsx")).toContain("Protected records could not be loaded");
   });
 });

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 
 const mocks = vi.hoisted(() => ({
   withAuth: vi.fn(),
@@ -32,13 +33,17 @@ describe("WorkOS portal organization boundary", () => {
     }
   });
 
-  it("redirects an anonymous session through the organization-pinned login", async () => {
+  it("fails closed if an anonymous session reaches the server fallback", async () => {
     mocks.withAuth.mockResolvedValue({ user: null });
 
-    await expect(
-      AuthenticatedPortal({ children: "private", returnTo: "/crew" }),
-    ).rejects.toThrow("NEXT_REDIRECT");
-    expect(mocks.redirect).toHaveBeenCalledWith("/login?returnTo=%2Fcrew");
+    const output = renderToStaticMarkup(
+      await AuthenticatedPortal({ children: "private", returnTo: "/crew" }),
+    );
+
+    expect(output).toContain("Sign in to the authorized WorkOS organization");
+    expect(output).toContain('/login?returnTo=%2Fcrew');
+    expect(output).not.toContain("private");
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
   it("rejects a valid session from a different WorkOS organization", async () => {
@@ -47,12 +52,17 @@ describe("WorkOS portal organization boundary", () => {
       organizationId: "org_other",
     });
 
-    await expect(
-      AuthenticatedPortal({ children: "private", returnTo: "/operations" }),
-    ).rejects.toThrow("NEXT_REDIRECT");
-    expect(mocks.redirect).toHaveBeenCalledWith(
-      "/login?returnTo=%2Foperations",
+    const output = renderToStaticMarkup(
+      await AuthenticatedPortal({
+        children: "private",
+        returnTo: "/operations",
+      }),
     );
+
+    expect(output).toContain("authorized WorkOS organization");
+    expect(output).toContain('/login?returnTo=%2Foperations');
+    expect(output).not.toContain("private");
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
   it("accepts only the configured organization session", async () => {

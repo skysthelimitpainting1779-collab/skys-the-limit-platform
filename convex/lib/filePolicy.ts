@@ -11,6 +11,13 @@ export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
 export const accessLevelValidator = v.union(
   v.literal("public"),
+  v.literal("customer"),
+  v.literal("internal"),
+  v.literal("restricted"),
+);
+
+export const genericAccessLevelValidator = v.union(
+  v.literal("public"),
   v.literal("internal"),
   v.literal("restricted"),
 );

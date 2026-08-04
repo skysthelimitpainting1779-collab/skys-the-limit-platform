@@ -144,9 +144,13 @@ export function PortalShell({
     [context, selectedOrgId],
   );
   const role = activeMembership?.role;
+  const activeRoute = portalNav.find((item) => pathname.startsWith(item.href));
+  const canAccessActiveRoute = Boolean(
+    !activeRoute || (role && activeRoute.allows.has(role)),
+  );
   const visibleNav = role
     ? portalNav.filter((item) => item.allows.has(role))
-    : portalNav.filter((item) => pathname.startsWith(item.href));
+    : [];
   const displayUser = context?.user ?? serverUser;
 
   const workspaceValue = useMemo<WorkspaceValue>(
@@ -278,7 +282,17 @@ export function PortalShell({
           </nav>
         </header>
 
-        {context && context.memberships.length === 0 ? (
+        {context === undefined ? (
+          <main
+            className="mx-auto max-w-3xl px-4 py-16 sm:px-6"
+            aria-busy="true"
+            aria-live="polite"
+          >
+            <section className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              Verifying your organization membership and workspace access…
+            </section>
+          </main>
+        ) : context.memberships.length === 0 ? (
           <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
             <section className="rounded-xl border border-border bg-card p-6">
               <h1 className="text-2xl font-bold tracking-tight">
@@ -289,6 +303,39 @@ export function PortalShell({
                 membership is available. Ask an owner or administrator to
                 complete the invitation before using operational records.
               </p>
+            </section>
+          </main>
+        ) : !activeMembership ? (
+          <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+            <section className="rounded-xl border border-border bg-card p-6">
+              <h1 className="text-2xl font-bold tracking-tight">
+                No active organization is available
+              </h1>
+              <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
+                Your session is valid, but none of its active memberships can
+                open this workspace. Ask an owner to restore an active
+                organization membership.
+              </p>
+            </section>
+          </main>
+        ) : !canAccessActiveRoute ? (
+          <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+            <section className="rounded-xl border border-border bg-card p-6">
+              <h1 className="text-2xl font-bold tracking-tight">
+                This workspace is not available for your role
+              </h1>
+              <p className="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
+                Convex verified your active organization membership, but it
+                does not grant access to this route.
+              </p>
+              {visibleNav.at(0) ? (
+                <Link
+                  href={visibleNav[0].href}
+                  className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  Open {visibleNav[0].label}
+                </Link>
+              ) : null}
             </section>
           </main>
         ) : (

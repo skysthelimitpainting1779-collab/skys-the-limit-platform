@@ -28,6 +28,8 @@ import EstimatePage, { metadata as estMeta } from "@/app/estimate/page";
 import CustomerPage, { metadata as custMeta } from "@/app/customer/page";
 import CrewPage, { metadata as crewMeta } from "@/app/crew/page";
 import OperationsPage, { metadata as opsMeta } from "@/app/operations/page";
+import ApplicationError from "@/app/error";
+import ApplicationLoading from "@/app/loading";
 import { Id } from "@convex/_generated/dataModel";
 
 // Mock convex/react hooks for unit testing component logic
@@ -74,6 +76,19 @@ describe("App Shells & Convex Integration Suite", () => {
     expect(typeof CustomerDashboard).toBe("function");
     expect(typeof CrewDashboard).toBe("function");
     expect(typeof OperationsDashboard).toBe("function");
+  });
+
+  it("provides recoverable loading and fail-closed route boundaries", () => {
+    const loading = renderToStaticMarkup(<ApplicationLoading />);
+    expect(loading).toContain("Loading the requested workspace");
+    expect(loading).toContain('aria-busy="true"');
+
+    const failed = renderToStaticMarkup(
+      <ApplicationError error={new Error("sensitive detail")} reset={vi.fn()} />,
+    );
+    expect(failed).toContain("Protected records could not be loaded");
+    expect(failed).toContain("Try again");
+    expect(failed).not.toContain("sensitive detail");
   });
 
   it("verifies /estimate page metadata and route shell component", () => {

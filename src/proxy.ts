@@ -13,10 +13,6 @@ export default authkitProxy({
       "/api/estimate",
       "/auth/callback",
       "/login",
-      // Portal layouts apply the organization-scoped server redirect.
-      "/operations",
-      "/crew",
-      "/customer",
     ],
   },
 });

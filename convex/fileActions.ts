@@ -2,6 +2,7 @@
 
 import {
   del,
+  getDownloadUrl as getBlobDownloadUrl,
   head,
   issueSignedToken,
   presignUrl,
@@ -41,6 +42,33 @@ function validateUploadRequest(name: string, mimeType: string, fileSize: number)
 
 function safePathSegment(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+type AuthorizedBlob = {
+  blobUrl: string;
+  blobPathname: string;
+  name: string;
+};
+
+async function createPrivateDownload(document: AuthorizedBlob) {
+  const expiresAt = Date.now() + DOWNLOAD_TTL_MS;
+  const signedToken = await issueSignedToken({
+    pathname: document.blobPathname,
+    operations: ["get"],
+    validUntil: expiresAt,
+  });
+  const { presignedUrl } = await presignUrl(signedToken, {
+    operation: "get",
+    pathname: document.blobPathname,
+    access: "private",
+    validUntil: expiresAt,
+    useCache: false,
+  });
+  return {
+    url: getBlobDownloadUrl(presignedUrl),
+    name: document.name,
+    expiresAt,
+  };
 }
 
 export const generateUploadUrl = action({
@@ -148,25 +176,31 @@ export const getDownloadUrl = action({
     name: string;
     expiresAt: number;
   }> => {
-    const document: {
-      blobUrl: string;
-      blobPathname: string;
-      name: string;
-    } = await ctx.runQuery(internal.files.getAuthorizedBlob, args);
-    const expiresAt = Date.now() + DOWNLOAD_TTL_MS;
-    const signedToken = await issueSignedToken({
-      pathname: document.blobPathname,
-      operations: ["get"],
-      validUntil: expiresAt,
-    });
-    const { presignedUrl } = await presignUrl(signedToken, {
-      operation: "get",
-      pathname: document.blobPathname,
-      access: "private",
-      validUntil: expiresAt,
-      useCache: false,
-    });
-    return { url: presignedUrl, name: document.name, expiresAt };
+    const document: AuthorizedBlob = await ctx.runQuery(
+      internal.files.getAuthorizedBlob,
+      args,
+    );
+    return await createPrivateDownload(document);
+  },
+});
+
+export const getCustomerDownloadUrl = action({
+  args: { documentId: v.id("documents") },
+  returns: v.object({
+    url: v.string(),
+    name: v.string(),
+    expiresAt: v.number(),
+  }),
+  handler: async (ctx, args): Promise<{
+    url: string;
+    name: string;
+    expiresAt: number;
+  }> => {
+    const document: AuthorizedBlob = await ctx.runQuery(
+      internal.files.getCustomerAuthorizedBlob,
+      args,
+    );
+    return await createPrivateDownload(document);
   },
 });
 

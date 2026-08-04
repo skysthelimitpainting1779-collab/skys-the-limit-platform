@@ -83,6 +83,8 @@ function ConfiguredConvexProvider({
 function ProvisionAuthenticatedUser() {
   const { isAuthenticated } = useConvexAuth();
   const bindAuthenticatedUser = useMutation(api.users.store);
+  const [failedRetryVersion, setFailedRetryVersion] = useState<number | null>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -91,10 +93,12 @@ function ProvisionAuthenticatedUser() {
     const bind = async (attempt: number) => {
       try {
         await bindAuthenticatedUser({});
+        if (!cancelled) setFailedRetryVersion(null);
       } catch {
         if (cancelled) return;
         if (attempt >= 4) {
           console.error("[AuthKit] Convex identity binding failed.");
+          setFailedRetryVersion(retryVersion);
           return;
         }
         retryTimer = setTimeout(
@@ -108,8 +112,28 @@ function ProvisionAuthenticatedUser() {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [bindAuthenticatedUser, isAuthenticated]);
-  return null;
+  }, [bindAuthenticatedUser, isAuthenticated, retryVersion]);
+
+  if (!isAuthenticated || failedRetryVersion !== retryVersion) return null;
+  return (
+    <section
+      role="alert"
+      className="border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground"
+    >
+      <div className="mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-3">
+        <p>
+          Secure account setup did not finish. No protected records were loaded.
+        </p>
+        <button
+          type="button"
+          onClick={() => setRetryVersion((version) => version + 1)}
+          className="inline-flex min-h-10 items-center rounded-lg border border-border bg-card px-3 font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Retry secure setup
+        </button>
+      </div>
+    </section>
+  );
 }
 
 function useAuthFromAuthKit() {
