@@ -6,13 +6,14 @@ const workflowPath = resolve(".github/workflows/lead-intake-e2e.yml");
 const bootstrapPath = resolve("convex/ci.ts");
 
 describe("lead-intake CI isolation contract", () => {
-  it("configures every fail-closed WorkOS input on the local Convex deployment", () => {
+  it("configures every fail-closed server input on the local Convex deployment", () => {
     const workflow = readFileSync(workflowPath, "utf8");
     const deploymentVariables = [
       "WORKOS_CLIENT_ID",
       "WORKOS_API_KEY",
       "WORKOS_WEBHOOK_SECRET",
       "WORKOS_ACTION_SECRET",
+      "LEAD_INTAKE_SECRET",
     ];
 
     for (const variable of deploymentVariables) {

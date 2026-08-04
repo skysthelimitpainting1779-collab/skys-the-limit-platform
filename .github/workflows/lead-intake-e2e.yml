@@ -27,6 +27,7 @@ jobs:
       WORKOS_ORGANIZATION_ID: org_local_ci_fail_closed
       WORKOS_WEBHOOK_SECRET: whsec_local_ci_fail_closed
       WORKOS_ACTION_SECRET: action_local_ci_fail_closed
+      LEAD_INTAKE_SECRET: local_ci_lead_intake_proof_key_32_chars_minimum
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
@@ -51,6 +52,7 @@ jobs:
           npx convex env set WORKOS_API_KEY "$WORKOS_API_KEY"
           npx convex env set WORKOS_WEBHOOK_SECRET "$WORKOS_WEBHOOK_SECRET"
           npx convex env set WORKOS_ACTION_SECRET "$WORKOS_ACTION_SECRET"
+          npx convex env set LEAD_INTAKE_SECRET "$LEAD_INTAKE_SECRET"
 
           nohup bash -lc 'CONVEX_AGENT_MODE=anonymous npx convex dev' > /tmp/convex.log 2>&1 &
           echo $! > /tmp/convex.pid
