@@ -1,0 +1,128 @@
+{
+  "node_id": "platform-rescue-customer-documents",
+  "title": "Independent evaluation — customer document security and portal workflow",
+  "timestamp": "2026-08-04T07:02:16.7960341Z",
+  "status": "passed",
+  "verdict": "pass",
+  "implementer": "/root (platform rescue implementer)",
+  "evaluator": "/root/operations_lifecycle_ui",
+  "evaluator_role": "independent_customer_document_evaluator",
+  "independent_evaluator": true,
+  "implementer_is_evaluator": false,
+  "independence_note": "The evaluator did not implement the customer-document slice and did not modify implementation or test code during evaluation. The evaluator's separate operations-lifecycle UI work was excluded from this verdict.",
+  "target": {
+    "branch": "fix/owner-staff-platform-rescue",
+    "candidate_sha": "106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "candidate_subject": "fix(platform): complete scoped portal workflows",
+    "base_sha": "723b5d4634cb565303a7f286917e1e4bfbb0aef5",
+    "evaluated_range": "723b5d4634cb565303a7f286917e1e4bfbb0aef5..106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "target_kind": "git_revision",
+    "evaluation_note": "All source, test, and command claims are pinned to the immutable candidate SHA. No live Convex deployment, Vercel Blob store, WorkOS environment, Production service, repository merge, or deployment was accessed or mutated."
+  },
+  "rollback": {
+    "last_known_good_sha": "723b5d4634cb565303a7f286917e1e4bfbb0aef5",
+    "command": "git revert 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "human_approval_required": false,
+    "production_effect": false,
+    "note": "Coordinate before reverting if this multi-slice commit is pushed or shared; merging dev to main, deploying Production, changing DNS, or mutating Production data still requires owner approval."
+  },
+  "evidence": {
+    "evaluator_verdict": "pass",
+    "discovery_and_contracts": {
+      "graphify_first": "pass — queried the existing Graphify knowledge graph for the customer-document list/download, Blob action, CustomerDashboard, and hostile-test call chains before targeted source reads",
+      "lessons": "pass — reviewed graphify-out/reflections/LESSONS.md, including the prior customer-document policy and private-download lessons",
+      "convex_guidelines": "pass — reviewed convex/_generated/ai/guidelines.md before evaluating Convex schema, authentication, indexes, pagination, and public/internal function boundaries",
+      "skills": "pass — applied the peer-evaluator and security-review contracts; the evaluator remained independent and limited its only write to this receipt",
+      "current_third_party_docs": "pass — resolved and queried current Context7 documentation for Convex, Vercel Blob, and React. The implementation matches documented authenticated Convex queries/pagination, private Blob signed-token/presign flows and authoritative head metadata, and real React loading/action states.",
+      "exact_tree": "pass — HEAD was verified as 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd before and after evaluation; the only pre-existing untracked path was .playwright-cli/, which was ignored and not evaluated"
+    },
+    "policy_review": {
+      "distinct_customer_policy": "pass — convex/lib/filePolicy.ts models customer as a distinct access level while genericAccessLevelValidator deliberately excludes it; schema and generated types accept the dedicated value",
+      "exact_customer_binding": "pass — listMyCustomerDocuments and getCustomerAuthorizedBlob require canonical tokenIdentifier authentication, an active exact CUSTOMER_ROLES membership in the document organization, and a unique customers.by_org_and_user binding",
+      "resource_scope": "pass — customer reads require accessLevel=customer, a present jobId, a job in the same organization, and job.customerId equal to the exact bound customer record",
+      "generic_api_isolation": "pass — generic getDocument/getAuthorizedBlob/getDownloadUrl reject customer documents; generic listDocuments cannot accept the customer value; public metadata omits blobUrl and blobPathname",
+      "creation_scope": "pass — customer-grant uploads require an active operations membership, same-organization job, and same-organization customer; crew roles are denied even when assigned; uploadedBy is derived from the authenticated actor",
+      "private_blob_boundary": "pass — no ctx.storage path exists; uploads are private Vercel Blob presigns, finalizeUpload validates authoritative head content type/size/path, and customer downloads are five-minute get-only private presigns produced only after the specialized authorization query",
+      "pagination": "pass — customer listing uses the organization/access index plus Convex pagination, rejects unsafe numItems values, caps each page at 50, and revalidates every page row against its job/customer relationship",
+      "portal_workflow": "pass — CustomerDashboard conditionally mounts the exact customer query, uses the specialized paginated list and download action, and renders first-load, empty, load-more/loading-more, per-file authorization progress, and recoverable download-error states"
+    },
+    "verification": [
+      {
+        "command": "npx vitest run convex/customerDocumentsSecurity.test.ts",
+        "result": "pass — 1 file, 7 hostile authorization tests"
+      },
+      {
+        "command": "npx vitest run src/__tests__/file-actions-security.test.ts",
+        "result": "pass — 1 file, 4 Vercel Blob boundary tests"
+      },
+      {
+        "command": "npx vitest run convex/anonymousApiSecurity.test.ts convex/publicApiInventory.test.ts convex/checklistsFilesSecurity.test.ts convex/customerDocumentsSecurity.test.ts src/__tests__/file-actions-security.test.ts src/__tests__/capability-ui.test.tsx src/__tests__/app-shells.test.tsx",
+        "result": "pass — 7 files, 41 tests"
+      },
+      {
+        "command": "npm test",
+        "result": "pass — 30 files, 178 tests"
+      },
+      {
+        "command": "npm run typecheck",
+        "result": "pass — tsc --noEmit"
+      },
+      {
+        "command": "npm run lint",
+        "result": "pass — ESLint"
+      },
+      {
+        "command": "npm run verify:skills",
+        "result": "pass — all project-owned agent skills validated"
+      },
+      {
+        "command": "npm run verify:env",
+        "result": "pass — environment contract clean and complete"
+      },
+      {
+        "command": "npm run verify:assets",
+        "result": "pass — 1 committed asset, 0 pending"
+      },
+      {
+        "command": "npm audit --omit=dev --audit-level=high",
+        "result": "pass — 0 vulnerabilities"
+      },
+      {
+        "command": "git show --check --pretty= 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+        "result": "pass"
+      },
+      {
+        "command": "npm run build",
+        "result": "pass — Next.js 16.2.12 Turbopack production build, TypeScript, page data, and all 10 static pages completed"
+      }
+    ]
+  },
+  "blocking_findings": [],
+  "residual_risks": [
+    {
+      "id": "CUSTOMER-DOCUMENT-PAGINATION-DENSITY",
+      "severity": "low",
+      "summary": "The specialized list paginates organization-wide customer documents and then filters each bounded page by job/customer ownership.",
+      "impact": "No unauthorized record or Blob coordinate is returned, but a customer with sparse documents may need multiple Load More requests and can infer coarse organization-wide document-density state from pagination completion behavior.",
+      "recommendation": "If document volume becomes material, denormalize the authorized customerId onto customer-visible document metadata and add an organization/customer index, with a migration that revalidates each job/customer link."
+    },
+    {
+      "id": "CUSTOMER-DOCUMENT-LIVE-PREVIEW-PROOF",
+      "severity": "low",
+      "summary": "The private Blob and protected customer portal flows were verified statically, in unit/integration tests, and in a production compile, but not against an isolated live Preview deployment.",
+      "impact": "Environment provisioning, Blob-store permissions, WorkOS claims, or Preview protection could still fail operationally without weakening the reviewed server-side policy.",
+      "recommendation": "After this SHA is pushed, run exact-SHA anonymous, wrong-customer, revoked-membership, private-upload/head/finalize/download, and CustomerDashboard browser smokes in isolated Preview infrastructure before merge."
+    }
+  ],
+  "test_coverage_notes": [
+    "The hostile Convex suite directly covers anonymous, wrong-organization, other-customer, cross-organization job, unbound job, internal/restricted substitution, crew creation, exact customer grant, generic API bypass, Blob-coordinate redaction, and oversized pagination cases.",
+    "CustomerDashboard is wired to real Convex hooks, but its loading/load-more/download/error rendering is presently supported by source-contract and compile coverage rather than a behavioral DOM interaction test; adding that test would improve regression precision without blocking this verdict.",
+    "Active membership and suspended-organization fail-closed behavior are centralized in requireActiveMembership and covered elsewhere in the 178-test regression suite; a customer-document-specific revoked-membership case would make the local threat proof more explicit."
+  ],
+  "release_gates": [
+    "Push the immutable candidate and require exact-SHA CI, Security, and Vercel Preview results; checks on another revision do not count.",
+    "Use isolated Preview WorkOS, Convex, and Vercel Blob credentials and seed at least two organizations and two customers for hostile browser/API smokes.",
+    "Do not merge dev to main, deploy Production, attach a Production domain, mutate Production Convex or Blob data, send customer communications, or change DNS without the required human approval."
+  ],
+  "verdict_rationale": "Pass. At 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd, customer documents have a distinct policy, exact active membership and customer-record binding, same-organization job/customer enforcement, generic API isolation, server-derived uploader identity, operations-scoped creation, crew denial, private Vercel Blob-only signed access, bounded pagination, and a real CustomerDashboard list/download workflow. Focused hostile tests, the 178-test suite, typecheck, lint, environment/asset/skill gates, dependency audit, exact-commit hygiene, and the production build are all green. The two documented residual risks are nonblocking and do not expose customer records or Blob coordinates."
+}

@@ -30,7 +30,7 @@
       "document_tenant_scope": "pass — upload, read, download, list, and deletion decisions bind to the document organization and job assignment where applicable",
       "token_identifier_binding": "pass — authorization lookups use issuer-qualified tokenIdentifier; subject is limited to binding an unbound signature-verified WorkOS webhook profile",
       "document_pagination": "pass — listings require tenant/access indexes and Convex pagination options",
-      "v4_002_governance": "pass — original v4-002 evidence names separate evaluator reviewer_v4_002 and its independent handoff verifies 23/23 source-pack checksums; implementing worker is no longer its final authority"
+      "v4_002_governance": "superseded — the original 2026-08-02 claim was unsupported because the required v4-002 receipt/reviewer artifacts were absent from that exact candidate tree. A later independent evaluation at 2026-08-04T07:09:02.2103276Z now establishes the result in .agent/state/nodes/v4-002.json by reproducing the archive hash, 23/23 original ZIP-stream hashes, 23/23 extracted hashes, ordered reference review, visual contact-sheet inspection, and classifications."
     },
     "additional_hardening": {
       "legacy_public_rpcs": "pass — lead, estimate, job, user, and audit endpoints fail closed except explicitly anonymous tenant-bound lead intake and a pure pricing calculation; audit append and provisioning seams are internal",
@@ -62,6 +62,15 @@
     "Run private Blob upload/head/finalize/download/delete and hostile MIME, size, pathname, tenant, role, and job-assignment tests against the protected preview.",
     "Require green CI/security statuses, independent approval, and protected-preview anonymous smoke tests before merge or release."
   ],
+  "governance_history_correction": {
+    "timestamp": "2026-08-04T07:09:02.2103276Z",
+    "corrected_by": "/root/customer_document_flow",
+    "preserved_original_claim": "pass — original v4-002 evidence names separate evaluator reviewer_v4_002 and its independent handoff verifies 23/23 source-pack checksums; implementing worker is no longer its final authority",
+    "reason": "At the exact 137f2eebf899d4ccf101594063083529df039d9f tree, the claimed independent v4-002 receipt and reviewer handoff were absent, so that part of the historical pass rationale was not auditable.",
+    "superseding_evidence": ".agent/state/nodes/v4-002.json",
+    "superseding_verdict": "pass",
+    "effect_on_security_node": "The unsupported historical governance assertion is corrected without erasing it. The later independent receipt now closes that governance dependency; the technical security findings and their original exact-commit verification remain unchanged."
+  },
   "limitations": [
     "No live Convex deployment, WorkOS tenant, Vercel Blob store, production credentials, or production data was accessed.",
     "Cross-issuer subject collision was not reproduced against live accepted WorkOS issuers; tokenIdentifier binding and preview hostile-identity verification remain required."

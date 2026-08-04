@@ -1,248 +1,156 @@
 {
   "node_id": "platform-rescue-001",
-  "title": "Independent evaluation — owner/staff platform rescue",
-  "timestamp": "2026-08-04T05:32:39.3136402Z",
-  "status": "remediation_required",
-  "verdict": "remediate",
+  "title": "Independent final-panel evaluation — owner/staff platform rescue",
+  "timestamp": "2026-08-04T07:09:02.2103276Z",
+  "status": "passed",
+  "verdict": "pass",
   "implementer": "/root (platform rescue implementer)",
-  "evaluator": "/root/platform_rescue_evaluator",
+  "evaluator": "/root/customer_document_flow",
   "independent_evaluator": true,
   "implementer_is_evaluator": false,
   "target": {
     "branch": "fix/owner-staff-platform-rescue",
-    "candidate_sha": "723b5d4634cb565303a7f286917e1e4bfbb0aef5",
-    "candidate_subject": "fix(security): harden WorkOS and wire operating portals",
+    "candidate_sha": "106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "candidate_subject": "fix(platform): complete scoped portal workflows",
     "base": "origin/dev",
-    "evaluated_range": "origin/dev..723b5d4634cb565303a7f286917e1e4bfbb0aef5",
-    "evaluation_note": "All verdict claims are pinned to the immutable candidate commit. Focused tests, full branch verification, and the production build completed before the implementer began later uncommitted remediation in the shared worktree."
+    "base_sha": "4e2e2bb5364ff27766f775a0dd45e737c868ade8",
+    "evaluated_range": "origin/dev..106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform-rescue",
+    "exact_tree_note": "HEAD was exact and the rescue worktree was clean except intentional untracked .playwright-cli/, which was ignored. No implementation code was edited by this evaluator."
   },
   "rollback": {
-    "last_known_good_sha": "de7bcca12c1d3a61853878fcf73e6a6857b51544",
-    "command": "git revert 723b5d4",
+    "last_known_good_sha": "723b5d4634cb565303a7f286917e1e4bfbb0aef5",
+    "command": "git revert 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
     "human_approval_required": false,
     "production_effect": false,
-    "note": "Coordinate before reverting if the candidate is later pushed to a shared branch; merging dev to main or changing Production still requires owner approval."
+    "note": "Coordinate before reverting a pushed/shared multi-slice commit. Merging dev to main, deploying Production, changing DNS, or mutating Production data still requires owner approval."
+  },
+  "evaluation_history": [
+    {
+      "timestamp": "2026-08-04T05:32:39.3136402Z",
+      "candidate_sha": "723b5d4634cb565303a7f286917e1e4bfbb0aef5",
+      "evaluator": "/root/platform_rescue_evaluator",
+      "verdict": "remediate",
+      "preserved_finding_ids": [
+        "RBAC-CREW-WRITE-001",
+        "ASSIGNMENT-INDEX-001",
+        "CUSTOMER-DOCUMENTS-001",
+        "PORTAL-LIFECYCLE-UI-001",
+        "ROUTE-CAPABILITY-001",
+        "WCAG-CONTRAST-001",
+        "PORTAL-FAILURE-STATE-001",
+        "GOVERNANCE-V4-002-001",
+        "DIFF-HYGIENE-001"
+      ],
+      "preserved_findings": [
+        { "id": "RBAC-CREW-WRITE-001", "severity": "high", "summary": "crew_member could mutate task completion and project updates contrary to the committed matrix" },
+        { "id": "ASSIGNMENT-INDEX-001", "severity": "high", "summary": "the assignments entity/index was absent and crew listing filtered after a bounded organization slice" },
+        { "id": "CUSTOMER-DOCUMENTS-001", "severity": "high", "summary": "the secure customer Documents workflow had no explicit customer grant/list/download path" },
+        { "id": "PORTAL-LIFECYCLE-UI-001", "severity": "high", "summary": "customer onboarding, scheduling, assignment, and role mutations had no portal call sites" },
+        { "id": "ROUTE-CAPABILITY-001", "severity": "medium", "summary": "portal layouts did not reject a role directly opening another role's route" },
+        { "id": "WCAG-CONTRAST-001", "severity": "medium", "summary": "light-theme primary button text contrast was below WCAG 2.2 AA" },
+        { "id": "PORTAL-FAILURE-STATE-001", "severity": "medium", "summary": "terminal provisioning and route loading/error failures lacked recoverable user-facing states" },
+        { "id": "GOVERNANCE-V4-002-001", "severity": "high", "summary": "the source-pack node lacked an auditable independent receipt while a downstream state claimed one existed" },
+        { "id": "DIFF-HYGIENE-001", "severity": "low", "summary": "the origin/dev comparison failed git diff --check due to added EOF blank lines" }
+      ],
+      "prior_verdict_rationale": "The 723b5d4 candidate materially fixed PR #26 authorization findings but could not pass because its crew write contract, assignment model/query, customer Documents workflow, lifecycle UI, route guard, contrast, failure states, v4-002 governance, and diff hygiene remained incomplete.",
+      "history_note": "The prior remediate verdict remains part of the audit trail and is superseded only for the new immutable candidate after independent re-evaluation."
+    }
+  ],
+  "scope_and_abstention": {
+    "broad_evaluator_scope": "Full origin/dev comparison and the remediation delta outside the customer-document slice, including PR #26 authorization findings, WorkOS, lifecycle RPC/UI, assignments, crew writes, checklists, route guards, failure states, contrast, public prefetch, idempotency, tests, environment, dependency, and governance gates.",
+    "abstained_slice": "The evaluator implemented the customer-document slice and therefore explicitly abstained from judging its policy, specialized list/download actions, customer-document UI, and hostile customer-document tests.",
+    "required_dependency_receipt": ".agent/state/nodes/platform-rescue-customer-documents.json",
+    "dependency_evaluator": "/root/operations_lifecycle_ui",
+    "dependency_candidate_sha": "106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+    "dependency_verdict": "pass",
+    "dependency_blockers": 0,
+    "panel_reliance": "The whole-candidate verdict relies on that separate commit-exact receipt for the abstained slice; this evaluator makes no independent customer-document pass claim."
   },
   "evidence": {
-    "evaluator_verdict": "remediate",
-    "contract_and_architecture_discovery": {
-      "graphify_first": "pass — queried the existing Graphify knowledge graph before targeted source inspection and checked graphify-out/reflections/LESSONS.md",
-      "convex_guidelines": "pass — read convex/_generated/ai/guidelines.md before evaluating Convex APIs",
-      "current_third_party_docs": "pass — resolved and queried current Context7 documentation for WorkOS AuthKit Next.js, the WorkOS AuthKit Convex component, Convex authorization/pagination, Next.js proxy/auth boundaries, and Vercel Blob private upload/download behavior",
-      "exact_diff": "reviewed origin/dev..723b5d4634cb565303a7f286917e1e4bfbb0aef5 and the exact commit tree"
+    "discovery_and_current_docs": {
+      "graphify_first": "pass — queried Graphify before targeted raw inspection and reviewed graphify-out/reflections/LESSONS.md",
+      "convex_guidelines": "pass — read convex/_generated/ai/guidelines.md and used the Convex reviewer contract",
+      "context7": "pass — resolved and queried current authoritative documentation for Convex, WorkOS AuthKit Next.js, Next.js 16.2.9 route/proxy/loading/error behavior, and Vercel Blob",
+      "github_pr_26": "pass — fetched PR #26 conversation, review, and thread data read-only with the bundled thread-aware helper. The original review contained eight categories and no inline review threads; all critical/high code findings were re-evaluated against the candidate rather than relying on the earlier different head."
     },
-    "pr_26_and_follow_up_security_findings": {
-      "self_provisioning_and_role_elevation": "fixed at the candidate — users.store binds only a signature-verified active webhook-synced WorkOS user; users.updateRole requires an active owner/admin membership, prevents admin owner-grants/demotions, protects the last owner, and audits changes",
-      "legacy_public_rpcs": "fixed at the candidate — the exact public RPC inventory is asserted and protected legacy calls fail closed for anonymous identities",
-      "tenant_scope": "fixed at the candidate — operational reads and mutations validate active organization membership and resource organization; customer and crew reads add exact record or assignment checks",
-      "cms_role_and_org_lifecycle": "fixed at the candidate — CMS authorization uses active per-organization memberships and active organization lifecycle state",
-      "legacy_member_schema_compatibility": "fixed at the candidate — the legacy member role remains schema-compatible and fails closed until explicitly promoted",
-      "checklist_schema_auth_actor_and_bounds": "fixed at the candidate — checklist tables/indexes exist; public RPCs authenticate and job-scope; completedBy is derived from identity; items are child rows with explicit caps",
-      "vercel_blob_file_boundary": "fixed for staff/crew/public paths at the candidate — upload/finalize/download use Vercel Blob, authoritative Blob head metadata, server-derived uploadedBy, signed restricted uploads, indexed pagination, and redacted public metadata",
-      "canonical_identity": "fixed at the candidate — authorization lookup uses issuer-qualified tokenIdentifier",
-      "v4_002_governance": "not fixed — the required independent receipt and reviewer artifacts are absent while a later state file claims they exist"
+    "pr_26_and_security_recheck": {
+      "role_escalation": "pass — users.store binds only an active signature-verified webhook profile by canonical tokenIdentifier; users.updateRole requires active organization owner/admin authority, prevents admin owner/admin elevation and owner demotion, protects the last active owner, and audits the membership change",
+      "legacy_public_rpcs": "pass — explicit public API inventory and anonymous hostile tests keep only intended anonymous entry points and deny protected lead, estimate, job, user, audit, checklist, notification, customer, claim, file, and operations calls",
+      "cross_organization_operations": "pass — active organization membership and exact resource org checks protect reads/writes; indexed tenant reads replace global scans",
+      "mutable_email_claim": "pass — customer access is an explicit customers.by_org_and_user relationship; email is display/contact data and never ownership proof",
+      "cms_roles_and_lifecycle": "pass — CMS edits/publishing require active per-organization membership roles and an active organization; public reads expose only verified published pages",
+      "canonical_identity": "pass — protected identity lookup uses issuer-qualified tokenIdentifier with subject limited to verified initial binding",
+      "schema_and_query_correctness": "pass — legacy member remains compatible and capability-less; protected exports have return validators; bounded indexed reads are used; reactive operations queries do not depend on Date.now()"
     },
-    "public_rpc_inventory": "pass — convex/publicApiInventory.test.ts and convex/anonymousApiSecurity.test.ts cover the explicit anonymous allowlist and fail-closed protected exports",
-    "signed_lead_intake": "pass — /api/estimate validates and signs a canonical bounded payload; leadActions.submit verifies freshness/signature before an internal tenant-bound idempotent rate-limited mutation",
-    "environment_and_secret_safety": {
-      "environment_contract": "pass — npm run verify:env; .env.example contains placeholders only, .gitignore tracks only .env.example, production-effect flags default false, and Preview/Development reject Production-effect flags and live WorkOS credentials",
-      "tracked_env_files": [
-        ".env.example"
-      ],
-      "secret_scan": "pass — no credential value was detected in the exact added source; the sole high-risk literal scanner hit is the dynamically assembled detection pattern in .husky/pre-commit, not a credential",
-      "npm_audit": "pass — npm audit --omit=dev --audit-level=high reported 0 vulnerabilities"
+    "prior_blocker_resolution": {
+      "RBAC-CREW-WRITE-001": "closed — crew_member/legacy crew are read-only; assigned crew_lead may update field state; manager roles retain management writes; exact assignment, job org, status, creation-time, and embedded membership invariants are rechecked server-side and hostile tests cover denials",
+      "ASSIGNMENT-INDEX-001": "closed — assignments is a bounded indexed entity synchronized transactionally with crew assignment and job status; crew listing queries organization/user/status/time indexes before fetching exact jobs",
+      "CUSTOMER-DOCUMENTS-001": "closed only by dependency — separate evaluator receipt platform-rescue-customer-documents passes the exact SHA with zero blockers; this evaluator abstains",
+      "PORTAL-LIFECYCLE-UI-001": "closed — capability-gated UI now calls customers.createFromLead, customers.linkUser, jobs.createFromEstimate, jobs.assignCrew, users.updateRole, listAssignableCrew, and listTeamMemberships; behavioral component and Convex hostile tests cover owner, estimator, project manager, content role, invalid link, cross-org, and disabled identity cases",
+      "ROUTE-CAPABILITY-001": "closed — PortalShell withholds children until Convex membership verification and route-role approval; direct wrong-role navigation renders fail-closed guidance and tests cover operations, crew, and customer routes",
+      "WCAG-CONTRAST-001": "closed — semantic primary pairs are asserted at >=4.5:1 in light and dark themes and the test passes",
+      "PORTAL-FAILURE-STATE-001": "closed — terminal identity-binding failure renders an accessible retry state; App Router loading and error boundaries provide reduced-motion loading and recoverable fail-closed errors",
+      "GOVERNANCE-V4-002-001": "closed — independent v4-002 receipt reproduces exact archive, 23/23 ZIP-stream and extracted hashes, ordered reference review, contact-sheet inspection, and classification rules",
+      "DIFF-HYGIENE-001": "closed — git diff --check origin/dev..106175ce6a1af7e6fa925cc7fa38a3cf76a857bd and git show --check both pass"
+    },
+    "workos_and_route_boundary": {
+      "proxy_and_login": "pass — AuthKit proxy protects portal paths, preserves only an explicit public allowlist, login is a route handler that validates returnTo and constrains organizationId, and callback uses the official handler",
+      "wrong_organization": "pass — AuthenticatedPortal requires the configured WorkOS organization and reveals no protected records on a mismatch",
+      "public_portal_prefetch": "pass — public footer links to protected portals set prefetch=false, avoiding unauthenticated RSC prefetch through the WorkOS boundary",
+      "external_state": "No Production or live customer system was touched. The earlier read-only Staging snapshot remains a deployment gate rather than code evidence."
     },
     "verification": [
       {
-        "command": "npx vitest run convex/anonymousApiSecurity.test.ts convex/legacyRpcSecurity.test.ts convex/ownerStaffSecurity.test.ts convex/checklistsFilesSecurity.test.ts convex/workosSecurity.test.ts convex/publicApiInventory.test.ts src/__tests__/file-actions-security.test.ts src/__tests__/lead-intake-proof.test.ts src/__tests__/capability-ui.test.tsx src/__tests__/workos-portal-boundary.test.tsx",
-        "result": "pass — 10 files, 63 tests"
-      },
-      {
-        "command": "npm run verify:branch",
-        "result": "pass — ESLint, tsc --noEmit, 24 files and 148 tests"
-      },
-      {
-        "command": "npm run build",
-        "result": "pass — Next.js 16.2.12 optimized production build; all public and portal routes compiled"
-      },
-      {
-        "command": "npm run verify:skills && npm run verify:env && npm run verify:assets",
-        "result": "pass"
+        "command": "npm run verify",
+        "result": "pass — skills, environment, assets, ESLint, tsc --noEmit, 30 Vitest files / 178 tests, and Next.js 16.2.12 Turbopack production build; all public and portal routes compiled"
       },
       {
         "command": "npm audit --omit=dev --audit-level=high",
         "result": "pass — 0 vulnerabilities"
       },
       {
-        "command": "git show --check --pretty= 723b5d4634cb565303a7f286917e1e4bfbb0aef5",
+        "command": "git diff --check origin/dev..106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
         "result": "pass"
       },
       {
-        "command": "git diff --check origin/dev..723b5d4634cb565303a7f286917e1e4bfbb0aef5",
-        "result": "fail — exit 2; .agents/BRIEFING.md:33 and .agents/ORIGINAL_REQUEST.md:290 add blank lines at EOF"
+        "command": "git show --check --pretty= 106175ce6a1af7e6fa925cc7fa38a3cf76a857bd",
+        "result": "pass"
+      },
+      {
+        "command": "focused hostile suites included in the 178-test run",
+        "result": "pass — anonymous/public inventory, legacy RPC, owner/staff, WorkOS, job/crew assignment, operations lifecycle, checklist/file, capability/route, login/proxy, contrast/loading/error, and idempotent lifecycle coverage"
       }
     ],
-    "external_read_only_checks": {
-      "workos_environment": "Staging only; Production was not opened or mutated. Staging has signup disabled, required MFA and email verification, a five-minute access token, 30-day maximum session, 12-hour inactivity timeout, strong password controls, one Test Organization, zero users, zero invitations, zero webhooks, localhost-only redirect/logout/origin settings, and no configured JWT template. Internal roles exist but the customer role is not provisioned externally.",
-      "github_exact_sha": "No exact-SHA check evidence exists because GitHub returned 422 No commit found for 723b5d4634cb565303a7f286917e1e4bfbb0aef5. PR #26 had already advanced to a different head and its green checks cannot be attributed to this candidate.",
-      "github_protection": "The coordinator reports the repository is private and GitHub rejected the requested protected-branch approval/check configuration because the current plan requires GitHub Pro or a public repository. Privacy was preserved; this remains a human/billing release gate.",
-      "production": "untouched — no Production WorkOS, Convex, Vercel, Blob, DNS, Stripe, email, repository merge, invitation, or data mutation was performed"
-    }
+    "v4_002_dependency": ".agent/state/nodes/v4-002.json — pass; exact ZIP hash f73edca31da7202f2c992b39dfeba0ecf134e5d5f3044525b3de4e5d55e6da5d, 23/23 ZIP-stream hashes, 23/23 extracted hashes, ten references read in order, contact sheet visually inspected, only BRAND-001 public-approved"
   },
-  "blocking_findings": [
+  "blocking_findings": [],
+  "residual_risks": [
     {
-      "id": "RBAC-CREW-WRITE-001",
-      "severity": "high",
-      "summary": "crew_member can mutate task completion and project updates despite the committed authorization matrix and prior evaluator claim that crew members are read-only",
-      "locations": [
-        "docs/architecture/AUTHORIZATION_MATRIX.md:67",
-        "docs/architecture/AUTHORIZATION_MATRIX.md:95",
-        "convex/jobs.ts:518",
-        "convex/jobs.ts:527",
-        "convex/jobs.ts:531",
-        "convex/jobs.ts:573",
-        "convex/jobs.ts:583",
-        "src/components/crew/CrewDashboard.tsx:516",
-        "src/components/crew/CrewDashboard.tsx:668",
-        "src/components/crew/CrewDashboard.tsx:681",
-        "convex/ownerStaffSecurity.test.ts:459",
-        ".agent/state/nodes/v4-security-review-fixes.json:38"
-      ],
-      "impact": "An assigned crew member can complete/reopen unassigned or self-assigned tasks and create internal project updates. The UI exposes the task control and exposes a customer-visible checkbox that the server rejects for non-managers; estimator users can also see a write form the backend rejects.",
-      "required_remediation": "Make the backend match the matrix: crew_member is read-only for task/project state; assigned crew_lead and authorized managers may update. Gate task/update/customer-share controls with the same server-derived capabilities. Replace the permissive crew-member test with behavioral allow/deny tests for crew_member, crew_lead, estimator, manager, unassigned identity, and cross-organization identity."
+      "id": "EXACT-SHA-EXTERNAL-GATES",
+      "severity": "release_gate",
+      "summary": "The local immutable candidate is not yet backed by exact-SHA GitHub CI/Security/Vercel Preview results or isolated live WorkOS/Convex/Blob hostile smokes.",
+      "disposition": "Nonblocking for this code/evidence verdict; blocking for merge or release."
     },
     {
-      "id": "ASSIGNMENT-INDEX-001",
-      "severity": "high",
-      "summary": "The required assignments entity is absent, and crew job listing filters only after taking a bounded organization slice",
-      "locations": [
-        ".agents/ORIGINAL_REQUEST.md:260",
-        "convex/schema.ts:229",
-        "convex/schema.ts:238",
-        "convex/jobs.ts:286",
-        "convex/jobs.ts:303",
-        "convex/jobs.ts:317"
-      ],
-      "impact": "An assigned crew user can receive an incomplete daily-work list whenever their jobs fall outside the first organization-wide result slice. Embedded arrays also prevent a direct indexed user-to-job query.",
-      "required_remediation": "Add the required bounded assignment model/index (organization + assignee + active/status/time as appropriate), keep it synchronized transactionally with assignment mutations, query crew work through that index, migrate/backfill Preview data, and test that assigned jobs beyond the general organization limit are still returned without cross-tenant leakage."
+      "id": "PRIVATE-REPO-BRANCH-PROTECTION",
+      "severity": "release_gate",
+      "summary": "The current GitHub plan previously rejected the requested private-repository branch protection configuration.",
+      "disposition": "Require an owner-approved equivalent or plan change before release; repository privacy must not be weakened merely to obtain protection."
     },
     {
-      "id": "CUSTOMER-DOCUMENTS-001",
-      "severity": "high",
-      "summary": "The secure customer Documents workflow is a static fail-closed shell; no explicit document-to-customer grant exists",
-      "locations": [
-        ".agents/ORIGINAL_REQUEST.md:121",
-        ".agents/ORIGINAL_REQUEST.md:123",
-        ".agents/ORIGINAL_REQUEST.md:269",
-        "convex/schema.ts:401",
-        "convex/files.ts:142",
-        "convex/files.ts:160",
-        "convex/files.ts:328",
-        "convex/files.ts:367",
-        "src/components/customer/CustomerDashboard.tsx:371",
-        "src/components/customer/CustomerDashboard.tsx:378"
-      ],
-      "impact": "Fail-closed behavior prevents disclosure, but an operations-uploaded restricted contract, invoice, or project photo cannot be granted to and downloaded by the exact bound customer. The required customer portal workflow is therefore not implemented.",
-      "required_remediation": "Introduce an explicit tenant-scoped customer grant or ownership link, indexed for customer listing; authorize metadata and signed download against the exact active customer record plus document job/customer relationship; wire a paginated customer list/download UI; add owner/uploader, bound customer, different customer, unbound customer, different organization, revoked grant, and public/internal/restricted behavioral tests. Do not infer ownership from email."
-    },
-    {
-      "id": "PORTAL-LIFECYCLE-UI-001",
-      "severity": "high",
-      "summary": "Critical onboarding and scheduling mutations exist only in the backend, so the operating portals still require out-of-band administration",
-      "locations": [
-        "convex/users.ts:292",
-        "convex/customers.ts:117",
-        "convex/customers.ts:171",
-        "convex/jobs.ts:220",
-        "convex/jobs.ts:408",
-        "src/components/operations/OperationsDashboard.tsx:177"
-      ],
-      "impact": "There are no frontend call sites for users.updateRole, customers.createFromLead, customers.linkUser, jobs.createFromEstimate, or jobs.assignCrew. An owner/admin cannot complete customer onboarding or crew assignment from the portal, and new customer/crew workflows cannot become operational without direct backend tooling.",
-      "required_remediation": "Wire capability-gated owner/admin/project-manager controls for the required lifecycle, or obtain an explicit contract reduction from the owner. Add end-to-end component/Convex tests for success, validation, forbidden roles, cross-organization IDs, and disabled/tombstoned identities."
-    },
-    {
-      "id": "ROUTE-CAPABILITY-001",
-      "severity": "medium",
-      "summary": "Portal layouts enforce WorkOS organization presence but do not reject a role that directly opens another role's route",
-      "locations": [
-        "src/components/portal/AuthenticatedPortal.tsx:14",
-        "src/components/portal/AuthenticatedPortal.tsx:18",
-        "src/app/operations/layout.tsx:8",
-        "src/app/crew/layout.tsx:7",
-        "src/app/customer/layout.tsx:8"
-      ],
-      "impact": "Convex RPC authorization prevents a data bypass, but a direct URL can expose the wrong portal surface before client capability checks render an unavailable state. This weakens route-level least privilege and creates confusing cross-role behavior.",
-      "required_remediation": "Add a route/page capability boundary that fails closed for the route's allowed active Convex membership roles, keep RPC authorization authoritative, and test direct navigation for every role and inactive/tombstoned membership."
-    },
-    {
-      "id": "WCAG-CONTRAST-001",
-      "severity": "medium",
-      "summary": "The default light-theme primary button text contrast is below WCAG 2.2 AA for normal text",
-      "locations": [
-        "src/app/globals.css:10",
-        "src/app/globals.css:11",
-        "src/components/ui/button.tsx:10"
-      ],
-      "impact": "The defined oklch primary/primary-foreground pair computes to approximately 3.803:1 after sRGB clipping; default button text is normal-size and requires at least 4.5:1.",
-      "required_remediation": "Adjust the semantic primary or foreground token to at least 4.5:1 in light mode, preserve brand intent, and add an automated semantic-token contrast assertion for light and dark modes."
-    },
-    {
-      "id": "PORTAL-FAILURE-STATE-001",
-      "severity": "medium",
-      "summary": "Authentication provisioning and route-level loading/error failures do not produce a recoverable user-facing state",
-      "locations": [
-        ".agents/ORIGINAL_REQUEST.md:236",
-        "src/components/providers/ConvexClientProvider.tsx:83",
-        "src/components/providers/ConvexClientProvider.tsx:94",
-        "src/components/providers/ConvexClientProvider.tsx:96",
-        "src/app/error.tsx (absent at candidate SHA)",
-        "src/app/loading.tsx (absent at candidate SHA)"
-      ],
-      "impact": "After the final identity-binding retry, the app only writes a console error while dashboards can remain in an indefinite loading/unavailable state; uncaught route errors have no product-specific recovery boundary.",
-      "required_remediation": "Expose a fail-closed provisioning status with retry/sign-out guidance, add accessible App Router loading and error boundaries, and test terminal binding failure and recovery."
-    },
-    {
-      "id": "GOVERNANCE-V4-002-001",
-      "severity": "high",
-      "summary": "The source-pack node lacks the required independent evaluator receipt, while a later evaluator state makes an unsupported pass claim",
-      "locations": [
-        ".agent/state/nodes/v4-002.json (absent at candidate SHA)",
-        ".agents/reviewer_v4_002/ (absent at candidate SHA)",
-        ".agents/worker_v4_002/progress.md:12",
-        ".agents/worker_v4_002/progress.md:13",
-        ".agent/state/nodes/v4-security-review-fixes.json:33"
-      ],
-      "impact": "The mandatory peer-review chain for v4-002 is not auditable, and the existing claim that a separate reviewer and handoff exist is false in the exact commit tree.",
-      "required_remediation": "Have an independent evaluator reproduce the source-pack checksum/provenance checks, add .agent/state/nodes/v4-002.json with implementer/evaluator separation and evidence, preserve the reviewer handoff if required by the node contract, and correct/remove unsupported downstream claims."
-    },
-    {
-      "id": "DIFF-HYGIENE-001",
-      "severity": "low",
-      "summary": "The required origin/dev comparison fails git diff --check",
-      "locations": [
-        ".agents/BRIEFING.md:33",
-        ".agents/ORIGINAL_REQUEST.md:290"
-      ],
-      "impact": "Whitespace hygiene is not clean across the exact review range.",
-      "required_remediation": "Remove the added blank lines at EOF and rerun git diff --check origin/dev..<new-sha>."
+      "id": "PREVIEW-MIGRATION-AND-BACKFILL",
+      "severity": "release_gate",
+      "summary": "New assignment/customer-document indexes and identity/tenant relations require isolated Preview migration/backfill verification before rollout.",
+      "disposition": "No Production mutation is authorized."
     }
-  ],
-  "test_coverage_gaps": [
-    "The green capability UI test checks source-string presence and does not prove that crew_member/estimator mutation controls are absent.",
-    "No behavioral test proves crew_member cannot update tasks; the existing owner/staff test explicitly permits an assigned crew_member to add a project update.",
-    "No test covers an assigned job falling beyond the organization-wide take limit.",
-    "No customer document grant/list/download behavioral tests exist because the workflow is absent.",
-    "No exact-preview hostile identity, webhook lifecycle, Blob, or customer/crew end-to-end verification was run for this local-only SHA."
   ],
   "release_gates": [
-    "Do not advance or treat 723b5d4634cb565303a7f286917e1e4bfbb0aef5 as superseding PR #26 until every blocking finding is remediated and independently re-evaluated at a new exact SHA.",
-    "Push the new candidate and require exact-SHA CI, Security, Lead Intake E2E, and Vercel Preview checks; checks on PR #26's different head do not count.",
-    "Configure and verify an isolated Staging/Preview WorkOS webhook and supported token path, create seeded test identities for every role including customer, and run create/update/delete, suspended organization, deleted/reinvited membership, disabled user, cross-issuer, and wrong-organization tests.",
-    "Apply schema/index changes and assignment/customer-document backfills in isolated non-production Convex before preview verification.",
-    "Run private Vercel Blob upload/head/finalize/list/download/delete tests with hostile MIME, oversized content, pathname, tenant, customer-grant, uploader, role, and assignment cases in an isolated Preview store.",
-    "Keep Preview and Production WorkOS, Convex, Blob, email, and payment credentials isolated; keep live Stripe/email/Production Convex disabled until explicit owner approval.",
-    "Resolve the private-repository branch-protection plan limitation or enforce an owner-approved equivalent before release; independent approval remains mandatory.",
-    "Merging dev to main, attaching a Production domain, deploying Production, sending customer communications, charging Stripe, mutating Production data, or changing DNS remains human_approval_required."
+    "Push the immutable candidate and require exact-SHA CI, Security, Lead Intake E2E, and Vercel Preview checks; results on PR #26's different head do not count.",
+    "Apply schema/index changes and required backfills only in isolated non-production Convex, then verify assignment, customer, document, identity, and organization lifecycle invariants.",
+    "Use isolated Preview WorkOS, Convex, and Vercel Blob credentials; seed hostile identities across two organizations and test wrong-org, disabled/tombstoned, webhook create/update/delete/reinvite, private upload/head/finalize/download, and revoked access.",
+    "Resolve the private-repository approval/check enforcement limitation with an owner-approved control before release.",
+    "Do not merge dev to main, deploy Production, attach/move a Production domain, change DNS, send real customer email/SMS, enable live Stripe charges, mutate Production Convex/Blob data, rotate credentials, or delete branches/data without human approval."
   ],
-  "verdict_rationale": "The candidate materially fixes PR #26's five critical authorization findings and eleven of the twelve later checklist/file/schema comments, with strong fail-closed RPC, signed lead, WorkOS lifecycle, tenant, Blob, pagination, environment, and test foundations. It cannot pass because the exact tree contradicts its crew authorization contract, can omit assigned jobs due to filter-after-take and lacks the required assignment entity, leaves customer documents and core onboarding/assignment lifecycle as non-operational shells/backend-only seams, lacks the required v4-002 independent evidence, fails normal-text contrast and route failure-state requirements, and has no exact-SHA external verification."
+  "verdict_rationale": "Pass. The exact candidate closes every prior code and governance blocker, preserves fail-closed tenant and identity boundaries, supplies operational owner/staff lifecycle UI, aligns crew writes with the authorization matrix, adds indexed assignments and idempotent estimate-to-job creation, fixes route capability, contrast, loading/error, login/proxy, and prefetch behavior, and passes the complete 178-test/build/audit/hygiene gate. The evaluator explicitly abstained from its own customer-document slice and relied on a separate exact-SHA pass receipt with zero blockers. V4-002 is independently reproduced and passes. Remaining items are explicit external Preview/release gates, not contradictory code findings."
 }
