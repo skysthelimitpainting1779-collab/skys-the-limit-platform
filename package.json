@@ -18,6 +18,7 @@
     "verify:skills": "node scripts/validate-skills.mjs",
     "verify:env": "node scripts/validate-environment.mjs",
     "verify:assets": "node scripts/validate-assets.mjs",
+    "verify:zernio": "node scripts/verify-zernio-auth.mjs",
     "prepare": "husky"
   },
   "dependencies": {
