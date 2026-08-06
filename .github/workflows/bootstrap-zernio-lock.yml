@@ -6,6 +6,12 @@ on:
       - feature/zernio-integration
     paths:
       - .github/workflows/bootstrap-zernio-lock.yml
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - .github/workflows/bootstrap-zernio-lock.yml
+      - package.json
 
 permissions:
   contents: write
