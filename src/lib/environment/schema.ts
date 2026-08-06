@@ -28,12 +28,16 @@ const EnvironmentSchema = z
     // File storage — server-only; use isolated stores in Preview and Production
     BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 
+    // Social publishing — server-only; required only when live publishing is enabled
+    ZERNIO_API_KEY: z.string().min(1).optional(),
+
     // Vercel (auto-injected)
     VERCEL_ENV: z.enum(["production", "preview", "development"]).optional(),
     VERCEL_URL: z.string().optional(),
 
     // Feature gates — must be explicit "true"; default blocks production effects
     ENABLE_LIVE_EMAIL: z.enum(["true", "false"]).default("false"),
+    ENABLE_LIVE_SOCIAL: z.enum(["true", "false"]).default("false"),
     ENABLE_LIVE_STRIPE: z.enum(["true", "false"]).default("false"),
     ENABLE_PRODUCTION_CONVEX: z.enum(["true", "false"]).default("false"),
   })
@@ -90,6 +94,23 @@ const EnvironmentSchema = z
         code: z.ZodIssueCode.custom,
         path: ["LEAD_INTAKE_SECRET"],
         message: "Placeholder values are not valid credentials",
+      });
+    }
+    if (isPlaceholder(data.ZERNIO_API_KEY)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["ZERNIO_API_KEY"],
+        message: "Placeholder values are not valid credentials",
+      });
+    }
+    if (
+      data.ENABLE_LIVE_SOCIAL === "true" &&
+      (!data.ZERNIO_API_KEY || isPlaceholder(data.ZERNIO_API_KEY))
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["ZERNIO_API_KEY"],
+        message: "Live social publishing requires a real Zernio API key",
       });
     }
 
@@ -244,6 +265,9 @@ function validateEnvironment(
     }
     if (envData.ENABLE_LIVE_EMAIL === "true") {
       throw new Error("BLOCKED: ENABLE_LIVE_EMAIL=true is not permitted in Preview/Development environments.");
+    }
+    if (envData.ENABLE_LIVE_SOCIAL === "true") {
+      throw new Error("BLOCKED: ENABLE_LIVE_SOCIAL=true is not permitted in Preview/Development environments.");
     }
   }
 
