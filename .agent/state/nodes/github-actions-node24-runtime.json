@@ -1,0 +1,81 @@
+{
+  "node_id": "github-actions-node24-runtime",
+  "title": "Independent GitHub Actions Node 24 Runtime Evaluation",
+  "timestamp": "2026-08-04T11:32:42.8898603Z",
+  "status": "completed",
+  "implementer": "root implementation agent; commit authored by Johnny Cage",
+  "evaluator": "/root/pr26_gap_audit",
+  "independent_evaluator": true,
+  "verdict": "pass",
+  "target": {
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform-actions-node24",
+    "branch": "fix/github-actions-node24-runtime",
+    "base_commit": "2d6d594d6224b112a935e5f00fc41d4fe99d58b2",
+    "base_ref": "origin/dev",
+    "candidate_commit": "e1bfb2d62fb78f1bec41373c2012876da9acc8ab",
+    "review_range": "origin/dev..e1bfb2d62fb78f1bec41373c2012876da9acc8ab",
+    "candidate_state": "exact committed tree independently reviewed; no commit or push performed by evaluator"
+  },
+  "north_star": "Remove deprecated Node 20 JavaScript-action runtimes without changing workflow behavior, permissions, application code, or production-effect boundaries.",
+  "changed_files": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/lead-intake-e2e.yml",
+    ".github/workflows/preview-verification.yml",
+    ".github/workflows/release-verification.yml",
+    ".github/workflows/security.yml",
+    "src/__tests__/github-actions-runtime.test.ts"
+  ],
+  "protocol": {
+    "graphify_first": "pass — graphify query was run before raw-file inspection and scoped the review to workflow/action runtime surfaces",
+    "peer_evaluator_skill": "pass — .agents/skills/peer-evaluator/SKILL.md was read in full and this receipt uses its independent-verdict path",
+    "context7": "pass — Context7 resolved /websites/github_en_actions and official current documentation was queried before compatibility and supply-chain conclusions",
+    "make_no_mistakes_max": "fallback — the named skill is not present in the supplied skill catalog; the evaluator applied an explicit north star, exact-SHA invariant checks, independent primary-source verification, and bounded green metrics instead",
+    "sequential_thinking": "fallback — no sequentialthinking tool is exposed in the current tool surface; the evaluator used explicit staged hypotheses and empirical checks without widening scope"
+  },
+  "evidence": {
+    "exact_tree": "pass — HEAD and the requested target both resolved to e1bfb2d62fb78f1bec41373c2012876da9acc8ab; origin/dev resolved to its direct parent 2d6d594d6224b112a935e5f00fc41d4fe99d58b2",
+    "diff_scope": "pass — origin/dev..candidate changes exactly five workflow files and one focused test; the workflow delta contains 22 changed lines, all and only the 11 old/new checkout or setup-node reference lines; no triggers, permissions, commands, environment values, secrets, runtime application code, or production boundaries changed",
+    "workflow_inventory": "pass — all 11 recognized occurrences under .github/workflows were enumerated: seven actions/checkout references equal 3d3c42e5aac5ba805825da76410c181273ba90b1 and four actions/setup-node references equal 820762786026740c76f36085b0efc47a31fe5020; every reference is a full 40-character SHA",
+    "context7_policy": "pass — official GitHub Actions documentation says a full-length commit SHA is the most secure immutable action reference, tags can move, the SHA must originate from the official repository, and runs.using node24 is a supported JavaScript-action runtime; Context7 library ID /websites/github_en_actions",
+    "official_checkout_tag": "pass — git ls-remote against https://github.com/actions/checkout.git resolved refs/tags/v7.0.1 directly to 3d3c42e5aac5ba805825da76410c181273ba90b1; the exact-commit https://raw.githubusercontent.com/actions/checkout/3d3c42e5aac5ba805825da76410c181273ba90b1/action.yml declares runs.using: node24 and retains the fetch-depth input",
+    "official_setup_node_tag": "pass — git ls-remote against https://github.com/actions/setup-node.git resolved refs/tags/v7.0.0 directly to 820762786026740c76f36085b0efc47a31fe5020; the exact-commit https://raw.githubusercontent.com/actions/setup-node/820762786026740c76f36085b0efc47a31fe5020/action.yml declares runs.using: node24 and retains node-version-file and cache inputs",
+    "official_publisher": "pass — the GitHub REST organization record identifies https://github.com/actions as a verified organization, and both tag and manifest checks were made against repositories in that organization rather than forks",
+    "release_metadata": "pass — official releases exist at https://github.com/actions/checkout/releases/tag/v7.0.1 and https://github.com/actions/setup-node/releases/tag/v7.0.0 for the reviewed tags",
+    "prior_warning_root_cause": "confirmed — the previous actions/checkout v4 tag and old immutable checkout pin 11d5960a326750d5838078e36cf38b85af677262 both declare node20; the previous actions/setup-node v4 tag and old immutable setup-node pin 49933ea5288caeca8642d1e84afbd3f7d6820020 both declare node20. GitHub's official Node 20 deprecation notice states Node 20 reached end of life in April 2026, runners began defaulting JavaScript actions to Node 24 on June 16, 2026, and action users must update to versions that run on Node 24: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+    "compatibility": "pass — every job uses GitHub-hosted ubuntu-latest rather than an in-scope self-hosted runner; the exact action manifests retain all inputs used by these workflows, and the repository .nvmrc is 24. The action runtime upgrade does not alter the project Node selection contract",
+    "security_and_supply_chain": "pass — mutable v4 references and older pins were replaced with current official full SHAs, permissions remain least-privilege and unchanged, and no new action publisher, token exposure, secret access, cache behavior input, or privileged event boundary was introduced",
+    "focused_test_strength": "pass — src/__tests__/github-actions-runtime.test.ts enumerates every top-level .yml/.yaml workflow, collects every checkout/setup-node use, requires a non-empty inventory, and asserts each reference equals the approved action-specific immutable SHA",
+    "focused_test": "pass — npx vitest run src/__tests__/github-actions-runtime.test.ts completed 1 file / 1 test passing",
+    "typecheck": "pass — npm run typecheck completed successfully with tsc --noEmit",
+    "diff_check": "pass — git diff --check origin/dev..e1bfb2d62fb78f1bec41373c2012876da9acc8ab exited zero with no output",
+    "full_verification": "pass — supplied root evidence for the exact candidate records npm run verify passing 31 test files / 179 tests and the production build; the independent evaluator did not rerun the full build during this bounded review",
+    "dependency_audit": "pass — supplied root evidence records npm audit with zero vulnerabilities",
+    "graph_disposition": "pass — before writing this receipt, graphify-out/graph.json was the only dirty file, was unstaged, and measured 12,106,977 bytes. It was intentionally excluded because .husky/pre-commit rejects staged files above 5,242,880 bytes. The generated graph remains local and unstaged; the evaluator did not stage, commit, reset, or overwrite it",
+    "frontend_policy": "not applicable — no frontend component, page, style, visual claim, or Tailwind token changed",
+    "production_effects": "none — evaluation and candidate are repository-local CI configuration and tests only"
+  },
+  "commands": [
+    "graphify query \"GitHub Actions checkout setup-node workflows SHA pin node24 supply chain\" --budget 2500",
+    "git diff --name-status origin/dev..e1bfb2d62fb78f1bec41373c2012876da9acc8ab",
+    "git diff --check origin/dev..e1bfb2d62fb78f1bec41373c2012876da9acc8ab",
+    "rg -n --glob '*.yml' --glob '*.yaml' 'uses:\\s*actions/(checkout|setup-node)@' .github/workflows",
+    "git ls-remote https://github.com/actions/checkout.git refs/tags/v7.0.1",
+    "git ls-remote https://github.com/actions/setup-node.git refs/tags/v7.0.0",
+    "npx vitest run src/__tests__/github-actions-runtime.test.ts",
+    "npm run typecheck"
+  ],
+  "blocking_findings": [],
+  "residual_risk": [
+    "Immutable action pins require deliberate future SHA upgrades to receive security and bug fixes; the focused contract test makes that maintenance explicit.",
+    "No self-hosted runner was exercised. All current workflows use GitHub-hosted ubuntu-latest, so the known minimum-runner and unsupported-platform constraints for Node 24 are outside the current execution path.",
+    "The exact local commit has not been evaluated here on GitHub-hosted runners; exact-head hosted CI remains a publication gate even though focused verification, typecheck, supplied full verification, and supplied audit evidence are green.",
+    "The 12.1 MB generated Graphify artifact remains intentionally dirty and unstaged until repository maintainers choose a size-management strategy; it is not part of the candidate commit."
+  ],
+  "rollback": {
+    "last_known_good_commit": "2d6d594d6224b112a935e5f00fc41d4fe99d58b2",
+    "command": "git revert e1bfb2d62fb78f1bec41373c2012876da9acc8ab",
+    "human_approval_required": false,
+    "production_effects": false
+  },
+  "notes": "PASS. The candidate resolves the verified Node 20 warning root cause with official Node 24 action releases pinned to independently confirmed immutable SHAs, preserves workflow semantics and least-privilege permissions, and adds a focused regression contract. This receipt is evaluator output only and is intentionally not committed or pushed."
+}
