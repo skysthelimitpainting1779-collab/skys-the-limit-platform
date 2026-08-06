@@ -1,0 +1,199 @@
+name: Authorize Zernio API key
+
+on:
+  push:
+    branches:
+      - feature/zernio-integration
+    paths:
+      - .github/workflows/authorize-zernio.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zernio-device-authorization
+  cancel-in-progress: false
+
+jobs:
+  authorize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feature/zernio-integration
+          fetch-depth: 0
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Initiate Zernio device authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sS --fail-with-body -X POST https://zernio.com/api/auth/cli/initiate \
+            -H 'Content-Type: application/json' \
+            -d '{"deviceName":"Sky’s the Limit Platform Agent Setup"}' \
+            -o /tmp/zernio-init.json
+
+          python <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          payload = json.loads(Path('/tmp/zernio-init.json').read_text())
+          device_code = payload['deviceCode']
+          browser_url = payload['browserUrl']
+          user_code = payload['userCode']
+          expires_at = payload['expiresAt']
+          interval = max(5, int(payload.get('interval', 5)))
+
+          print(f'::add-mask::{device_code}')
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+              env_file.write(f'ZERNIO_DEVICE_CODE={device_code}\n')
+              env_file.write(f'ZERNIO_POLL_INTERVAL={interval}\n')
+
+          Path('zernio-auth-request.json').write_text(
+              json.dumps(
+                  {
+                      'browserUrl': browser_url,
+                      'userCode': user_code,
+                      'expiresAt': expires_at,
+                  },
+                  indent=2,
+              ) + '\n',
+              encoding='utf-8',
+          )
+          PY
+
+      - name: Publish temporary approval URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add zernio-auth-request.json
+          HUSKY=0 git commit -m "chore: publish Zernio authorization URL"
+          HUSKY=0 git push origin HEAD:feature/zernio-integration
+
+      - name: Install exact dependency graph
+        run: npm ci
+
+      - name: Poll for authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          authorized=false
+
+          for _attempt in $(seq 1 180); do
+            http_code=$(curl -sS \
+              -o /tmp/zernio-poll.json \
+              -w '%{http_code}' \
+              -H "Authorization: Bearer ${ZERNIO_DEVICE_CODE}" \
+              https://zernio.com/api/auth/cli/poll)
+
+            if [[ "$http_code" == "200" || "$http_code" == "202" ]]; then
+              api_key=$(python <<'PY'
+          import json
+          from pathlib import Path
+
+          payload = json.loads(Path('/tmp/zernio-poll.json').read_text())
+
+          def find_api_key(value):
+              if isinstance(value, dict):
+                  for name in ('apiKey', 'api_key', 'token'):
+                      candidate = value.get(name)
+                      if isinstance(candidate, str) and candidate.strip():
+                          return candidate.strip()
+                  for child in value.values():
+                      found = find_api_key(child)
+                      if found:
+                          return found
+              elif isinstance(value, list):
+                  for child in value:
+                      found = find_api_key(child)
+                      if found:
+                          return found
+              return ''
+
+          print(find_api_key(payload))
+          PY
+              )
+
+              if [[ -n "$api_key" ]]; then
+                echo "::add-mask::$api_key"
+                printf '%s' "$api_key" > /tmp/zernio-api-key
+                chmod 600 /tmp/zernio-api-key
+                authorized=true
+                break
+              fi
+
+              status=$(python <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('/tmp/zernio-poll.json').read_text())
+          print(str(payload.get('status', 'pending')).lower())
+          PY
+              )
+
+              if [[ "$status" != "pending" ]]; then
+                echo "Zernio authorization ended with status: $status" >&2
+                exit 1
+              fi
+            elif [[ "$http_code" == "404" || "$http_code" == "410" ]]; then
+              echo "Zernio authorization expired or was not found." >&2
+              exit 1
+            fi
+
+            sleep "$ZERNIO_POLL_INTERVAL"
+          done
+
+          if [[ "$authorized" != "true" ]]; then
+            echo "Zernio authorization timed out." >&2
+            exit 1
+          fi
+
+      - name: Verify credential without publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          ZERNIO_API_KEY="$(cat /tmp/zernio-api-key)" npm run verify:zernio
+          npm run verify:branch
+
+      - name: Encrypt credential for one-time handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/zernio-public.pem <<'PEM'
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0LpOzlRo+TZZT+H2brmp
+          /FSYg9tFnoQr/Sb6ySCKN+00PstcAfHUuDCVSSb4JqqVpCxZt+wXJoFSZXQhrxZV
+          jHBDZXf+N256x82ldRa7lEs27UczsSgY5n4bRcafbWIUOe1U3BDo7/H3fl67lTk7
+          mN3cTbH5PshJPvy1TaQFtHb7NZSV5iTxfs5LDScH05pc62yi42U1bLBkkjVmTkwY
+          P5hTHnKQTHKkXN372sx/rP83szj5+dnerk5l+5ZGGQhiHfATKwdQOrPlxjOFHzU3
+          KjVjxpgHRhN41gTYhilxC7G7Sg3VvM0+fPsB1XiQm6ssKL3YZR7fgKvD51X2gj3K
+          ewIDAQAB
+          -----END PUBLIC KEY-----
+          PEM
+
+          openssl pkeyutl -encrypt \
+            -pubin \
+            -inkey /tmp/zernio-public.pem \
+            -in /tmp/zernio-api-key \
+            -out zernio-api-key.enc \
+            -pkeyopt rsa_padding_mode:oaep \
+            -pkeyopt rsa_oaep_md:sha256
+
+          rm zernio-auth-request.json .github/workflows/authorize-zernio.yml
+          git add zernio-api-key.enc zernio-auth-request.json .github/workflows/authorize-zernio.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          HUSKY=0 git commit -m "chore: stage encrypted Zernio credential handoff"
+          HUSKY=0 git push origin HEAD:feature/zernio-integration
+
+          shred -u /tmp/zernio-api-key || rm -f /tmp/zernio-api-key
+          rm -f /tmp/zernio-public.pem /tmp/zernio-init.json /tmp/zernio-poll.json
