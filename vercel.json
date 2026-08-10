@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "if [ \"$VERCEL_ENV\" = \"preview\" ]; then npx convex deploy --cmd 'npm run build' --preview-run 'ci:ensurePreviewOrganization'; else npm run build; fi",
+  "buildCommand": "if [ \"$VERCEL_ENV\" = \"preview\" ]; then npx convex deploy --cmd 'npm run build' && node scripts/sync-convex-preview-env.mjs && npx convex deploy --preview-run 'ci:ensurePreviewOrganization'; else npm run build; fi",
   "installCommand": "npm ci",
   "devCommand": "npm run dev",
   "headers": [

@@ -5,6 +5,9 @@ import { describe, expect, it } from "vitest";
 const workflowPath = resolve(".github/workflows/lead-intake-e2e.yml");
 const bootstrapPath = resolve("convex/ci.ts");
 const vercelConfigPath = resolve("vercel.json");
+const previewEnvironmentSyncPath = resolve(
+  "scripts/sync-convex-preview-env.mjs",
+);
 
 describe("lead-intake CI isolation contract", () => {
   it("configures every fail-closed server input on the local Convex deployment", () => {
@@ -70,11 +73,46 @@ describe("lead-intake CI isolation contract", () => {
     expect(vercelConfig.buildCommand).toContain("npx convex deploy");
     expect(vercelConfig.buildCommand).toContain("--cmd 'npm run build'");
     expect(vercelConfig.buildCommand).toContain(
+      "node scripts/sync-convex-preview-env.mjs",
+    );
+    expect(vercelConfig.buildCommand).toContain(
       "--preview-run 'ci:ensurePreviewOrganization'",
     );
     expect(vercelConfig.buildCommand).toContain(
       'if [ "$VERCEL_ENV" = "preview" ]',
     );
     expect(vercelConfig.buildCommand).toContain("else npm run build; fi");
+
+    const initialDeploy = vercelConfig.buildCommand.indexOf(
+      "--cmd 'npm run build'",
+    );
+    const environmentSync = vercelConfig.buildCommand.indexOf(
+      "node scripts/sync-convex-preview-env.mjs",
+    );
+    const seededDeploy = vercelConfig.buildCommand.indexOf(
+      "--preview-run 'ci:ensurePreviewOrganization'",
+    );
+
+    expect(environmentSync).toBeGreaterThan(initialDeploy);
+    expect(seededDeploy).toBeGreaterThan(environmentSync);
+  });
+
+  it("syncs Vercel-owned secrets into the selected Convex Preview via stdin", () => {
+    const syncScript = readFileSync(previewEnvironmentSyncPath, "utf8");
+
+    for (const variable of [
+      "LEAD_INTAKE_SECRET",
+      "WORKOS_CLIENT_ID",
+      "WORKOS_API_KEY",
+      "WORKOS_WEBHOOK_SECRET",
+      "WORKOS_ORGANIZATION_ID",
+    ]) {
+      expect(syncScript).toContain(`"${variable}"`);
+    }
+
+    expect(syncScript).toContain('"--preview-name"');
+    expect(syncScript).toContain("input: value");
+    expect(syncScript).not.toContain("console.log(value)");
+    expect(syncScript).not.toContain("--prod");
   });
 });
