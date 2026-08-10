@@ -6,7 +6,12 @@ if (process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "producti
 }
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    // `convex deploy --cmd` supplies NEXT_PUBLIC_CONVEX_URL for this build.
+    // Freeze the same non-secret URL for server routes so stale Vercel runtime
+    // variables cannot point them at a different deployment.
+    CONVEX_DEPLOYMENT_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+  },
 };
 
 export default nextConfig;

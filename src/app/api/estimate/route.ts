@@ -9,6 +9,7 @@ import {
   createLeadIntakeProof,
   type LeadIntakePayload,
 } from "@/lib/leads/intakeProof";
+import { resolveConvexDeploymentUrl } from "@/lib/convex/deploymentUrl";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,16 +18,7 @@ export const maxDuration = 10;
 let convexClient: ConvexHttpClient | undefined;
 
 function getConvexClient(): ConvexHttpClient {
-  const url = process.env.NEXT_PUBLIC_CONVEX_URL;
-  const isLocal =
-    url?.startsWith("http://localhost") || url?.startsWith("http://127.0.0.1");
-  const isCloud = url?.startsWith("https://") && !url.includes("your-deployment");
-
-  if (!url || (!isLocal && !isCloud)) {
-    throw new Error("CONVEX_NOT_CONFIGURED");
-  }
-
-  convexClient ??= new ConvexHttpClient(url);
+  convexClient ??= new ConvexHttpClient(resolveConvexDeploymentUrl());
   return convexClient;
 }
 

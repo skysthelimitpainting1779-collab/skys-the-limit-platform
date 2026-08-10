@@ -1,0 +1,37 @@
+{
+  "node_id": "convex-preview-runtime-url",
+  "title": "Freeze the Vercel-managed Convex URL for server routes",
+  "timestamp": "2026-08-10T15:34:38.2476158Z",
+  "status": "completed",
+  "implementer": "/root",
+  "evaluator": "/root/evaluate_vercel_convex_preview",
+  "independent_evaluator": true,
+  "verdict": "pass",
+  "target": {
+    "branch": "fix/convex-preview-runtime-url",
+    "base_commit": "be6c3fe2521610ddc0757f683c3450ebcedf5e6d",
+    "base_ref": "origin/dev",
+    "candidate_state": "uncommitted working tree independently reviewed before publication"
+  },
+  "north_star": "Ensure the estimate server route always calls the Convex deployment selected by the Vercel build and never a stale runtime environment URL.",
+  "evidence": {
+    "hosted_root_cause": "confirmed — Vercel deployed and seeded cool-lynx-973, but the first hosted POST returned temporarily_unavailable while a stale branch runtime NEXT_PUBLIC_CONVEX_URL remained configured",
+    "implementation": "pass — next.config freezes Convex's build-injected URL as CONVEX_DEPLOYMENT_URL and the server route resolves only that constant",
+    "fail_closed": "pass — missing, placeholder, or invalid build URL throws CONVEX_NOT_CONFIGURED; there is no fallback to NEXT_PUBLIC_CONVEX_URL",
+    "focused_tests": "pass — managed-over-stale precedence, fail-closed behavior, and Next config mapping all pass",
+    "full_tests": "pass — 33 files / 191 tests passed",
+    "static_checks": "pass — lint, tsc --noEmit, and git diff --check passed",
+    "dependency_audit": "pass — npm audit reported zero vulnerabilities",
+    "independent_review": "pass — evaluator found the runtime remediation sound, non-secret, regression-covered, and ready for hosted Preview verification"
+  },
+  "blocking_findings": [],
+  "residual_risk": [
+    "The corrected dev deployment must return accepted=true for a hosted synthetic lead before stale Preview URL variables are deleted."
+  ],
+  "rollback": {
+    "last_known_good_commit": "be6c3fe2521610ddc0757f683c3450ebcedf5e6d",
+    "command": "git revert <candidate-commit>",
+    "human_approval_required": false,
+    "production_effects": false
+  }
+}
