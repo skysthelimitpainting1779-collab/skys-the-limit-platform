@@ -11,7 +11,7 @@
       "source": "get-convex/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/convex/SKILL.md",
-      "computedHash": "a334f0906be272948b753ee98537dd1b2e0f596514a9574f86f73b8ca9b72535"
+      "computedHash": "d8d267be1af449b19eaf05a7b1716ed903e1bc4de2e67a911f67859f341c5337"
     },
     "convex-acquire-domain": {
       "source": "get-convex/agent-skills",

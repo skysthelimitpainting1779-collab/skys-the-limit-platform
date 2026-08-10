@@ -7,7 +7,7 @@ import {
 
 const secret = "local-test-only-lead-intake-secret-32-chars";
 const payload: LeadIntakePayload = {
-  orgId: "organizations_example",
+  workosOrganizationId: "org_workos_example",
   idempotencyKey: "550e8400-e29b-41d4-a716-446655440000",
   fullName: "Jane Doe",
   email: "jane@example.com",

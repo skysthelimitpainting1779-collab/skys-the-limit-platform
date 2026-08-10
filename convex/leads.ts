@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import {
   OPERATIONS_ROLES,
   requireActiveMembership,
@@ -27,6 +32,24 @@ export const projectTypeValidator = v.union(
 
 const INTAKE_WINDOW_MS = 15 * 60 * 1_000;
 const MAX_INTAKES_PER_ORG_WINDOW = 100;
+
+/** Resolves a stable identity-provider tenant to this deployment's local ID. */
+export const resolveOrganizationIdByWorkOSId = internalQuery({
+  args: { workosOrganizationId: v.string() },
+  returns: v.id("organizations"),
+  handler: async (ctx, args) => {
+    const organization = await ctx.db
+      .query("organizations")
+      .withIndex("by_workosOrganizationId", (query) =>
+        query.eq("workosOrganizationId", args.workosOrganizationId),
+      )
+      .unique();
+    if (!organization || organization.status !== "active") {
+      throw new Error("ORGANIZATION_NOT_FOUND");
+    }
+    return organization._id;
+  },
+});
 
 /** Trusted persistence seam reached only after leadActions verifies a server proof. */
 export const create = internalMutation({

@@ -12,7 +12,6 @@ const EnvironmentSchema = z
     NEXT_PUBLIC_CONVEX_URL: z
       .string()
       .url({ message: "NEXT_PUBLIC_CONVEX_URL must be a valid Convex deployment URL" }),
-    NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: z.string().min(1).optional(),
     LEAD_INTAKE_SECRET: z.string().min(32).optional(),
 
     // Authentication — required for auth-protected routes
@@ -104,16 +103,6 @@ const EnvironmentSchema = z
             message: "WorkOS AuthKit must be configured for deployment",
           });
         }
-      }
-      if (
-        !data.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID ||
-        isPlaceholder(data.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID)
-      ) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID"],
-          message: "Deployment lead intake requires a real organization ID",
-        });
       }
       if (!data.LEAD_INTAKE_SECRET || isPlaceholder(data.LEAD_INTAKE_SECRET)) {
         ctx.addIssue({
