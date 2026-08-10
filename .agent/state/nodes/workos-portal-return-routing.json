@@ -1,0 +1,39 @@
+{
+  "node_id": "workos-portal-return-routing",
+  "timestamp": "2026-08-09T20:03:12-07:00",
+  "status": "completed",
+  "verdict": "pass",
+  "agent": "codex-root",
+  "evaluator": "review_workos_consolidation",
+  "evidence": {
+    "implementation_commit": "fa7804e339327e24f641b15784081ccf0581bcf0",
+    "base": "origin/dev@99b3085de09c8752c29b6f078fdd7f36bb82d990",
+    "context7_library": "/workos/authkit-nextjs",
+    "verification": {
+      "focused_auth_tests": "16/16 passed",
+      "full_serial_suite": "183/183 passed",
+      "lint": "passed",
+      "typecheck": "passed",
+      "production_build": "passed",
+      "npm_audit": "0 vulnerabilities",
+      "environment_contract": "passed",
+      "asset_provenance": "passed"
+    },
+    "parallel_test_note": "The default parallel run timed out in two unchanged Convex security tests; both passed individually and the full suite passed with one worker.",
+    "security_review": {
+      "open_redirect": "not found",
+      "authkit_header_leakage": "not found",
+      "organization_control": "server-side WORKOS_ORGANIZATION_ID",
+      "return_path_allowlist": [
+        "/operations",
+        "/crew",
+        "/customer"
+      ]
+    },
+    "rollback": {
+      "command": "git revert fa7804e339327e24f641b15784081ccf0581bcf0",
+      "human_approval_required": false
+    }
+  },
+  "notes": "Independent review passed with no required remediation. The implementation uses authkit() and handleAuthkitProxy() to preserve AuthKit session headers while routing anonymous portal requests through the organization-pinned login handler."
+}
