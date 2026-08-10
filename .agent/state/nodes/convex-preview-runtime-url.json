@@ -1,7 +1,7 @@
 {
   "node_id": "convex-preview-runtime-url",
   "title": "Freeze the Vercel-managed Convex URL for server routes",
-  "timestamp": "2026-08-10T15:34:38.2476158Z",
+  "timestamp": "2026-08-10T15:46:38.0841258Z",
   "status": "completed",
   "implementer": "/root",
   "evaluator": "/root/evaluate_vercel_convex_preview",
@@ -11,18 +11,19 @@
     "branch": "fix/convex-preview-runtime-url",
     "base_commit": "be6c3fe2521610ddc0757f683c3450ebcedf5e6d",
     "base_ref": "origin/dev",
-    "candidate_state": "uncommitted working tree independently reviewed before publication"
+    "candidate_state": "published first implementation plus an independently reviewed direct-access correction awaiting hosted PR verification"
   },
   "north_star": "Ensure the estimate server route always calls the Convex deployment selected by the Vercel build and never a stale runtime environment URL.",
   "evidence": {
     "hosted_root_cause": "confirmed — Vercel deployed and seeded cool-lynx-973, but the first hosted POST returned temporarily_unavailable while a stale branch runtime NEXT_PUBLIC_CONVEX_URL remained configured",
-    "implementation": "pass — next.config freezes Convex's build-injected URL as CONVEX_DEPLOYMENT_URL and the server route resolves only that constant",
+    "first_pr_e2e": "failed safely — the first PR #34 deployment returned 503 because a generic environment-object indirection prevented Next.js from inlining CONVEX_DEPLOYMENT_URL",
+    "implementation": "pass locally — next.config freezes Convex's build-injected URL as CONVEX_DEPLOYMENT_URL and the helper now defaults its string parameter directly from process.env.CONVEX_DEPLOYMENT_URL so Next.js can inline it",
     "fail_closed": "pass — missing, placeholder, or invalid build URL throws CONVEX_NOT_CONFIGURED; there is no fallback to NEXT_PUBLIC_CONVEX_URL",
-    "focused_tests": "pass — managed-over-stale precedence, fail-closed behavior, and Next config mapping all pass",
-    "full_tests": "pass — 33 files / 191 tests passed",
+    "focused_tests": "pass — 28 tests cover direct build access, managed URL use, fail-closed behavior, Next config mapping, lead intake, and environment schema",
+    "full_tests": "pass — 33 files / 192 tests passed",
     "static_checks": "pass — lint, tsc --noEmit, and git diff --check passed",
     "dependency_audit": "pass — npm audit reported zero vulnerabilities",
-    "independent_review": "pass — evaluator found the runtime remediation sound, non-secret, regression-covered, and ready for hosted Preview verification"
+    "independent_review": "pass — evaluator confirmed direct process.env access is the correct Next.js inlining boundary, stale runtime fallback remains excluded, and Production isolation is preserved"
   },
   "blocking_findings": [],
   "residual_risk": [
