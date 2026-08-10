@@ -5,7 +5,7 @@ import {
 } from "../src/lib/leads/intakeProof";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { action } from "./_generated/server";
+import { action, env } from "./_generated/server";
 
 const segmentValidator = v.union(
   v.literal("residential"),
@@ -14,7 +14,7 @@ const segmentValidator = v.union(
 );
 
 function requireIntakeSecret() {
-  const secret = process.env.LEAD_INTAKE_SECRET;
+  const secret = env.LEAD_INTAKE_SECRET;
   if (!secret || secret.length < 32) {
     throw new Error("LEAD_INTAKE_UNAVAILABLE");
   }
@@ -24,7 +24,7 @@ function requireIntakeSecret() {
 /** Anonymous transport with a short-lived proof minted by the validated Next route. */
 export const submit = action({
   args: {
-    orgId: v.id("organizations"),
+    workosOrganizationId: v.string(),
     idempotencyKey: v.string(),
     fullName: v.string(),
     email: v.string(),
@@ -51,6 +51,11 @@ export const submit = action({
       proof,
     );
     if (!verified) throw new Error("INVALID_INTAKE_PROOF");
-    return await ctx.runMutation(internal.leads.create, payload);
+    const { workosOrganizationId, ...lead } = payload;
+    const orgId = await ctx.runQuery(
+      internal.leads.resolveOrganizationIdByWorkOSId,
+      { workosOrganizationId },
+    );
+    return await ctx.runMutation(internal.leads.create, { ...lead, orgId });
   },
 });

@@ -33,16 +33,19 @@ function getConvexClient(): ConvexHttpClient {
 async function persistLead(
   input: LeadPersistenceInput,
 ): Promise<LeadPersistenceResult> {
-  const orgId = process.env.NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID;
-  if (!orgId || orgId.includes("REPLACE_ME")) {
-    throw new Error("LEAD_INTAKE_ORGANIZATION_NOT_CONFIGURED");
+  const workosOrganizationId = process.env.WORKOS_ORGANIZATION_ID;
+  if (
+    !workosOrganizationId ||
+    workosOrganizationId.includes("REPLACE_ME")
+  ) {
+    throw new Error("LEAD_INTAKE_WORKOS_ORGANIZATION_NOT_CONFIGURED");
   }
   const secret = process.env.LEAD_INTAKE_SECRET;
   if (!secret || secret.length < 32 || secret.includes("REPLACE_ME")) {
     throw new Error("LEAD_INTAKE_SECRET_NOT_CONFIGURED");
   }
   const payload = {
-    orgId,
+    workosOrganizationId,
     idempotencyKey: input.idempotencyKey,
     fullName: input.fullName,
     email: input.email,

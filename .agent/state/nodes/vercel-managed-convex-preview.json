@@ -1,0 +1,45 @@
+{
+  "node_id": "vercel-managed-convex-preview",
+  "title": "Vercel-owned Convex Preview lifecycle and tenant bootstrap",
+  "timestamp": "2026-08-10T15:19:01.3133627Z",
+  "status": "completed",
+  "implementer": "/root",
+  "evaluator": "/root/evaluate_vercel_convex_preview",
+  "independent_evaluator": true,
+  "verdict": "pass",
+  "target": {
+    "worktree": "C:/Users/Johnny Cage/Documents/antigravity/skys-the-limit-platform",
+    "branch": "infra/vercel-managed-convex-preview",
+    "base_commit": "a1d9d8c47dbea62ed293ced88c82ec440d45cd63",
+    "base_ref": "dev",
+    "candidate_state": "uncommitted working tree independently reviewed before publication"
+  },
+  "north_star": "Make Vercel the durable owner of isolated Convex Preview deployments and secret provisioning without changing Production or accepting deployment-local tenant IDs at the public intake boundary.",
+  "evidence": {
+    "marketplace_resource": "pass — Vercel-owned Convex resource skys-the-limit-platform-convex is available and connected to sky-s-the-limit-platform for Preview only",
+    "preview_defaults": "pass — names-only inspection confirms LEAD_INTAKE_SECRET, WORKOS_API_KEY, WORKOS_CLIENT_ID, WORKOS_ORGANIZATION_ID, and WORKOS_WEBHOOK_SECRET as managed Convex Preview defaults; no values were printed or committed",
+    "deploy_key_dry_run": "pass — Vercel Preview environment injection plus npx convex deploy --dry-run selected the Marketplace preview key and would claim/deploy the requested branch backend",
+    "tenant_isolation": "pass — signed intake uses stable WORKOS_ORGANIZATION_ID and an internal indexed Convex query resolves the active deployment-local organization before persistence",
+    "preview_bootstrap": "pass — internal-only idempotent mutation creates or reuses the branch organization and fails closed on inactive or conflicting state",
+    "production_boundary": "pass — vercel.json runs Convex deploy only for VERCEL_ENV=preview; all other environments retain npm run build and Production remains unconnected/unmodified",
+    "workflow_boundary": "pass — secrets are not placed in Vercel Workflow state; Marketplace configuration and Convex Preview defaults own the control-plane lifecycle",
+    "focused_tests": "pass — 5 focused files / 42 tests passed for proof signing, unknown-tenant rejection, idempotency, rate limiting, CI bootstrap, environment contract, and Vercel build policy",
+    "full_tests": "pass — 32 files / 188 tests passed",
+    "static_checks": "pass — lint, tsc --noEmit, verify:skills, verify:env, verify:assets, and git diff --check passed",
+    "dependency_audit": "pass — npm audit reported zero vulnerabilities",
+    "generated_env": "pass — generated Env declarations were aligned with the installed Convex 1.43 codegen template; hosted Preview deploy/codegen is the publication reproducibility gate",
+    "independent_review": "pass after remediation — evaluator confirmed Production remains Next-only, tenant resolution is deployment-safe, NEXT_PUBLIC_CONVEX_URL is build-frozen from the managed Convex deploy command, and the change may advance to hosted Preview verification"
+  },
+  "blocking_findings": [],
+  "residual_risk": [
+    "The first hosted dev deployment must prove that /api/estimate persists into the new Vercel-managed Convex Preview before stale Preview URL and organization-ID variables are removed.",
+    "Sensitive Vercel variables are intentionally scoped to dev, so feature-branch Vercel builds fail closed; the authoritative hosted build occurs after reviewed code lands on dev.",
+    "Production Convex migration remains a separate owner-approved change."
+  ],
+  "rollback": {
+    "last_known_good_commit": "a1d9d8c47dbea62ed293ced88c82ec440d45cd63",
+    "command": "git revert <candidate-commit>",
+    "human_approval_required": false,
+    "production_effects": false
+  }
+}

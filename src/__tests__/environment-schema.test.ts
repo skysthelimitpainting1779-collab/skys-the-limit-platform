@@ -20,7 +20,6 @@ describe("Environment Schema & Isolation Guards", () => {
     WORKOS_REDIRECT_URI: "https://example.com/auth/callback",
     NEXT_PUBLIC_WORKOS_REDIRECT_URI: "https://example.com/auth/callback",
     WORKOS_ORGANIZATION_ID: "org_production",
-    NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_production",
     LEAD_INTAKE_SECRET: "production-lead-intake-secret-over-32-characters",
   };
   const previewRequirements = {
@@ -32,7 +31,6 @@ describe("Environment Schema & Isolation Guards", () => {
     NEXT_PUBLIC_WORKOS_REDIRECT_URI:
       "https://preview.example.com/auth/callback",
     WORKOS_ORGANIZATION_ID: "org_preview",
-    NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_preview",
   };
 
   it("parses valid environment configuration", () => {
@@ -149,7 +147,6 @@ describe("Environment Schema & Isolation Guards", () => {
       WORKOS_ORGANIZATION_ID: "org_REPLACE_ME",
       WORKOS_WEBHOOK_SECRET: "replace_with_environment_specific_webhook_secret",
       WORKOS_ACTION_SECRET: "replace_with_environment_specific_action_secret",
-      NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID: "organizations_REPLACE_ME",
       BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_REPLACE_ME",
       LEAD_INTAKE_SECRET: "generate_32_character_lead_intake_secret_here",
     });
@@ -189,6 +186,17 @@ describe("Environment Schema & Isolation Guards", () => {
     delete env.WORKOS_ORGANIZATION_ID;
 
     expect(EnvironmentSchema.safeParse(env).success).toBe(false);
+  });
+
+  it("does not require a deployment-specific Convex organization document ID", () => {
+    const result = EnvironmentSchema.safeParse({
+      ...validBaseEnv,
+      ...previewRequirements,
+      NODE_ENV: "production",
+      VERCEL_ENV: "preview",
+    });
+
+    expect(result.success).toBe(true);
   });
 
   it("requires the shared lead-intake secret in deployments", () => {

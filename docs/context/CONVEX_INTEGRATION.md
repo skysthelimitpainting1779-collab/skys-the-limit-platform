@@ -4,50 +4,52 @@
 
 - **Convex** is the source of truth for all operational business data
 - **Local development** uses `npx convex dev` (local instance on port 3210 by default)
-- **Preview** environments use a dedicated Convex Preview deployment (separate from Production)
+- **Preview** environments use branch-specific Convex deployments provisioned by the Vercel Marketplace integration
 - **Production** uses a dedicated Convex Production deployment
 
-## Setup: Cloud Convex Project
+## Vercel-owned Preview project
 
-To link to a cloud Convex project (required for Preview/Production deployments):
+Vercel owns the Preview control plane through the official Convex Marketplace
+resource `skys-the-limit-platform-convex`. The resource is connected only to
+Vercel Preview. Its managed `CONVEX_DEPLOY_KEY` creates or reuses one isolated
+Convex deployment per Git branch.
 
-```bash
-# 1. Log in to Convex
-npx convex login
+The Vercel build runs:
 
-# 2. Create and link a new Convex project
-npx convex dev
-# → Follow prompts to create "skys-the-limit-platform" project
-# → This will write NEXT_PUBLIC_CONVEX_URL and CONVEX_DEPLOYMENT to .env.local
+```sh
+if [ "$VERCEL_ENV" = "preview" ]; then
+  npx convex deploy --cmd 'npm run build' --preview-run 'ci:ensurePreviewOrganization'
+else
+  npm run build
+fi
 ```
 
-## Preview Isolation
+`convex deploy` supplies `NEXT_PUBLIC_CONVEX_URL` to the Next.js build, pushes
+the schema and functions, and then runs the internal Preview bootstrap. The
+bootstrap reads the stable `WORKOS_ORGANIZATION_ID` and creates the matching
+active organization inside that branch's database. Application requests never
+carry a Convex document ID from another deployment.
 
-**Critical**: Preview deployments must use Preview-tier Convex credentials, never Production.
+## Preview defaults
 
-When the Convex project is configured in cloud:
-1. Go to https://dashboard.convex.dev
-2. Find the project → Settings → Deployments
-3. Copy the **Preview** deployment URL (format: `https://xx-slug-123.convex.cloud`)
-4. Add to Vercel: `NEXT_PUBLIC_CONVEX_URL` → Preview environment only
-5. Never cross-configure Preview with Production credentials
+Convex project-level Preview defaults are copied into every new branch Preview:
 
-## Required Vercel Environment Variables
+- `WORKOS_CLIENT_ID`
+- `WORKOS_API_KEY`
+- `WORKOS_ORGANIZATION_ID`
+- `WORKOS_WEBHOOK_SECRET`
+- `LEAD_INTAKE_SECRET`
 
-| Variable | Environment | Description |
-|----------|-------------|-------------|
-| `NEXT_PUBLIC_CONVEX_URL` | preview | Preview Convex deployment URL |
-| `NEXT_PUBLIC_CONVEX_URL` | production | Production Convex deployment URL |
-| `NEXT_PUBLIC_CONVEX_URL` | development | Local: http://127.0.0.1:3210 (set in .env.local) |
-| `CONVEX_DEPLOY_KEY` | production | Production deploy key (sensitive — set manually in Vercel dashboard) |
-
-## Adding CONVEX_DEPLOY_KEY to Vercel
+Set or inspect names without printing secret values:
 
 ```bash
-# Set as sensitive (encrypted, not readable after creation)
-vercel env add CONVEX_DEPLOY_KEY production --yes --scope skys-35411c00
-# Enter value when prompted (or use --value flag with the key)
+npx convex env default list --names-only --type preview --project skys:skys-the-limit-platform-convex
 ```
+
+Production is intentionally not connected to the Marketplace resource and has
+not been migrated by this Preview setup. The Vercel build condition preserves
+the original Next-only Production build. Merging or promoting `dev` to `main`
+still requires owner approval.
 
 ## Convex Schema Location
 
@@ -66,3 +68,6 @@ vercel env add CONVEX_DEPLOY_KEY production --yes --scope skys-35411c00
 npm run dev         # Start Next.js
 npx convex dev      # Start Convex (separate terminal)
 ```
+
+The local CI workflow writes the same fail-closed variables to its anonymous
+Convex deployment and seeds by `WORKOS_ORGANIZATION_ID`.

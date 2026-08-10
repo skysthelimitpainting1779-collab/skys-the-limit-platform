@@ -102,11 +102,13 @@ async function seedTenantScopedRpcFixture() {
     orgA = await ctx.db.insert("organizations", {
       name: "Organization A",
       slug: "legacy-rpc-a",
+      workosOrganizationId: "org_workos_a",
       status: "active",
     });
     orgB = await ctx.db.insert("organizations", {
       name: "Organization B",
       slug: "legacy-rpc-b",
+      workosOrganizationId: "org_workos_b",
       status: "active",
     });
     const users = [
@@ -374,7 +376,7 @@ describe("legacy public Convex RPC boundary", () => {
   it("keeps anonymous intake tenant-bound and idempotent", async () => {
     const { t, orgA } = await seedTenantScopedRpcFixture();
     const input = {
-      orgId: orgA,
+      workosOrganizationId: "org_workos_a",
       idempotencyKey: "00000000-0000-4000-8000-000000000099",
       fullName: "Public Intake",
       email: "public-intake@example.com",
@@ -435,6 +437,30 @@ describe("legacy public Convex RPC boundary", () => {
     ).resolves.toMatchObject({ orgId: orgA, email: input.email });
   });
 
+  it("rejects a signed intake for an unknown WorkOS organization", async () => {
+    const { t } = await seedTenantScopedRpcFixture();
+    const input = {
+      workosOrganizationId: "org_workos_unknown",
+      idempotencyKey: "00000000-0000-4000-8000-000000000098",
+      fullName: "Unknown Tenant",
+      email: "unknown-tenant@example.com",
+      phone: "+15555550198",
+      segment: "residential" as const,
+      serviceAddress: "198 Unknown Way, Minneapolis MN",
+      projectDetails: "A valid request that must fail tenant resolution.",
+      sourcePath: "/estimate",
+      contactConsent: true as const,
+    };
+    const secret = "local-test-only-lead-intake-secret-32-chars";
+    process.env.LEAD_INTAKE_SECRET = secret;
+    const issuedAt = Date.now();
+    const proof = await createLeadIntakeProof(secret, input, issuedAt);
+
+    await expect(
+      t.action(anyApi.leadActions.submit, { ...input, issuedAt, proof }),
+    ).rejects.toThrow("ORGANIZATION_NOT_FOUND");
+  });
+
   it("caps signed anonymous intake across rotated contact details", async () => {
     const { t, orgA } = await seedTenantScopedRpcFixture();
     const now = Date.now();
@@ -459,7 +485,7 @@ describe("legacy public Convex RPC boundary", () => {
     });
 
     const input = {
-      orgId: orgA,
+      workosOrganizationId: "org_workos_a",
       idempotencyKey: "00000000-0000-4000-8000-000000000100",
       fullName: "Rotated Caller 101",
       email: "rotated-101@example.com",

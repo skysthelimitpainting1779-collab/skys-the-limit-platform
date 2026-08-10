@@ -1,5 +1,5 @@
 export type LeadIntakePayload = {
-  orgId: string;
+  workosOrganizationId: string;
   idempotencyKey: string;
   fullName: string;
   email: string;
@@ -15,7 +15,7 @@ export type LeadIntakePayload = {
   utmCampaign?: string;
 };
 
-const PROOF_VERSION = "lead-intake-v1";
+const PROOF_VERSION = "lead-intake-v2";
 const MAX_PROOF_AGE_MS = 5 * 60 * 1_000;
 const MAX_CLOCK_SKEW_MS = 30 * 1_000;
 const MIN_SECRET_LENGTH = 32;
@@ -32,7 +32,7 @@ function canonicalPayload(payload: LeadIntakePayload, issuedAt: number) {
   return JSON.stringify([
     PROOF_VERSION,
     issuedAt,
-    payload.orgId,
+    payload.workosOrganizationId,
     payload.idempotencyKey,
     payload.fullName,
     payload.email,

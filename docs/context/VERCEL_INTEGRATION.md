@@ -12,7 +12,7 @@
 | Preview Branch | `dev` and all feature branches |
 | Node.js Version | `24.x` |
 | Install Command | `npm ci` |
-| Build Command | `npm run build` |
+| Build Command | Preview: Convex deploy + Next build + seed; Production: `npm run build` only |
 | Framework | Next.js (App Router) |
 
 ## Branch → Deployment Mapping
@@ -31,16 +31,15 @@
 - `ENABLE_LIVE_STRIPE` — `false` (gates Stripe live mode)
 - `ENABLE_PRODUCTION_CONVEX` — `false` (gates Production Convex access)
 
-### Sensitive — Must Be Added Manually in Vercel Dashboard
+### Sensitive and provider-managed variables
 
 These must be added by the project owner via the Vercel dashboard or CLI interactive mode:
 
 | Variable | Environment | Notes |
 |----------|-------------|-------|
-| `NEXT_PUBLIC_CONVEX_URL` | preview | Preview Convex deployment URL |
+| `CONVEX_DEPLOY_KEY` | preview | Managed by the connected Vercel Convex Marketplace resource |
 | `NEXT_PUBLIC_CONVEX_URL` | production | Production Convex deployment URL |
-| `NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID` | preview / production | Environment-specific active tenant for public lead intake |
-| `LEAD_INTAKE_SECRET` | preview / production | Unique 32+ character proof key; set the same value in the matching Convex deployment |
+| `LEAD_INTAKE_SECRET` | preview / production | Unique 32+ character proof key; Preview value is also a Convex Preview default |
 | `CONVEX_DEPLOY_KEY` | production | From Convex dashboard → Project → Settings → Deploy Keys |
 | `WORKOS_API_KEY` | production | Production WorkOS API key |
 | `WORKOS_API_KEY` | preview | Isolated non-production WorkOS API key |
@@ -52,16 +51,22 @@ These must be added by the project owner via the Vercel dashboard or CLI interac
 | `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | preview | `https://sky-s-the-limit-platform-skys-35411c00.vercel.app/auth/callback` |
 | `WORKOS_ORGANIZATION_ID` | preview / production | Environment-specific invitation-only WorkOS organization |
 
+There is no `NEXT_PUBLIC_DEFAULT_ORGANIZATION_ID`. Convex document IDs are
+deployment-local. The route signs the stable `WORKOS_ORGANIZATION_ID`, and the
+Convex action resolves it through `organizations.by_workosOrganizationId`.
+
 `SKIP_ENV_VALIDATION=true` is allowed only for controlled local or CI
 placeholder builds. It is explicitly rejected when `VERCEL_ENV` is `preview`
 or `production`.
 
 ### Convex Function Environment
 
-Convex actions and webhook handlers do not inherit Vercel environment
-variables. Configure `WORKOS_WEBHOOK_SECRET`, `BLOB_READ_WRITE_TOKEN`, and the
-matching `LEAD_INTAKE_SECRET` separately for each Convex deployment. WorkOS Actions are currently disabled;
-configure `WORKOS_ACTION_SECRET` only if reviewed action handlers are enabled.
+Convex actions and webhook handlers do not inherit ordinary Vercel environment
+variables. The Vercel-owned Convex project therefore supplies project-level
+Preview defaults for WorkOS identity, webhook verification, and the matching
+lead-intake proof secret. New branch Preview deployments copy those defaults
+before `ci:ensurePreviewOrganization` runs. WorkOS Actions remain disabled;
+configure `WORKOS_ACTION_SECRET` only if reviewed handlers are enabled.
 Preview Convex must never reuse Production WorkOS or Blob credentials.
 
 ## Adding Sensitive Variables
@@ -92,11 +97,12 @@ vercel domains add your-production-domain.com --scope skys-35411c00
 | Vercel Speed Insights | ✅ Enabled | Via project settings |
 | Vercel Web Analytics | ✅ Enabled | Via project settings |
 | Vercel OIDC | ✅ Enabled | For secure token exchange |
-| Convex | 🔧 Needs cloud project | Run `npx convex login` + `npx convex dev` |
+| Convex Marketplace | ✅ Preview connected | Vercel-owned resource; branch-specific Convex deployments |
 
 ## Vercel Configuration File
 
 `vercel.json` defines:
 - Install command: `npm ci` (reproducible installs)
+- Build command: deploy Convex, build against its injected URL, then seed Preview; keep Production Next-only
 - Security headers: CSP, HSTS, X-Frame-Options, etc.
 - Framework: Next.js

@@ -33,7 +33,7 @@ This test proves the complete code path without attaching Preview to Production 
 
 - Direct calls to the public Convex mutation receive the same structural and length validation as the HTTP boundary.
 - No email, SMS, payment, AI model, Vercel Workflow, Queue, or Blob call occurs.
-- The Vercel Route Handler returns a recoverable 503 until an isolated cloud Convex Preview URL is configured.
+- The Vercel Route Handler returns a recoverable 503 unless the Marketplace-managed branch Convex Preview is deployed, seeded, and reachable.
 - Browser input never controls authoritative timestamps or lead status.
 - Raw PII is not logged.
 - Production promotion and domain changes remain owner-gated.
