@@ -18,21 +18,32 @@ The Vercel build runs:
 
 ```sh
 if [ "$VERCEL_ENV" = "preview" ]; then
-  npx convex deploy --cmd 'npm run build' --preview-run 'ci:ensurePreviewOrganization'
+  npx convex deploy --cmd 'npm run build' &&
+  node scripts/sync-convex-preview-env.mjs &&
+  npx convex deploy --preview-run 'ci:ensurePreviewOrganization'
 else
   npm run build
 fi
 ```
 
-`convex deploy` supplies `NEXT_PUBLIC_CONVEX_URL` to the Next.js build, pushes
-the schema and functions, and then runs the internal Preview bootstrap. The
-bootstrap reads the stable `WORKOS_ORGANIZATION_ID` and creates the matching
-active organization inside that branch's database. Application requests never
-carry a Convex document ID from another deployment.
+The first `convex deploy` creates or reuses the branch deployment and supplies
+`NEXT_PUBLIC_CONVEX_URL` to the Next.js build. Vercel then synchronizes the five
+approved Preview variables to that exact Convex Preview over stdin, so secret
+values are not included in command arguments or build output. The final deploy
+refreshes the schema, functions, and AuthKit configuration with those values,
+then runs the internal Preview bootstrap. The bootstrap reads the stable
+`WORKOS_ORGANIZATION_ID` and creates the matching active organization inside
+that branch's database. Application requests never carry a Convex document ID
+from another deployment.
+
+This synchronization belongs to the Vercel deployment lifecycle. Vercel
+Workflow is reserved for durable application jobs; it is not used as a secret
+store because workflow inputs and step state are persisted.
 
 ## Preview defaults
 
-Convex project-level Preview defaults are copied into every new branch Preview:
+Convex project-level Preview defaults bootstrap every new branch Preview. Each
+Vercel build then reconciles them from Vercel's branch-scoped values:
 
 - `WORKOS_CLIENT_ID`
 - `WORKOS_API_KEY`
