@@ -9,10 +9,6 @@ on:
         description: Issue number to hand to the Eve factory
         required: true
         type: number
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/eve-factory-dispatch.yml
 
 permissions:
   contents: read
@@ -21,9 +17,6 @@ permissions:
 
 jobs:
   dispatch:
-    if: >-
-      github.event_name != 'push' ||
-      contains(github.event.head_commit.message, 'bootstrap(eve): install factory dispatch bridge')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -54,17 +47,6 @@ jobs:
               LABEL=""
               ISSUE_NUMBER="$INPUT_ISSUE_NUMBER"
               ACTION_KIND="manual"
-              ;;
-            push)
-              LABEL=""
-              ISSUE_NUMBER="36"
-              ACTION_KIND="bootstrap"
-              if ! gh api "repos/$GITHUB_REPOSITORY/labels/factory" >/dev/null 2>&1; then
-                gh api --method POST "repos/$GITHUB_REPOSITORY/labels" \
-                  -f name='factory' \
-                  -f color='5319e7' \
-                  -f description='Hand this issue to the Eve software factory' >/dev/null
-              fi
               ;;
             *)
               echo "Unsupported event: $GITHUB_EVENT_NAME" >&2
