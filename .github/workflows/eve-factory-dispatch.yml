@@ -1,0 +1,156 @@
+name: Eve Factory Dispatch
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to hand to the Eve factory
+        required: true
+        type: number
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/eve-factory-dispatch.yml
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+jobs:
+  dispatch:
+    if: >-
+      github.event_name != 'push' ||
+      contains(github.event.head_commit.message, 'bootstrap(eve): install factory dispatch bridge')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      EVE_FACTORY_URL: https://eve-software-factory-template-pearl.vercel.app
+      EVE_OIDC_AUDIENCE: eve-factory-skys-the-limit
+
+    steps:
+      - name: Resolve dispatch context
+        id: context
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_ISSUE_NUMBER: ${{ inputs.issue_number }}
+        run: |
+          set -euo pipefail
+
+          case "$GITHUB_EVENT_NAME" in
+            issues)
+              LABEL="$(jq -r '.label.name // ""' "$GITHUB_EVENT_PATH")"
+              if [[ "$LABEL" != "factory" ]]; then
+                echo "Factory label was not applied; nothing to dispatch."
+                exit 0
+              fi
+              ISSUE_NUMBER="$(jq -r '.issue.number' "$GITHUB_EVENT_PATH")"
+              ACTION_KIND="$(jq -r '.action' "$GITHUB_EVENT_PATH")"
+              ;;
+            workflow_dispatch)
+              LABEL=""
+              ISSUE_NUMBER="$INPUT_ISSUE_NUMBER"
+              ACTION_KIND="manual"
+              ;;
+            push)
+              LABEL=""
+              ISSUE_NUMBER="36"
+              ACTION_KIND="bootstrap"
+              if ! gh api "repos/$GITHUB_REPOSITORY/labels/factory" >/dev/null 2>&1; then
+                gh api --method POST "repos/$GITHUB_REPOSITORY/labels" \
+                  -f name='factory' \
+                  -f color='5319e7' \
+                  -f description='Hand this issue to the Eve software factory' >/dev/null
+              fi
+              ;;
+            *)
+              echo "Unsupported event: $GITHUB_EVENT_NAME" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ ! "$ISSUE_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Invalid issue number: $ISSUE_NUMBER" >&2
+            exit 1
+          fi
+
+          ACTOR_PERMISSION="$(
+            gh api "repos/$GITHUB_REPOSITORY/collaborators/$GITHUB_ACTOR/permission" \
+              --jq '.role_name // .permission'
+          )"
+          case "$ACTOR_PERMISSION" in
+            admin|maintain|write|triage) ;;
+            *)
+              echo "Actor $GITHUB_ACTOR is not trusted to dispatch factory work: $ACTOR_PERMISSION" >&2
+              exit 1
+              ;;
+          esac
+
+          ACTOR_ID="$(gh api "users/$GITHUB_ACTOR" --jq '.id')"
+          ISSUE_FILE="$(mktemp)"
+          gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER" > "$ISSUE_FILE"
+
+          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "action_kind=$ACTION_KIND" >> "$GITHUB_OUTPUT"
+          echo "label=$LABEL" >> "$GITHUB_OUTPUT"
+          echo "actor_permission=$ACTOR_PERMISSION" >> "$GITHUB_OUTPUT"
+          echo "actor_id=$ACTOR_ID" >> "$GITHUB_OUTPUT"
+          echo "issue_file=$ISSUE_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch to Eve with GitHub OIDC
+        if: steps.context.outputs.issue_number != ''
+        shell: bash
+        env:
+          ISSUE_NUMBER: ${{ steps.context.outputs.issue_number }}
+          ACTION_KIND: ${{ steps.context.outputs.action_kind }}
+          LABEL: ${{ steps.context.outputs.label }}
+          ACTOR_PERMISSION: ${{ steps.context.outputs.actor_permission }}
+          ACTOR_ID: ${{ steps.context.outputs.actor_id }}
+          ISSUE_FILE: ${{ steps.context.outputs.issue_file }}
+        run: |
+          set -euo pipefail
+
+          OIDC_JSON="$(
+            curl --fail-with-body --silent --show-error \
+              -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${EVE_OIDC_AUDIENCE}"
+          )"
+          OIDC_TOKEN="$(jq -r '.value' <<<"$OIDC_JSON")"
+          if [[ -z "$OIDC_TOKEN" || "$OIDC_TOKEN" == "null" ]]; then
+            echo "GitHub did not return an OIDC token." >&2
+            exit 1
+          fi
+          echo "::add-mask::$OIDC_TOKEN"
+
+          PAYLOAD_FILE="$(mktemp)"
+          jq -n \
+            --arg eventName "$GITHUB_EVENT_NAME" \
+            --arg action "$ACTION_KIND" \
+            --arg actorPermission "$ACTOR_PERMISSION" \
+            --arg actor "$GITHUB_ACTOR" \
+            --arg actorId "$ACTOR_ID" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg label "$LABEL" \
+            --slurpfile issue "$ISSUE_FILE" \
+            '{
+              schemaVersion: 1,
+              eventName: $eventName,
+              action: $action,
+              actorPermission: $actorPermission,
+              actor: $actor,
+              actorId: $actorId,
+              repository: $repository,
+              label: (if $label == "" then null else {name: $label} end),
+              issue: $issue[0]
+            }' > "$PAYLOAD_FILE"
+
+          curl --fail-with-body --silent --show-error \
+            --connect-timeout 10 \
+            --max-time 30 \
+            -X POST "${EVE_FACTORY_URL}/factory/github-actions" \
+            -H "Authorization: Bearer $OIDC_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary "@$PAYLOAD_FILE"
