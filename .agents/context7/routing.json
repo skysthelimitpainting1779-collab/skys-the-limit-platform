@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "required_when": [
+    "correctness depends on current external library or provider behavior",
+    "a version-sensitive API, configuration, migration, security contract, or deployment contract changes",
+    "an unfamiliar third-party API is used"
+  ],
+  "skip_when": [
+    "copy-only edit",
+    "internal naming change",
+    "proprietary business logic with no external API dependency",
+    "local refactor that preserves vendor-facing behavior"
+  ],
+  "evidence_requires": ["library_id", "question", "contract", "source", "applies_to"],
+  "process": ["identify library", "resolve exact library ID", "ask one exact question", "record the affecting contract", "implement"]
+}

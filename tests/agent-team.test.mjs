@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { evaluatePreTool } from "../scripts/policy/core.mjs";
 import { evaluatePromotion, gradeCases } from "../scripts/evals/lib.mjs";
+import { sha256, validatePacket } from "../scripts/verifiers/packet-lib.mjs";
 
 const root = process.cwd();
 const ids = {
@@ -139,6 +140,31 @@ test("promotion rejects held-out regression, protected-bar changes, flakiness, a
   assert.ok(report.reasons.includes("METRIC_TAMPERING"));
   assert.ok(report.reasons.includes("FLAKY_EVAL"));
   assert.ok(report.reasons.some((reason) => reason.includes("latency_ms")));
+});
+
+test("Context7 routing records exact current contracts without ceremonial invocation", () => {
+  const contracts = JSON.parse(readFileSync(join(root, ".agents", "context7", "contracts.json"), "utf8"));
+  const routing = JSON.parse(readFileSync(join(root, ".agents", "context7", "routing.json"), "utf8"));
+  assert.equal(contracts.libraries.next.library_id, "/vercel/next.js/v16.2.9");
+  assert.equal(contracts.libraries.workos_authkit.library_id, "/workos/authkit-nextjs");
+  assert.equal(contracts.libraries.convex.library_id, "/get-convex/convex-backend");
+  assert.ok(routing.required_when.some((value) => value.includes("version-sensitive")));
+  assert.ok(routing.skip_when.some((value) => value.includes("copy-only")));
+  const result = spawnSync(process.execPath, [join(root, "scripts", "certification", "context7.mjs")], { cwd: root, encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("clean-context verifier packets bind exact SHAs and exclude implementer reasoning", () => {
+  const evidence = (text) => ({ path: "evidence.txt", sha256: sha256(text), text });
+  const packet = {
+    schema_version: "1.0.0", task_contract_id: "TASK-1", verifier: "V10",
+    base_commit_sha: "a".repeat(40), candidate_commit_sha: "b".repeat(40),
+    diff: evidence("diff"), acceptance_criteria: evidence("acceptance"), graphify_evidence: evidence("graph"), context7_evidence: evidence("docs"), test_evidence: evidence("tests"), prohibited_context_absent: true
+  };
+  assert.deepEqual(validatePacket(packet), []);
+  assert.ok(validatePacket({ ...packet, parent_reasoning: "trust me" }).some((value) => value.includes("prohibited context")));
+  assert.ok(validatePacket({ ...packet, candidate_commit_sha: "HEAD" }).some((value) => value.includes("exact SHA")));
+  assert.ok(validatePacket({ ...packet, test_evidence: { ...packet.test_evidence, text: "altered" } }).some((value) => value.includes("hash mismatch")));
 });
 
 test("role write boundaries are mechanically enforced", () => {

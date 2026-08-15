@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "evaluated_sha", "evidence", "remediation_guidance"],
+  "properties": {
+    "verdict": { "enum": ["PASS", "FAIL", "UNCERTAIN"] },
+    "evaluated_sha": { "pattern": "^[0-9a-f]{40}$" },
+    "evidence": {
+      "type": "object",
+      "required": ["deterministic_checks", "judge_evaluations"],
+      "properties": {
+        "deterministic_checks": { "type": "array", "items": { "type": "object", "required": ["name", "passed", "output_summary"] } },
+        "judge_evaluations": { "type": "array", "items": { "type": "object", "required": ["dimension", "score", "reason"] } }
+      }
+    },
+    "remediation_guidance": { "type": "string" }
+  }
+}

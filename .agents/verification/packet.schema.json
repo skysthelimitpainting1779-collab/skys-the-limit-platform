@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "task_contract_id", "verifier", "base_commit_sha", "candidate_commit_sha", "diff", "acceptance_criteria", "graphify_evidence", "context7_evidence", "test_evidence", "prohibited_context_absent"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "task_contract_id": { "type": "string", "minLength": 1 },
+    "verifier": { "pattern": "^V(?:[0-9]|10)$" },
+    "base_commit_sha": { "pattern": "^[0-9a-f]{40}$" },
+    "candidate_commit_sha": { "pattern": "^[0-9a-f]{40}$" },
+    "diff": { "type": "object", "required": ["sha256", "text"], "properties": { "sha256": { "pattern": "^[0-9a-f]{64}$" }, "text": { "type": "string" } } },
+    "acceptance_criteria": { "$ref": "#/$defs/evidence" },
+    "graphify_evidence": { "$ref": "#/$defs/evidence" },
+    "context7_evidence": { "$ref": "#/$defs/evidence" },
+    "test_evidence": { "$ref": "#/$defs/evidence" },
+    "prohibited_context_absent": { "const": true }
+  },
+  "$defs": { "evidence": { "type": "object", "required": ["path", "sha256", "text"], "properties": { "path": { "type": "string" }, "sha256": { "pattern": "^[0-9a-f]{64}$" }, "text": { "type": "string" } } } }
+}
