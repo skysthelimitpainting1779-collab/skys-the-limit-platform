@@ -45,11 +45,10 @@ jobs:
           check_route() {
             local route=$1
             local url="${PREVIEW_URL}${route}"
-            local status
             # Follow up to 5 redirects; capture the final HTTP status.
             # Vercel SSO-protected previews return 302 for unauthenticated requests —
             # any 2xx or 3xx proves the route compiled and is reachable.
-            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 --max-redirs 5 "$url")
+            local status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 --max-redirs 5 "$url")
             if [[ "$status" =~ ^(2|3)[0-9]{2}$ ]]; then
               echo "✓ $route → $status"
             else
