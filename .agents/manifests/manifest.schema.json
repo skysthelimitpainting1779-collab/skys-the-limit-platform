@@ -13,7 +13,7 @@
       "additionalProperties": false,
       "required": ["id", "name", "role"],
       "properties": {
-        "id": { "pattern": "^[AVS](?:[0-9]|10)$" },
+        "id": { "pattern": "^(?:[AVS](?:[0-9]|10)|R0)$" },
         "name": { "type": "string", "minLength": 1 },
         "role": { "type": "string", "minLength": 1 }
       }
@@ -99,7 +99,8 @@
     },
     "completion_requires": { "$ref": "#/$defs/strings" },
     "hard_stops": { "$ref": "#/$defs/strings" },
-    "parent": { "type": "string" }
+    "parent": { "type": "string" },
+    "parents": { "$ref": "#/$defs/strings" }
   },
   "$defs": {
     "strings": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }

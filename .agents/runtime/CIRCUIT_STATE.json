@@ -1,6 +1,7 @@
 {
   "schema_version": "1.0.0",
   "active_circuits": {
+    "R0": { "state": "CLOSED", "failure_fingerprint": null, "implementation_cycles": 0, "remediation_cycles": 0, "verifier_rejections": 0 },
     "A0": { "state": "CLOSED", "failure_fingerprint": null, "implementation_cycles": 0, "remediation_cycles": 0, "verifier_rejections": 0 },
     "A1": { "state": "CLOSED", "failure_fingerprint": null, "implementation_cycles": 0, "remediation_cycles": 0, "verifier_rejections": 0 },
     "A2": { "state": "CLOSED", "failure_fingerprint": null, "implementation_cycles": 0, "remediation_cycles": 0, "verifier_rejections": 0 },

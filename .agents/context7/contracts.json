@@ -43,6 +43,30 @@
       "contract": "Server functions obtain identity with ctx.auth.getUserIdentity(), fail closed when identity is absent, and use declared indexes for membership and resource lookup. Caller-supplied identity is not authorization evidence.",
       "source": "https://github.com/get-convex/convex-backend/blob/main/npm-packages/docs/docs/auth/database-auth.mdx",
       "applies_to": ["convex/**"]
+    },
+    {
+      "id": "convex-components-reuse",
+      "library_id": "/websites/convex_dev",
+      "question": "How do Convex Components package reusable backend functions, schemas, and persistent data, and which official maintained components exist for workflows or migrations?",
+      "contract": "Convex Components are self-contained sandboxed backends with isolated functions and database tables; inspect the official component ecosystem before custom stateful backend infrastructure.",
+      "source": "https://docs.convex.dev/components/overview",
+      "applies_to": [".agents/skills/research-reuse-scout/**", "convex/**"]
+    },
+    {
+      "id": "vercel-official-reuse-surfaces",
+      "library_id": "/websites/vercel",
+      "question": "What official Vercel discovery surfaces exist for reusable templates and integrations before building custom infrastructure?",
+      "contract": "Inspect Vercel's integration discovery/Marketplace and pre-built templates before adding another infrastructure capability; discovery does not authorize provisioning.",
+      "source": "https://vercel.com/docs/integrations/install-an-integration",
+      "applies_to": [".agents/skills/research-reuse-scout/**", "vercel.json", ".github/workflows/**"]
+    },
+    {
+      "id": "shadcn-registry-reuse",
+      "library_id": "/shadcn-ui/ui",
+      "question": "What can current shadcn registries distribute beyond UI components, including hooks, libraries, configuration, rules, workflows, testing, CI, MCP, or agent files?",
+      "contract": "shadcn registries can distribute components, hooks, pages, utilities, configuration, documentation, templates, workflows, rules, project conventions, agent instructions, tests, CI, codemods, and migration kits; registry availability is not approval.",
+      "source": "https://github.com/shadcn-ui/ui/blob/main/apps/v4/content/docs/registry/github.mdx",
+      "applies_to": [".agents/skills/research-reuse-scout/**", "src/components/**", ".agents/**", ".github/**"]
     }
   ]
 }

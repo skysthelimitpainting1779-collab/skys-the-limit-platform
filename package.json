@@ -23,9 +23,12 @@
     "host:compile": "node scripts/agents/host-compiler.mjs compile",
     "host:check": "node scripts/agents/host-compiler.mjs check",
     "agents:parity": "node scripts/agents/host-compiler.mjs parity",
+    "agents:circuit": "node scripts/policy/circuit-cli.mjs",
+    "reuse:certify": "node scripts/certification/reuse.mjs",
     "verify": "npm run verify:skills && npm run verify:env && npm run verify:assets && npm run lint && npm run typecheck && npm test && npm run build",
-    "verify:branch": "npm run agents:validate && npm run host:check && npm run agents:parity && npm run context7:certify && npm run agents:eval:validate && npm run agents:eval:integrity && npm run agents:certify && npm run lint && npm run typecheck && npm test",
+    "verify:branch": "npm run agents:validate && npm run host:check && npm run agents:parity && npm run context7:certify && npm run reuse:certify && npm run agents:eval:validate && npm run agents:eval:integrity && npm run agents:certify && npm run lint && npm run typecheck && npm test",
     "verify:skills": "node scripts/validate-skills.mjs",
+    "skills:validate": "node scripts/validate-skills.mjs",
     "verify:env": "node scripts/validate-environment.mjs",
     "verify:assets": "node scripts/validate-assets.mjs",
     "prepare": "husky"

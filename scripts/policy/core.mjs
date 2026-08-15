@@ -19,7 +19,7 @@ export function normalizePayload(input = {}, explicitAgent = "") {
 }
 
 function normalizeAgent(value) {
-  return String(value ?? "").toUpperCase().match(/\b([AVS](?:[0-9]|10))\b/)?.[1] ?? "";
+  return String(value ?? "").toUpperCase().match(/\b((?:[AVS](?:[0-9]|10)|R0))\b/)?.[1] ?? "";
 }
 
 function extractTargets(args, command) {
@@ -185,6 +185,13 @@ function circuitViolation(agent, overrideLedger = null) {
   return null;
 }
 
+function circuitControlViolation(normalized) {
+  const controlsCircuit = /scripts[\\/]policy[\\/]circuit-cli\.mjs/i.test(normalized.command)
+    || normalized.targets.some((target) => target.toLowerCase() === ".agents/runtime/circuit_state.json");
+  if (controlsCircuit && normalized.agent !== "A0") return "Only A0 may mutate circuit state or authorize HALF_OPEN.";
+  return null;
+}
+
 function targetAgents(normalized) {
   const candidates = [normalized.args.target_agent, normalized.args.targetAgent, normalized.args.target, normalized.args.recipient, normalized.args.Recipient, normalized.args.agent_id, normalized.args.agent_type];
   if (Array.isArray(normalized.args.Subagents)) for (const item of normalized.args.Subagents) candidates.push(item?.TypeName, item?.Role);
@@ -226,6 +233,9 @@ export function evaluatePreTool(input, explicitAgent = "", overrides = {}) {
 
   const production = productionViolation(normalized);
   if (production) return { allow: false, code: "PRODUCTION", reason: production };
+
+  const circuitControl = circuitControlViolation(normalized);
+  if (circuitControl) return { allow: false, code: "CIRCUIT", reason: circuitControl };
 
   if ((isMutationTool(normalized.tool) || isMutatingCommand(normalized.command)) && ["main", "dev"].includes(currentBranch(input))) {
     return { allow: false, code: "PROTECTED_BRANCH", reason: "Implementation on main or dev is prohibited; use an isolated worktree and feature branch." };

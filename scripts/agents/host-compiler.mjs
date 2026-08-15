@@ -69,7 +69,7 @@ function capabilityBase(capability) {
 
 function validateManifest(entry, expectedKind) {
   const m = entry.manifest;
-  const allowedKeys = new Set([...expectedTopLevelKeys, ...(expectedKind === "specialists" ? ["parent"] : [])]);
+  const allowedKeys = new Set([...expectedTopLevelKeys, ...(expectedKind === "specialists" ? ["parent", "parents"] : [])]);
   for (const key of Object.keys(m)) {
     if (!allowedKeys.has(key)) throw new Error(`${relative(root, entry.path)} has unsupported key ${key}`);
   }
@@ -78,7 +78,7 @@ function validateManifest(entry, expectedKind) {
   }
   const expectedKindValue = expectedKind === "agents" ? "standing_agent" : expectedKind.slice(0, -1);
   if (m.kind !== expectedKindValue) throw new Error(`${m.identity?.id} has kind ${m.kind}, expected ${expectedKindValue}`);
-  if (!/^[AVS](?:[0-9]|10)$/.test(m.identity?.id ?? "")) throw new Error(`Invalid identity in ${entry.path}`);
+  if (!/^(?:[AVS](?:[0-9]|10)|R0)$/.test(m.identity?.id ?? "")) throw new Error(`Invalid identity in ${entry.path}`);
   if (m.execution_mode.read_only === m.execution_mode.may_write) throw new Error(`${m.identity.id} read/write mode is contradictory`);
   if (m.execution_mode.read_only && m.write_scope.allow.length) throw new Error(`${m.identity.id} is read-only but has allowed write paths`);
   if (m.execution_mode.read_only && !m.write_scope.deny.includes("**/*")) throw new Error(`${m.identity.id} read-only scope must deny **/*`);
@@ -113,16 +113,19 @@ function loadOrganization() {
   };
   assertIds("standing agent", agents.map((m) => m.identity.id), ids("A", 11));
   assertIds("verifier", verifiers.map((m) => m.identity.id), ids("V", 11));
-  assertIds("specialist", specialists.map((m) => m.identity.id), ids("S", 8, 1));
+  assertIds("specialist", specialists.map((m) => m.identity.id), ["R0", ...ids("S", 8, 1)]);
   if (!agents.find((m) => m.identity.id === "A0")?.subagents.enabled) throw new Error("Only A0 root must be able to dispatch standing agents");
   for (const agent of agents.filter((m) => m.identity.id !== "A0")) {
     if (agent.communication.may_message.some((id) => /^A(?:[1-9]|10)$/.test(id) && id !== "A0")) throw new Error(`${agent.identity.id} has a worker-to-worker ACL`);
     if (agent.subagents.verifier !== `V${agent.identity.id.slice(1)}`) throw new Error(`${agent.identity.id} has the wrong verifier`);
   }
   for (const specialist of specialists) {
-    if (!specialist.communication.may_message.includes(specialist.parent) || specialist.communication.may_message.length !== 1) throw new Error(`${specialist.identity.id} is not parent-scoped`);
-    const parent = agents.find((m) => m.identity.id === specialist.parent);
-    if (!parent?.subagents.specialists.includes(specialist.identity.id)) throw new Error(`${specialist.identity.id} is not registered by ${specialist.parent}`);
+    const parents = specialist.parents ?? [specialist.parent];
+    if (!parents.length || stableJson([...specialist.communication.may_message].sort(), 0) !== stableJson([...parents].sort(), 0)) throw new Error(`${specialist.identity.id} is not sponsor-scoped`);
+    for (const parentId of parents) {
+      const parent = agents.find((m) => m.identity.id === parentId);
+      if (!parent?.subagents.specialists.includes(specialist.identity.id)) throw new Error(`${specialist.identity.id} is not registered by ${parentId}`);
+    }
   }
   return [...agents, ...verifiers, ...specialists];
 }
@@ -262,7 +265,7 @@ function expectedOutputs(manifests) {
   outputs.set(join(root, ".agents", "generated", "HOST_PARITY.json"), JSON.stringify({
     schema_version: "1.0.0",
     manifest_sha256: manifestHash,
-    roles: { standing_agents: 11, verifiers: 11, specialists: 8 },
+    roles: { standing_agents: 11, verifiers: 11, specialists: 9 },
     universal_mcp: ["context7", "graphify"],
     model_sources: modelMap.sources,
     model_verified_on: modelMap.verified_on,

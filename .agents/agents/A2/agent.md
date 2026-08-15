@@ -69,6 +69,7 @@ BEGIN SEMANTIC CONTRACT
     "may_message": [
       "A0",
       "S1",
+      "R0",
       "V2"
     ],
     "may_not_message": [
@@ -136,6 +137,7 @@ BEGIN SEMANTIC CONTRACT
     "feature flags",
     "bootstrap contracts",
     "integration contracts",
+    "research recommendation adoption decisions",
     "architecture decisions",
     "resale readiness"
   ],
@@ -144,7 +146,8 @@ BEGIN SEMANTIC CONTRACT
     "enabled": true,
     "maximum": 1,
     "specialists": [
-      "S1"
+      "S1",
+      "R0"
     ],
     "verifier": "V2"
   },

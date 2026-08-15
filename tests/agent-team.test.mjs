@@ -6,12 +6,14 @@ import { spawnSync } from "node:child_process";
 import { evaluatePreTool } from "../scripts/policy/core.mjs";
 import { evaluatePromotion, gradeCases } from "../scripts/evals/lib.mjs";
 import { sha256, validatePacket } from "../scripts/verifiers/packet-lib.mjs";
+import { transitionCircuit } from "../scripts/policy/circuit-state.mjs";
+import { validateResearchPacket } from "../scripts/reuse/validate-packet.mjs";
 
 const root = process.cwd();
 const ids = {
   agents: Array.from({ length: 11 }, (_, index) => `A${index}`),
   verifiers: Array.from({ length: 11 }, (_, index) => `V${index}`),
-  specialists: Array.from({ length: 8 }, (_, index) => `S${index + 1}`),
+  specialists: ["R0", ...Array.from({ length: 8 }, (_, index) => `S${index + 1}`)],
 };
 const allIds = Object.values(ids).flat();
 
@@ -33,7 +35,7 @@ function runAdapter(host, agent, payload) {
 }
 
 test("the canonical organization is complete and every role has explicit authority", () => {
-  assert.equal(allIds.length, 30);
+  assert.equal(allIds.length, 31);
   const required = ["identity", "mission", "owns", "does_not_own", "model_tier", "execution_mode", "write_scope", "capabilities", "github", "subagents", "communication", "loop_budget", "circuit_breaker", "completion_requires", "hard_stops"];
   for (const id of allIds) {
     const value = manifest(id);
@@ -50,8 +52,9 @@ test("the canonical organization is complete and every role has explicit authori
     const value = manifest(id);
     assert.equal(value.execution_mode.read_only, true);
     assert.equal(value.subagents.enabled, false);
-    assert.deepEqual(value.communication.may_message, [value.parent]);
+    assert.deepEqual([...value.communication.may_message].sort(), [...(value.parents ?? [value.parent])].sort());
   }
+  assert.deepEqual(manifest("R0").parents, ["A0", "A2"]);
 });
 
 test("generated Codex and Antigravity profiles are exact and semantically drift-free", () => {
@@ -116,6 +119,12 @@ test("quality contracts cover every role and adversarial release scenarios", () 
   }
   assert.equal(verifiers.subjects.V6.false_pass_penalty, 100);
   assert.equal(verifiers.subjects.V10.false_pass_penalty, 100);
+  const research = JSON.parse(readFileSync(join(root, ".agents", "evals", "metrics", "research.json"), "utf8"));
+  assert.ok(research.subjects.R0);
+  assert.ok(publicCases.some((item) => item.subject === "R0"));
+  for (const tag of ["existing-project", "native-convex", "maintained-oss", "custom-smaller", "fashionable-inappropriate", "abandoned-readme", "incompatible-license", "operational-tradeoff"]) {
+    assert.ok(heldOutCases.some((item) => item.subject === "R0" && item.tags.includes(tag)), `R0 ${tag}`);
+  }
 });
 
 test("deterministic grading catches false PASS and judge explanations cannot be empty", () => {
@@ -154,6 +163,31 @@ test("Context7 routing records exact current contracts without ceremonial invoca
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("R0 is a bounded read-only reuse scout shared by A0 and A2", () => {
+  const r0 = manifest("R0");
+  assert.equal(r0.kind, "specialist");
+  assert.equal(r0.execution_mode.read_only, true);
+  assert.deepEqual(r0.parents, ["A0", "A2"]);
+  assert.ok(manifest("A0").subagents.specialists.includes("R0"));
+  assert.ok(manifest("A2").subagents.specialists.includes("R0"));
+  assert.equal(r0.circuit_breaker.thresholds.research_rounds, 3);
+  assert.equal(r0.circuit_breaker.thresholds.shortlist, 5);
+  assert.equal(r0.circuit_breaker.thresholds.finalists, 3);
+  assert.equal(policy("R0", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Update File: src/app/page.tsx\n*** End Patch" } }).code, "SCOPE");
+  const certification = spawnSync(process.execPath, [join(root, "scripts", "certification", "reuse.mjs")], { cwd: root, encoding: "utf8" });
+  assert.equal(certification.status, 0, certification.stderr);
+});
+
+test("research packets enforce shortlist, finalist, and material-evidence bounds", () => {
+  const packet = JSON.parse(readFileSync(join(root, ".agents", "evidence", "reuse", "R0-bootstrap.json"), "utf8"));
+  assert.deepEqual(validateResearchPacket(packet), []);
+  const tooMany = { ...packet, oss_candidates: Array.from({ length: 6 }, (_, index) => ({ name: `candidate-${index}` })) };
+  assert.ok(validateResearchPacket(tooMany).some((failure) => failure.includes("five candidates")));
+  const noGain = structuredClone(packet);
+  noGain.rounds[1].material_gain = "";
+  assert.ok(validateResearchPacket(noGain).some((failure) => failure.includes("lacks material gain")));
+});
+
 test("clean-context verifier packets bind exact SHAs and exclude implementer reasoning", () => {
   const evidence = (text) => ({ path: "evidence.txt", sha256: sha256(text), text });
   const packet = {
@@ -189,6 +223,9 @@ test("hub-and-spoke communication ACL is enforced", () => {
   assert.equal(message("S3", "A3").code, "ACL");
   assert.equal(message("V4", "A4").code, "ACL");
   assert.equal(message("V4", "A0").allow, true);
+  assert.equal(message("R0", "A0").allow, true);
+  assert.equal(message("R0", "A2").allow, true);
+  assert.equal(message("R0", "A4").code, "ACL");
 });
 
 test("Graphify-first denies broad code discovery but permits known-file reads and exact scoped fallback", () => {
@@ -215,6 +252,49 @@ test("OPEN circuits block workers and A0 can operate only when its own circuit p
   opened.active_circuits.A4.state = "OPEN";
   assert.equal(policy("A4", { tool_name: "Bash", tool_input: { command: "npm test" } }, { circuitState: opened }).code, "CIRCUIT");
   assert.equal(policy("A0", { tool_name: "Bash", tool_input: { command: "git status --short" } }, { circuitState: opened }).allow, true);
+});
+
+test("bounded circuit transitions deny unchanged retries and stop repeated failure", () => {
+  const base = JSON.parse(readFileSync(join(root, ".agents", "runtime", "CIRCUIT_STATE.json"), "utf8"));
+  const unchanged = transitionCircuit(base, "A4", { type: "REMEDIATION", hypothesis: "same", material_change: false }, "A4");
+  assert.equal(unchanged.code, "UNCHANGED_RETRY");
+  let state = transitionCircuit(base, "A4", { type: "FAILURE", fingerprint: "hydration" }, "A4").ledger;
+  state = transitionCircuit(state, "A4", { type: "REMEDIATION", hypothesis: "client boundary", material_change: true }, "A4").ledger;
+  state = transitionCircuit(state, "A4", { type: "FAILURE", fingerprint: "hydration" }, "A4").ledger;
+  state = transitionCircuit(state, "A4", { type: "REMEDIATION", hypothesis: "serialized prop", material_change: true }, "A4").ledger;
+  const opened = transitionCircuit(state, "A4", { type: "FAILURE", fingerprint: "hydration" }, "A4");
+  assert.equal(opened.transition, "OPEN");
+  assert.equal(opened.code, "REPEATED_FAILURE");
+});
+
+test("quality and safety trips open immediately; only A0 gets one evidence-backed HALF_OPEN probe", () => {
+  const base = JSON.parse(readFileSync(join(root, ".agents", "runtime", "CIRCUIT_STATE.json"), "utf8"));
+  const opened = transitionCircuit(base, "A5", { type: "HELD_OUT_REGRESSION" }, "A5");
+  assert.equal(opened.transition, "OPEN");
+  assert.equal(transitionCircuit(opened.ledger, "A5", { type: "HALF_OPEN_AUTHORIZE", material_new_evidence: "new auth test" }, "A5").code, "A0_REQUIRED");
+  const halfOpen = transitionCircuit(opened.ledger, "A5", { type: "HALF_OPEN_AUTHORIZE", material_new_evidence: "new auth test" }, "A0");
+  assert.equal(halfOpen.transition, "HALF_OPEN");
+  assert.equal(transitionCircuit(halfOpen.ledger, "A5", { type: "SUCCESS", verifier_pass: false }, "A5").code, "VERIFIER_PASS_REQUIRED");
+  assert.equal(transitionCircuit(halfOpen.ledger, "A5", { type: "SUCCESS", verifier_pass: true }, "A5").transition, "CLOSED");
+});
+
+test("no-progress, verifier rejection, and repeated MCP failure trip their bounded thresholds", () => {
+  const fresh = () => JSON.parse(readFileSync(join(root, ".agents", "runtime", "CIRCUIT_STATE.json"), "utf8"));
+  for (const [type, expected] of [["NO_PROGRESS", "NO_EVAL_PROGRESS"], ["VERIFIER_REJECTION", "VERIFIER_REJECTIONS"], ["SERVICE_FAILURE", "REPEATED_SERVICE_FAILURE"]]) {
+    let state = transitionCircuit(fresh(), "A4", { type }, "A4").ledger;
+    const opened = transitionCircuit(state, "A4", { type }, "A4");
+    assert.equal(opened.transition, "OPEN");
+    assert.equal(opened.code, expected);
+  }
+  for (const type of ["METRIC_TAMPERING", "FALSE_PASS_REGRESSION", "FLAKY_EVAL", "SECRET_EXPOSURE", "PRODUCTION_BOUNDARY"]) {
+    assert.equal(transitionCircuit(fresh(), "A4", { type }, "A4").transition, "OPEN", type);
+  }
+});
+
+test("workers cannot mutate or self-reset the shared circuit ledger", () => {
+  const payload = { tool_name: "Bash", tool_input: { command: "node scripts/policy/circuit-cli.mjs --agent A4 --actor A0 --event event.json" } };
+  assert.equal(policy("A4", payload).code, "CIRCUIT");
+  assert.equal(policy("A0", payload).allow, true);
 });
 
 test("both host adapters expose their native deny contracts", () => {

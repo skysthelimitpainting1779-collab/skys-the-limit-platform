@@ -58,7 +58,23 @@ npm run build
 - Skip Context7 for copy, internal naming, proprietary logic, or local refactors
   unaffected by vendor behavior.
 
-## 4. Git and worktree discipline
+## 4. Research and reuse before custom architecture
+
+- Before a non-trivial new subsystem, integration, workflow, component,
+  security/test/developer tool, agent capability, or MCP is custom-built, A0 or
+  A2 invokes the read-only R0 Research & Reuse Scout.
+- Search in order: existing project through Graphify; native current platform
+  capability through Context7; official components/templates/registries;
+  maintained open source; reference implementation; then custom code.
+- Research is bounded to three rounds, five candidates, and three finalists.
+  R0 recommends but never installs, writes, approves, or creates resources. A
+  new dependency requires an isolated pilot, deterministic proof, security and
+  license review, and an A0/A2 decision.
+- Skip R0 for tiny fixes, copy, obvious local refactors, or an exact
+  implementation already fixed by approved architecture. Research is a gate,
+  not ceremony.
+
+## 5. Git and worktree discipline
 
 - One active writer maps to one bounded work item, branch, and isolated
   worktree. Do not implement directly on `main` or `dev`.
@@ -68,7 +84,7 @@ npm run build
 - Every verification packet names the base and candidate 40-character SHAs.
   Any edit invalidates evidence for the earlier SHA.
 
-## 5. Entire provenance
+## 6. Entire provenance
 
 - Preserve Entire CLI checkpointing and its Husky/host integrations. Entire is
   execution provenance and Git-linked recovery—not task, acceptance, project,
@@ -76,20 +92,20 @@ npm run build
 - Never remove or bypass Entire hooks without explicit human approval. Keep
   setup and maintenance procedure in a task-selected skill, not this kernel.
 
-## 6. Scope, capabilities, and communication
+## 7. Scope, capabilities, and communication
 
 - Role manifests are default-deny. A role writes only allowed paths and uses
   only declared skills, MCPs, tools, and GitHub capabilities.
-- A0 may coordinate A1–A10 and V0. A primary agent may report to A0, call its
+- A0 may coordinate A1–A10, V0, and R0. A primary agent may report to A0, call its
   registered read-only specialist, and submit to its designated verifier.
 - Standing workers do not direct one another. Specialists message only their
-  parent. Verifiers return structured results to A0 and never collaborate with
+  declared sponsor or sponsors. Verifiers return structured results to A0 and never collaborate with
   implementers.
 - Load progressively: this kernel, one domain capability, the matching skill,
   and at most one narrow specialist. Do not bulk-load skills, graph reports,
   histories, or unrelated evidence.
 
-## 7. Independent exact-SHA verification
+## 8. Independent exact-SHA verification
 
 - Substantive candidates require the designated clean-context, read-only
   verifier. Verifier input is limited to the task contract, acceptance criteria,
@@ -100,7 +116,7 @@ npm run build
 - Verdicts are `PASS`, `FAIL`, or `UNCERTAIN`. `FAIL` and `UNCERTAIN` block
   advancement. Verifiers never repair findings.
 
-## 8. Bounded remediation and circuit breakers
+## 9. Bounded remediation and circuit breakers
 
 - Defaults: three implementation cycles, three remediation cycles, two verifier
   cycles, and one specialist call.
@@ -114,7 +130,7 @@ npm run build
 - An OPEN worker stops and preserves evidence. Only A0 may authorize one
   HALF_OPEN probe after materially new evidence.
 
-## 9. Protected definition of good
+## 10. Protected definition of good
 
 - `.agents/evals/` defines versioned metrics, thresholds, public cases,
   protected held-out cases, fixtures, and verifier rubrics.
@@ -128,7 +144,7 @@ npm run build
   protected artifacts are unchanged, and cost/latency remains inside budget.
   Public gain with held-out regression is `EVAL_OVERFIT`.
 
-## 10. Production hard stops
+## 11. Production hard stops
 
 - Agents never merge to `main`, promote/deploy Production, mutate Production
   Convex data, alter Production WorkOS, activate live Stripe, send real customer
@@ -139,7 +155,7 @@ npm run build
   organization, role, customer, or ownership.
 - Human approval remains the release boundary.
 
-## 11. Project architecture authority
+## 12. Project architecture authority
 
 - Canonical target: Next.js 16, React 19, TypeScript, Tailwind 4, Motion, Zod,
   Convex, WorkOS AuthKit, Vercel, GitHub Actions, Vitest/Node tests, and Playwright.
@@ -152,7 +168,7 @@ npm run build
   radius 0, `#FF5A00` on charcoal, no emoji in product source, reduced motion,
   keyboard support, and a WCAG 2.2 AA target.
 
-## 12. Evidence and efficiency
+## 13. Evidence and efficiency
 
 - Always load the task contract, exact SHA, relevant Graphify result, and current
   circuit state. Load exact files, skills, external contracts, and specialist
@@ -163,7 +179,7 @@ npm run build
 - Test facts with code when code can prove them. Never certify capabilities from
   file presence or self-report alone.
 
-## 13. Zero theater and stop conditions
+## 14. Zero theater and stop conditions
 
 - Every persistent agent artifact needs an executable consumer: compiler,
   validator, policy adapter, evaluator, query, or CI gate. Remove dead labels,

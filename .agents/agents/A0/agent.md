@@ -85,7 +85,8 @@ BEGIN SEMANTIC CONTRACT
       "A8",
       "A9",
       "A10",
-      "V0"
+      "V0",
+      "R0"
     ],
     "may_not_message": [
       "S1",
@@ -158,6 +159,7 @@ BEGIN SEMANTIC CONTRACT
     "GitHub work coordination",
     "decomposition decisions",
     "agent routing",
+    "research and reuse gate dispatch",
     "worktree initiation",
     "WAIT decisions",
     "circuit authority",
@@ -167,19 +169,22 @@ BEGIN SEMANTIC CONTRACT
   "subagents": {
     "enabled": true,
     "maximum": 3,
-    "specialists": [],
+    "specialists": [
+      "R0"
+    ],
     "verifier": "V0"
   },
   "write_scope": {
     "allow": [
       ".agents/contracts/**",
       ".agents/evidence/**",
-      ".agents/runtime/circuits/**"
+      ".agents/runtime/CIRCUIT_STATE.json"
     ],
     "deny": [
       "src/**",
       "convex/**",
       ".github/workflows/**",
+      ".agents/evals/public/**",
       ".agents/evals/held-out/**",
       ".agents/evals/metrics/**",
       ".agents/evals/rubrics/**"

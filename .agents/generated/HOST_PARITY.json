@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "manifest_sha256": "a0c1a860285ce89d97cfa913b444ebdb2f0f7377481cd6e64b1a68b38a0df774",
+  "manifest_sha256": "134df630b14d14efcb5a5705e84ffdbb2fbf198343b8228b3550a14ac9802af9",
   "roles": {
     "standing_agents": 11,
     "verifiers": 11,
-    "specialists": 8
+    "specialists": 9
   },
   "universal_mcp": [
     "context7",
