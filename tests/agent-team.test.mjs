@@ -246,6 +246,17 @@ test("Graphify-first denies broad code discovery but permits known-file reads an
   assert.equal(policy("A1", { tool_name: "Bash", tool_input: { command: "rg \"session\" src --glob *.ts" } }, { exhaustionRecord, currentSha }).code, "GRAPHIFY");
 });
 
+test("Graphify performs real traversal, reverse impact, worktree, memory, and freshness checks", () => {
+  const result = spawnSync(process.execPath, [join(root, "scripts", "certification", "graphify.mjs")], { cwd: root, encoding: "utf8", timeout: 120_000 });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const report = JSON.parse(result.stdout);
+  assert.equal(report.passed, true);
+  assert.ok(report.checks.graph.nodes > 100);
+  assert.equal(report.checks.traversal.affected, true);
+  assert.equal(report.checks.memory_reflection, true);
+  assert.equal(report.checks.worktree_local, true);
+});
+
 test("OPEN circuits block workers and A0 can operate only when its own circuit permits", () => {
   const closed = JSON.parse(readFileSync(join(root, ".agents", "runtime", "CIRCUIT_STATE.json"), "utf8"));
   const opened = structuredClone(closed);
