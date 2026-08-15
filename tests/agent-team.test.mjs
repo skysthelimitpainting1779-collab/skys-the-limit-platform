@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { evaluatePreTool } from "../scripts/policy/core.mjs";
+import { evaluatePromotion, gradeCases } from "../scripts/evals/lib.mjs";
 
 const root = process.cwd();
 const ids = {
@@ -98,6 +99,46 @@ test("dangerous Git, protected branches, production effects, and protected eval 
   assert.equal(policy("A0", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Update File: .env.production\n*** End Patch" } }).code, "PRODUCTION");
   assert.equal(policy("A0", { tool_name: "Bash", tool_input: { command: "npx vercel promote https://preview.example" } }).code, "PRODUCTION");
   assert.equal(policy("A0", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Update File: .agents/evals/held-out/V10.json\n*** End Patch" } }).code, "PROTECTED_EVAL");
+  assert.equal(policy("A0", { tool_name: "apply_patch", tool_input: { command: "*** Begin Patch\n*** Update File: .agents/evals/public/cases.json\n*** End Patch" } }).code, "PROTECTED_EVAL");
+});
+
+test("quality contracts cover every role and adversarial release scenarios", () => {
+  const agents = JSON.parse(readFileSync(join(root, ".agents", "evals", "metrics", "agents.json"), "utf8"));
+  const verifiers = JSON.parse(readFileSync(join(root, ".agents", "evals", "metrics", "verifiers.json"), "utf8"));
+  const publicCases = JSON.parse(readFileSync(join(root, ".agents", "evals", "public", "cases.json"), "utf8")).cases;
+  const heldOutCases = JSON.parse(readFileSync(join(root, ".agents", "evals", "held-out", "cases.json"), "utf8")).cases;
+  assert.deepEqual(Object.keys(agents.subjects), ids.agents);
+  assert.deepEqual(Object.keys(verifiers.subjects), ids.verifiers);
+  for (const id of [...ids.agents, ...ids.verifiers]) assert.ok(publicCases.some((item) => item.subject === id), `${id} public case`);
+  for (const tag of ["obvious-pass", "obvious-fail", "subtle-fail", "insufficient-evidence", "adversarial-summary"]) {
+    assert.ok(heldOutCases.some((item) => item.subject === "V10" && item.tags.includes(tag)), `V10 ${tag}`);
+  }
+  assert.equal(verifiers.subjects.V6.false_pass_penalty, 100);
+  assert.equal(verifiers.subjects.V10.false_pass_penalty, 100);
+});
+
+test("deterministic grading catches false PASS and judge explanations cannot be empty", () => {
+  const cases = [
+    { id: "false-pass", subject: "V10", expected: { verdict: "FAIL" } },
+    { id: "judge-reason", subject: "A3", expected: { verdict: "PASS" } },
+  ];
+  const report = gradeCases(cases, [
+    { case_id: "false-pass", output: { verdict: "PASS" }, candidate_sha: "a".repeat(40) },
+    { case_id: "judge-reason", output: { verdict: "PASS" }, judge: { score: 0.95, reason: "" }, candidate_sha: "b".repeat(40) },
+  ]);
+  assert.equal(report.passed, 0);
+  assert.match(report.details[0].failures.join(" "), /expected "FAIL"/);
+  assert.match(report.details[1].failures.join(" "), /non-empty reason/);
+});
+
+test("promotion rejects held-out regression, protected-bar changes, flakiness, and budget gaming", () => {
+  const baseline = { target_rate: 0, public_rate: 1, held_out_rate: 1, latency_ms: 100, tool_calls: 10, tokens: 1000 };
+  const report = evaluatePromotion(baseline, { target_rate: 1, public_rate: 1, held_out_rate: 0.99, protected_diff_count: 1, flake_variance: 0.06, latency_ms: 112, tool_calls: 10, tokens: 1000 });
+  assert.equal(report.decision, "REJECT");
+  assert.ok(report.reasons.some((reason) => reason.includes("HELD_OUT_REGRESSION")));
+  assert.ok(report.reasons.includes("METRIC_TAMPERING"));
+  assert.ok(report.reasons.includes("FLAKY_EVAL"));
+  assert.ok(report.reasons.some((reason) => reason.includes("latency_ms")));
 });
 
 test("role write boundaries are mechanically enforced", () => {

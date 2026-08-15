@@ -100,7 +100,8 @@ function isMutatingCommand(command) {
 
 function protectedEvalTarget(target) {
   return matchesAny(target, [
-    ".agents/evals/metrics/**", ".agents/evals/held-out/**", ".agents/evals/rubrics/**",
+    ".agents/evals/QUALITY_CONSTITUTION.md",
+    ".agents/evals/metrics/**", ".agents/evals/public/**", ".agents/evals/held-out/**", ".agents/evals/rubrics/**",
     ".agents/evals/fixtures/protected/**", ".agents/evals/thresholds.json",
   ]);
 }

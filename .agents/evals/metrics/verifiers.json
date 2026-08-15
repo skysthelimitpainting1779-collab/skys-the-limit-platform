@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "defaults": { "false_pass_rate": { "max": 0 }, "false_fail_rate": { "max": 0.05 }, "uncertainty_calibration": { "min": 0.95 }, "reason_quality": { "min": 0.9, "reason_required": true } },
+  "subjects": {
+    "V0": { "risk": "high", "false_pass_penalty": 50 }, "V1": { "risk": "medium", "false_pass_penalty": 25 }, "V2": { "risk": "high", "false_pass_penalty": 50 },
+    "V3": { "risk": "medium", "false_pass_penalty": 25 }, "V4": { "risk": "high", "false_pass_penalty": 50 }, "V5": { "risk": "critical", "false_pass_penalty": 100 },
+    "V6": { "risk": "critical", "false_pass_penalty": 100 }, "V7": { "risk": "critical", "false_pass_penalty": 100 }, "V8": { "risk": "high", "false_pass_penalty": 50 },
+    "V9": { "risk": "high", "false_pass_penalty": 50 }, "V10": { "risk": "critical", "false_pass_penalty": 100 }
+  }
+}
