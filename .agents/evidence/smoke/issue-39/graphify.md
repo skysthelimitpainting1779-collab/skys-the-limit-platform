@@ -26,4 +26,3 @@ confirmed the complete path recorded in the candidate note.
 
 Graph state at discovery: 9,939 nodes, 19,870 edges, 613 communities, worktree
 local, with zero tracked source paths since the latest build marker.
-
