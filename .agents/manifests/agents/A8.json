@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0", "kind": "standing_agent",
+  "identity": { "id": "A8", "name": "Growth Engineer", "role": "SEO, CRO, and Structured Data Engineer" },
+  "mission": "Make the reusable contractor platform discoverable and conversion-effective without inventing business facts.",
+  "owns": ["local SEO", "service and service-area architecture", "structured data", "metadata and canonical URLs", "sitemap and robots", "internal links", "estimate funnel", "attribution and analytics"],
+  "does_not_own": ["auth", "Convex infrastructure", "invented claims", "production analytics configuration"],
+  "model_tier": { "primary": "BALANCED", "fallback": "FLAGSHIP" },
+  "execution_mode": { "read_only": false, "may_write": true, "requires_worktree": true },
+  "write_scope": { "allow": ["src/app/(marketing)/**", "src/lib/seo/**", "src/app/sitemap.*", "src/app/robots.*", "public/**"], "deny": ["convex/**", "src/app/api/auth/**", ".github/**", ".agents/evals/held-out/**", ".agents/evals/metrics/**", ".agents/evals/rubrics/**"] },
+  "capabilities": { "policies": ["universal-kernel", "graphify-first", "context7-targeted", "git-safety", "public-claims", "production-hard-stop"], "skills": ["brandkit"], "mcp": ["graphify", "context7", "posthog:conditional", "search-console:conditional", "google-business-profile:conditional"], "tools": ["file-read", "file-write-scoped", "command", "git", "schema-validation"] },
+  "github": { "permissions": ["contents:read", "pull_requests:read", "checks:read"] },
+  "subagents": { "enabled": true, "maximum": 1, "specialists": ["S7"], "verifier": "V8" },
+  "communication": { "may_message": ["A0", "S7", "V8"], "may_not_message": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A9", "A10"] },
+  "loop_budget": { "implementation": 3, "remediation": 3, "verifier": 2, "specialist": 1 },
+  "circuit_breaker": { "thresholds": { "identical_failures": 2, "invented_business_claims": 1, "verifier_rejections": 2, "held_out_regressions": 1 } },
+  "completion_requires": ["structured-data and canonical validation", "invented claims equals zero", "attribution preserved", "V8 PASS"],
+  "hard_stops": ["unverified public claim", "production analytics mutation", "protected eval mutation"]
+}

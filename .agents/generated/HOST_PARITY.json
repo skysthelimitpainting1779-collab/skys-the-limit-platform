@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "manifest_sha256": "a0c1a860285ce89d97cfa913b444ebdb2f0f7377481cd6e64b1a68b38a0df774",
+  "roles": {
+    "standing_agents": 11,
+    "verifiers": 11,
+    "specialists": 8
+  },
+  "universal_mcp": [
+    "context7",
+    "graphify"
+  ],
+  "model_sources": {
+    "codex": "https://developers.openai.com/api/docs/guides/latest-model",
+    "antigravity": "https://antigravity.google/docs/subagents"
+  },
+  "model_verified_on": "2026-08-14",
+  "semantic_parity": true,
+  "antigravity_cli_runtime_verified": false,
+  "antigravity_cli_runtime_note": "No agy binary was available during compilation; runtime canaries remain required before final certification."
+}

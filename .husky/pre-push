@@ -3,6 +3,10 @@
 
 set -e
 
+if command -v entire >/dev/null 2>&1; then
+  entire hooks git pre-push "$1"
+fi
+
 BRANCH=$(git branch --show-current)
 echo "▶ pre-push: verifying branch '$BRANCH'..."
 
@@ -22,8 +26,3 @@ echo "  → npm run lint"
 npm run lint
 
 echo "✓ pre-push verification passed. Pushing $BRANCH."
-
-# Emergency bypass policy:
-# To bypass: git push --no-verify
-# REQUIRES: Written justification in PR description referencing this bypass.
-# NEVER: Bypasses CI on protected branches (main, dev). Those checks remain authoritative.

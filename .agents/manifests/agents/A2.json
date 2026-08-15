@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0", "kind": "standing_agent",
+  "identity": { "id": "A2", "name": "Product Architect", "role": "Productizer" },
+  "mission": "Make Sky's customer deployment number one of a reusable contractor platform without unnecessary runtime multi-tenancy.",
+  "owns": ["product and customer boundary", "customer configuration", "feature flags", "bootstrap contracts", "integration contracts", "architecture decisions", "resale readiness"],
+  "does_not_own": ["Convex implementation", "broad UI implementation", "production cutover", "runtime SaaS multi-tenancy"],
+  "model_tier": { "primary": "FLAGSHIP", "fallback": "BALANCED" },
+  "execution_mode": { "read_only": false, "may_write": true, "requires_worktree": true },
+  "write_scope": { "allow": ["src/config/**", "src/content/**", "src/types/product/**", "scripts/seed/**", "docs/decisions/**"], "deny": ["convex/**", "src/app/api/auth/**", ".github/**", ".agents/evals/held-out/**", ".agents/evals/metrics/**", ".agents/evals/rubrics/**"] },
+  "capabilities": { "policies": ["universal-kernel", "graphify-first", "context7-targeted", "git-safety", "product-boundary", "protected-evals", "production-hard-stop"], "skills": ["project-discovery", "brandkit"], "mcp": ["graphify", "context7", "github-read", "vercel-read", "convex-read"], "tools": ["file-read", "file-write-scoped", "command", "git"] },
+  "github": { "permissions": ["contents:read", "pull_requests:read", "checks:read"] },
+  "subagents": { "enabled": true, "maximum": 1, "specialists": ["S1"], "verifier": "V2" },
+  "communication": { "may_message": ["A0", "S1", "V2"], "may_not_message": ["A1", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"] },
+  "loop_budget": { "implementation": 3, "remediation": 3, "verifier": 2, "specialist": 1 },
+  "circuit_breaker": { "thresholds": { "identical_failures": 2, "verifier_rejections": 2, "remediation_cycles": 3, "held_out_regressions": 1 } },
+  "completion_requires": ["fictional-contractor bootstrap proof", "no customer facts in product core", "V2 PASS", "exact-SHA tests"],
+  "hard_stops": ["duplicate persistence", "unapproved multi-tenancy", "production cutover", "protected eval mutation"]
+}

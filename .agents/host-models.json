@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "verified_on": "2026-08-14",
+  "maximum_age_days": 60,
+  "sources": {
+    "codex": "https://developers.openai.com/api/docs/guides/latest-model",
+    "antigravity": "https://antigravity.google/docs/subagents"
+  },
+  "codex": {
+    "allowed": ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna"],
+    "tiers": { "FLAGSHIP": "gpt-5.6-sol", "BALANCED": "gpt-5.6-terra", "EFFICIENT": "gpt-5.6-luna" },
+    "reasoning": { "FLAGSHIP": "high", "BALANCED": "medium", "EFFICIENT": "low" }
+  },
+  "antigravity": {
+    "allowed": ["pro", "inherit", "flash"],
+    "tiers": { "FLAGSHIP": "pro", "BALANCED": "inherit", "EFFICIENT": "flash" }
+  }
+}

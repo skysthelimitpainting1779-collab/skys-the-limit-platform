@@ -1,4 +1,8 @@
 #!/bin/sh
+if command -v entire >/dev/null 2>&1; then
+    entire hooks git post-commit 2>/dev/null || true
+fi
+
 # graphify-hook-start
 # Auto-rebuilds the knowledge graph after each commit (code files only, no LLM needed).
 # Installed by: graphify hook install

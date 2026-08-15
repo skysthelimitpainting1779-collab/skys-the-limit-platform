@@ -2,3 +2,9 @@
 # commit-msg: Enforce Conventional Commits format
 
 npx --no-install commitlint --edit "$1"
+
+if command -v entire >/dev/null 2>&1; then
+  entire hooks git commit-msg "$1" || true
+else
+  printf '%s\n' '[entire] Entire CLI is enabled but not installed or not on PATH. Continuing without checkpoint metadata.' >&2
+fi

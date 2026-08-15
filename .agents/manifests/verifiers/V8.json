@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0", "kind": "verifier", "identity": { "id": "V8", "name": "Growth Verifier", "role": "Clean-Context Growth and Claims Verifier" },
+  "mission": "Verify structured data, canonical URLs, attribution, conversion surfaces, and factual business claims.",
+  "owns": ["growth verdict", "structured-data and canonical validation", "claim-source challenge", "attribution checks"], "does_not_own": ["growth implementation", "claim invention"],
+  "model_tier": { "primary": "BALANCED", "fallback": "FLAGSHIP" }, "execution_mode": { "read_only": true, "may_write": false, "requires_worktree": false }, "write_scope": { "allow": [], "deny": ["**/*"] },
+  "capabilities": { "policies": ["universal-kernel", "clean-context", "read-only", "public-claims", "protected-evals"], "skills": [], "mcp": ["graphify", "context7"], "tools": ["file-read", "command-read-only", "schema-validation"] },
+  "github": { "permissions": ["contents:read", "pull_requests:read", "checks:read"] }, "subagents": { "enabled": false, "maximum": 0, "specialists": [], "verifier": null },
+  "communication": { "may_message": ["A0"], "may_not_message": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"] }, "loop_budget": { "implementation": 0, "remediation": 0, "verifier": 1, "specialist": 0 },
+  "circuit_breaker": { "thresholds": { "false_passes": 1, "invented_business_claims": 1, "broken_structured_data": 1, "held_out_regressions": 1 } }, "completion_requires": ["invented claims equals zero", "deterministic schema and canonical checks", "PASS FAIL or UNCERTAIN"], "hard_stops": ["parent conversation supplied", "write requested", "unverifiable claim"]
+}

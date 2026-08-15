@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "node",
+      "args": [
+        "scripts/mcp/graphify-server.mjs"
+      ],
+      "cwd": "."
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "cwd": "."
+    }
+  }
+}

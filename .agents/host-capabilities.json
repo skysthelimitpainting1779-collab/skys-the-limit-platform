@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "mappings": {
+    "graphify": { "mode": "workspace_mcp", "server": "graphify" },
+    "context7": { "mode": "workspace_mcp", "server": "context7" },
+    "github": { "mode": "connected_mcp_or_cli", "server": "github" },
+    "vercel": { "mode": "connected_mcp_or_cli", "server": "vercel" },
+    "convex": { "mode": "connected_mcp_or_cli", "server": "convex" },
+    "workos": { "mode": "connected_mcp", "server": "workos" },
+    "playwright": { "mode": "connected_mcp", "server": "playwright" },
+    "figma": { "mode": "conditional_connected_mcp", "server": "figma" },
+    "posthog": { "mode": "conditional_connected_mcp", "server": "posthog" },
+    "search-console": { "mode": "conditional_connected_mcp", "server": "search-console" },
+    "google-business-profile": { "mode": "conditional_connected_mcp", "server": "google-business-profile" }
+  }
+}
