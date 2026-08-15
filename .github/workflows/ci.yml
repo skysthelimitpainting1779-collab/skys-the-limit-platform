@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, dev]
   push:
-    branches: [dev, 'infra/**', 'feature/**', 'fix/**', 'docs/**', 'agent/**']
+    branches: [dev, 'infra/**', 'feature/**', 'feat/**', 'fix/**', 'docs/**', 'agent/**']
 
 permissions:
   contents: read
@@ -64,11 +64,11 @@ jobs:
         run: |
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
           echo "Branch: $BRANCH"
-          if [[ "$BRANCH" =~ ^(main|dev|infra/|feature/|fix/|docs/|agent/|hotfix/|release/) ]]; then
+          if [[ "$BRANCH" =~ ^(main|dev|infra/|feature/|feat/|fix/|docs/|agent/|hotfix/|release/) ]]; then
             echo "✓ Branch name follows convention"
           else
             echo "✗ Branch '$BRANCH' does not follow naming convention"
-            echo "  Allowed prefixes: main, dev, infra/, feature/, fix/, docs/, agent/, hotfix/, release/"
+            echo "  Allowed prefixes: main, dev, infra/, feature/, feat/, fix/, docs/, agent/, hotfix/, release/"
             exit 1
           fi
 
