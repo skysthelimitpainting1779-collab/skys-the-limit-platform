@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:lead": "vitest run src/__tests__/lead-intake.test.ts src/__tests__/convex-lead-validation.test.ts",
     "test:e2e:lead": "node scripts/verify-lead-intake-e2e.mjs",
+    "test:mutation:lead-proof": "stryker run stryker.pilot.config.mjs",
     "graph:query": "graphify query",
     "graph:update": "graphify update .",
     "graph:certify": "node scripts/certification/graphify.mjs",
@@ -27,16 +28,23 @@
     "mcp:certify": "node scripts/certification/mcp.mjs",
     "ci:actionlint": "node scripts/oss/actionlint.mjs",
     "ci:zizmor": "node scripts/oss/zizmor.mjs",
+    "security:semgrep": "node scripts/oss/semgrep.mjs",
+    "security:osv": "node scripts/oss/osv.mjs",
+    "security:gitleaks": "node scripts/oss/gitleaks.mjs",
     "architecture:check": "dependency-cruiser --config .dependency-cruiser.mjs --output-type err-long -- src convex",
+    "ast:query": "ast-grep",
+    "docs:links": "node scripts/oss/lychee.mjs",
     "test:browser": "playwright test",
+    "test:load:estimate": "node scripts/oss/k6-local.mjs",
     "oss:certify": "node scripts/certification/oss-pilots.mjs",
+    "oss:advanced:certify": "node scripts/certification/advanced-pilots.mjs",
     "host:compile": "node scripts/agents/host-compiler.mjs compile",
     "host:check": "node scripts/agents/host-compiler.mjs check",
     "agents:parity": "node scripts/agents/host-compiler.mjs parity",
     "agents:circuit": "node scripts/policy/circuit-cli.mjs",
     "reuse:certify": "node scripts/certification/reuse.mjs",
     "verify": "npm run verify:skills && npm run verify:env && npm run verify:assets && npm run oss:certify && npm run test:browser && npm run lint && npm run typecheck && npm test && npm run build",
-    "verify:branch": "npm run agents:validate && npm run host:check && npm run agents:parity && npm run graph:certify && npm run context7:certify && npm run mcp:certify && npm run reuse:certify && npm run agents:eval:validate && npm run agents:eval:integrity && npm run agents:canary:check && npm run oss:certify && npm run agents:certify && npm run lint && npm run typecheck && npm test",
+    "verify:branch": "npm run agents:validate && npm run host:check && npm run agents:parity && npm run graph:certify && npm run context7:certify && npm run mcp:certify && npm run reuse:certify && npm run agents:eval:validate && npm run agents:eval:integrity && npm run agents:canary:check && npm run oss:certify && npm run oss:advanced:certify && npm run agents:certify && npm run lint && npm run typecheck && npm test",
     "verify:skills": "node scripts/validate-skills.mjs",
     "skills:validate": "node scripts/validate-skills.mjs",
     "verify:env": "node scripts/validate-environment.mjs",
@@ -59,12 +67,15 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@ast-grep/cli": "0.45.1",
     "@axe-core/playwright": "4.13.0",
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
     "@edge-runtime/vm": "^5.0.0",
     "@modelcontextprotocol/inspector": "2.2.0",
     "@playwright/test": "1.62.1",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.43",
     "@types/react": "^19",
@@ -73,6 +84,7 @@
     "dependency-cruiser": "18.2.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "fast-check": "4.9.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "tailwindcss": "^4",
@@ -81,6 +93,7 @@
   },
   "overrides": {
     "postcss": "^8.5.25",
+    "qs": "6.15.3",
     "sharp": "^0.35.0"
   },
   "engines": {
@@ -93,6 +106,7 @@
     ]
   },
   "allowScripts": {
+    "@ast-grep/cli@0.45.1": false,
     "esbuild@0.27.0": true,
     "unrs-resolver@1.12.2": true,
     "@modelcontextprotocol/inspector": false

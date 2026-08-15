@@ -41,10 +41,15 @@ export async function ensureTool(name) {
 
   const archivePath = join(installDir, asset.name);
   writeFileSync(archivePath, bytes);
-  const extraction = spawnSync("tar", ["-xf", archivePath, "-C", installDir], { encoding: "utf8" });
-  if (extraction.status !== 0 || !existsSync(binaryPath)) {
-    rmSync(installDir, { recursive: true, force: true });
-    throw new Error(`Unable to extract ${asset.name}: ${extraction.stderr || extraction.stdout}`);
+  if (asset.archive === "raw") {
+    writeFileSync(binaryPath, bytes);
+    rmSync(archivePath, { force: true });
+  } else {
+    const extraction = spawnSync("tar", ["-xf", archivePath, "-C", installDir], { encoding: "utf8" });
+    if (extraction.status !== 0 || !existsSync(binaryPath)) {
+      rmSync(installDir, { recursive: true, force: true });
+      throw new Error(`Unable to extract ${asset.name}: ${extraction.stderr || extraction.stdout}`);
+    }
   }
   if (process.platform !== "win32") chmodSync(binaryPath, 0o755);
   return { binaryPath, tool, cache: "MISS" };

@@ -16,6 +16,10 @@
     "radix": { "package": null, "installed": null, "library_id": "/websites/radix-ui_primitives", "source_reputation": "High" },
     "playwright": { "package": "@playwright/test", "installed": "1.62.1", "library_id": "/microsoft/playwright", "source_reputation": "High" },
     "axe_core": { "package": "@axe-core/playwright", "installed": "4.13.0", "library_id": "/dequelabs/axe-core", "source_reputation": "High" },
+    "fast_check": { "package": "fast-check", "installed": "4.9.0", "library_id": "/dubzzz/fast-check", "source_reputation": "High" },
+    "stryker": { "package": "@stryker-mutator/core", "installed": "10.0.0", "library_id": "/stryker-mutator/stryker-js", "source_reputation": "High" },
+    "semgrep": { "package": null, "installed": "1.173.0", "library_id": "/semgrep/semgrep-docs", "source_reputation": "High" },
+    "k6": { "package": null, "installed": "2.2.0", "library_id": "/websites/grafana_k6", "source_reputation": "High" },
     "stripe": { "package": null, "installed": null, "library_id": "/websites/stripe", "source_reputation": "High" },
     "resend": { "package": null, "installed": null, "library_id": "/websites/resend", "source_reputation": "High" },
     "posthog": { "package": null, "installed": null, "library_id": "/posthog/posthog.com", "source_reputation": "High" }
@@ -92,6 +96,38 @@
       "contract": "Keep workflow and job permissions least-privilege, disable checkout credential persistence when pushes are unnecessary, and pass event values through step env instead of interpolating attacker-controlled contexts directly into shell scripts.",
       "source": "https://docs.github.com/en/actions/reference/security/secure-use",
       "applies_to": [".github/workflows/**"]
+    },
+    {
+      "id": "fast-check-deterministic-properties",
+      "library_id": "/dubzzz/fast-check",
+      "question": "How should asynchronous properties run deterministically under Vitest with explicit run counts and seeds?",
+      "contract": "Await fc.assert around fc.asyncProperty and set explicit numRuns and seed values so failures are reproducible and shrinking evidence is stable.",
+      "source": "https://github.com/dubzzz/fast-check/blob/main/website/docs/tutorials/setting-up-your-test-environment/property-based-testing-manual-setup.md",
+      "applies_to": ["src/__tests__/*.property.test.ts"]
+    },
+    {
+      "id": "stryker-targeted-vitest-mutation",
+      "library_id": "/stryker-mutator/stryker-js",
+      "question": "How should a targeted StrykerJS mutation pilot use Vitest when related-test discovery cannot resolve aliased imports?",
+      "contract": "Use the official Vitest runner plugin, set vitest.related=false when related discovery finds no tests, target exact mutate globs, and configure JSON output in the config file.",
+      "source": "https://github.com/stryker-mutator/stryker-js/blob/master/packages/vitest-runner/schema/vitest-runner-options.json",
+      "applies_to": ["stryker.pilot.config.mjs", "src/lib/leads/intakeProof.ts"]
+    },
+    {
+      "id": "semgrep-local-security-rules",
+      "library_id": "/semgrep/semgrep-docs",
+      "question": "How should local Semgrep rules produce machine-readable blocking results without a hosted account?",
+      "contract": "Run semgrep scan against a local YAML config with --metrics=off, --json, and --error; findings return exit 1 and scan errors remain visible in structured output.",
+      "source": "https://github.com/semgrep/semgrep-docs/blob/main/docs/customize-semgrep-ce.mdx",
+      "applies_to": [".semgrep.yml", "scripts/oss/semgrep.mjs"]
+    },
+    {
+      "id": "k6-expected-validation-response",
+      "library_id": "/websites/grafana_k6",
+      "question": "How should a local k6 validation-path test classify an intentional HTTP 400 while retaining http_req_failed thresholds?",
+      "contract": "Use http.setResponseCallback(http.expectedStatuses(400)) so the intentional validation rejection is an expected response, then gate checks, failure rate, and p95 duration.",
+      "source": "https://grafana.com/docs/k6/latest/javascript-api/k6-http/expected-statuses/",
+      "applies_to": ["tests/load/estimate-validation.js", "scripts/oss/k6-local.mjs"]
     }
   ]
 }

@@ -117,7 +117,10 @@ jobs:
           npm run mcp:certify
 
       - name: Run adopted deterministic OSS gates
-        run: npm run oss:certify
+        run: |
+          npm run oss:certify
+          npm run oss:advanced:certify
+          npm run docs:links
 
       - name: Run Chromium and axe critical-route proof
         run: npm run test:browser

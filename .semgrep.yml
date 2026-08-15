@@ -1,0 +1,18 @@
+rules:
+  - id: stl-caller-controlled-organization
+    languages: [typescript]
+    severity: ERROR
+    message: Sensitive organization identity must come from authenticated server context, not request JSON.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              const { ..., orgId: $ORG, ... } = await $REQUEST.json()
+          - pattern: |
+              const { ..., organizationId: $ORG, ... } = await $REQUEST.json()
+
+  - id: stl-caller-controlled-role
+    languages: [typescript]
+    severity: ERROR
+    message: Authorization role must come from authenticated server context, not request JSON.
+    pattern: |
+      const { ..., role: $ROLE, ... } = await $REQUEST.json()
