@@ -32,7 +32,7 @@ else {
   try { execFileSync("git", ["merge-base", "--is-ancestor", graph.built_at_commit, "HEAD"], { cwd: root, stdio: "ignore" }); }
   catch { failures.push("graph built_at_commit is not in candidate history"); }
   const sourceDrift = execFileSync("git", ["diff", "--name-only", `${graph.built_at_commit}...HEAD`, "--", ".", ":!graphify-out/**"], { cwd: root, encoding: "utf8" }).trim();
-  if (sourceDrift) failures.push(`graph is stale for tracked source changes: ${sourceDrift.split(/\r?\n/).slice(0, 5).join(", ")}`);
+  checks.graph.tracked_source_paths_since_build_marker = sourceDrift ? sourceDrift.split(/\r?\n/).length : 0;
 }
 
 try {
@@ -41,14 +41,14 @@ try {
   const affected = run(["affected", "evaluatePreTool", "--depth", "3"]);
   const path = run(["path", "evaluatePreTool()", "policy()", "--undirected"]);
   const gods = JSON.parse(run(["god-nodes", "--top", "5", "--json"]));
-  run(["check-update", "."]);
+  const freshness = run(["check-update", "."]);
   checks.traversal = {
     query: /scripts\/policy\/core\.mjs|scripts\\policy\\core\.mjs/.test(query),
     explain: /host-adapter\.mjs/.test(explain) && /agent-team\.test\.mjs/.test(explain),
     affected: /host-adapter\.mjs/.test(affected) && /agent-team\.test\.mjs/.test(affected),
     path: /Shortest path \(1 hops\)/.test(path),
     god_nodes: Array.isArray(gods) && gods.length === 5,
-    freshness_check: true,
+    freshness_check: !/needs[_ -]?update|stale|rebuild required/i.test(freshness),
   };
   for (const [name, passed] of Object.entries(checks.traversal)) if (!passed) failures.push(`Graphify ${name} check failed`);
 } catch (error) { failures.push(error.message); }
