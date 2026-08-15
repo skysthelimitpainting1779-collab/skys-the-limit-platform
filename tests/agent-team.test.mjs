@@ -8,6 +8,7 @@ import { evaluatePromotion, gradeCases } from "../scripts/evals/lib.mjs";
 import { sha256, validatePacket } from "../scripts/verifiers/packet-lib.mjs";
 import { transitionCircuit } from "../scripts/policy/circuit-state.mjs";
 import { validateResearchPacket } from "../scripts/reuse/validate-packet.mjs";
+import { validateGraphData } from "../scripts/certification/validate-graph-file.mjs";
 
 const root = process.cwd();
 const ids = {
@@ -255,6 +256,15 @@ test("Graphify performs real traversal, reverse impact, worktree, memory, and fr
   assert.equal(report.checks.traversal.affected, true);
   assert.equal(report.checks.memory_reflection, true);
   assert.equal(report.checks.worktree_local, true);
+});
+
+test("the large-file gate admits only a bounded valid canonical Graphify JSON", () => {
+  const graph = JSON.parse(readFileSync(join(root, "graphify-out", "graph.json"), "utf8"));
+  assert.deepEqual(validateGraphData(graph, 13 * 1024 * 1024), []);
+  assert.ok(validateGraphData({ nodes: [], links: [], built_at_commit: "HEAD" }, 26 * 1024 * 1024).length >= 4);
+  const hook = readFileSync(join(root, ".husky", "pre-commit"), "utf8");
+  assert.match(hook, /graphify-out\/graph\.json/);
+  assert.match(hook, /validate-graph-file\.mjs/);
 });
 
 test("OPEN circuits block workers and A0 can operate only when its own circuit permits", () => {
