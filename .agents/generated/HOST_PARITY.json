@@ -16,6 +16,20 @@
   },
   "model_verified_on": "2026-08-14",
   "semantic_parity": true,
-  "antigravity_cli_runtime_verified": false,
-  "antigravity_cli_runtime_note": "No agy binary was available during compilation; runtime canaries remain required before final certification."
+  "host_runtime": {
+    "codex": {
+      "version": "0.145.0",
+      "runtime_verified": true,
+      "result": ".agents/evals/results/codex-portable-kernel-v1.1.json",
+      "note": "Native read-only canary improved from 9/10 to 10/10 with the portable kernel."
+    },
+    "antigravity": {
+      "version": "1.1.13",
+      "runtime_verified": true,
+      "result": ".agents/evals/results/antigravity-portable-kernel-v1.1.json",
+      "note": "Native sandboxed canary improved from 9/10 to 10/10; A0 was the only workspace root and invoked V0 read-only. Desktop screenshot capture remains blocked by Windows UI Automation error 0x80004002."
+    }
+  },
+  "antigravity_cli_runtime_verified": true,
+  "antigravity_cli_runtime_note": "Native sandboxed canary improved from 9/10 to 10/10; A0 was the only workspace root and invoked V0 read-only. Desktop screenshot capture remains blocked by Windows UI Automation error 0x80004002."
 }

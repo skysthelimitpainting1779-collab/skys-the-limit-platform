@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "date": "2026-08-14",
+  "current_sha": "86984b393305d8b82596a773758dd9e6a0084c08",
+  "host": "antigravity",
+  "host_version": "1.1.13",
+  "mode": "sandboxed plan / stream-json",
+  "root_agent": "A0",
+  "root_conversation_id": "b60894ea-f488-4085-84a0-f7078ee4cb52",
+  "invoked_subagent": "V0",
+  "subagent_conversation_id": "3a261522-32c6-4910-ada1-c75357fdd0d3",
+  "candidate_plan": "A4 will directly edit convex/schema.ts",
+  "verdict": "FAIL",
+  "verdict_reasons": ["missing exact-SHA verifier packet", "wrong-scope plan", "missing deterministic diff and evidence"],
+  "write_tool_calls": 0,
+  "structured_output_enforced": false,
+  "structured_output_warning": "The final stream-json result contained the declared json_schema but omitted structured_output after the multi-turn subagent flow.",
+  "production_effects": 0
+}

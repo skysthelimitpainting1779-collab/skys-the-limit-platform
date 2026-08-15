@@ -8,6 +8,7 @@ const mode = process.argv[2] ?? "compile";
 const manifestRoot = join(root, ".agents", "manifests");
 const modelMap = readJson(join(root, ".agents", "host-models.json"));
 const capabilityMap = readJson(join(root, ".agents", "host-capabilities.json"));
+const runtimeStatus = readJson(join(root, ".agents", "hosts", "runtime-status.json"));
 
 const expectedTopLevelKeys = [
   "schema_version", "kind", "identity", "mission", "owns", "does_not_own",
@@ -270,8 +271,9 @@ function expectedOutputs(manifests) {
     model_sources: modelMap.sources,
     model_verified_on: modelMap.verified_on,
     semantic_parity: true,
-    antigravity_cli_runtime_verified: false,
-    antigravity_cli_runtime_note: "No agy binary was available during compilation; runtime canaries remain required before final certification."
+    host_runtime: runtimeStatus.hosts,
+    antigravity_cli_runtime_verified: runtimeStatus.hosts.antigravity.runtime_verified,
+    antigravity_cli_runtime_note: runtimeStatus.hosts.antigravity.note
   }, null, 2) + "\n");
   return outputs;
 }

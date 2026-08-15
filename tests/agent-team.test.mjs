@@ -84,6 +84,15 @@ test("generated Codex and Antigravity profiles are exact and semantically drift-
   }
 });
 
+test("tracked host runtime status replaces compile-time environment guesses", () => {
+  const status = JSON.parse(readFileSync(join(root, ".agents", "hosts", "runtime-status.json"), "utf8"));
+  const parity = JSON.parse(readFileSync(join(root, ".agents", "generated", "HOST_PARITY.json"), "utf8"));
+  assert.equal(status.hosts.codex.runtime_verified, true);
+  assert.equal(status.hosts.antigravity.runtime_verified, true);
+  assert.deepEqual(parity.host_runtime, status.hosts);
+  assert.equal(parity.antigravity_cli_runtime_verified, true);
+});
+
 test("generated Codex TOML parses with the standard parser", () => {
   const script = [
     "import pathlib,tomllib",

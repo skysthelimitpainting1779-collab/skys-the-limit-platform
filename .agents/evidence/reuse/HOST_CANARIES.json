@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0.0",
+  "research_id": "R0-HOST-CANARIES-2026-08-14",
+  "task": "Measure critical instruction-surface behavior in Codex and Antigravity against a zero-injection control",
+  "date": "2026-08-14",
+  "current_sha": "86984b393305d8b82596a773758dd9e6a0084c08",
+  "problem": "Prove that host-native instruction loading changes behavior without adding another paid evaluation provider or claiming success from configuration presence.",
+  "required_capabilities": ["authenticated native host execution", "zero-injection control", "JSON Schema output", "same cases in both hosts", "token and latency evidence", "no write or Production effects"],
+  "existing_project_solution": {
+    "found": true,
+    "evidence": ["Codex CLI 0.145.0 provides ephemeral read-only exec with output schemas", "Antigravity CLI 1.1.13 provides sandboxed plan-mode print with JSON Schema and stream-json", "the repository already contains native generated adapters and an existing safe subprocess pattern to adapt"]
+  },
+  "native_options": [
+    { "name": "Codex exec", "source": "installed authenticated Codex CLI", "fit": "complete for zero-injection and AGENTS.md surfaces" },
+    { "name": "Antigravity print mode", "source": "installed authenticated Antigravity CLI", "fit": "complete for zero-injection, native kernel, agent discovery, and subagent stream evidence" }
+  ],
+  "official_ecosystem_options": [
+    { "name": "Promptfoo", "source": "open-source evaluation runner", "fit": "deferred to the ordered OSS pilot; unnecessary for the first native canary" }
+  ],
+  "oss_candidates": [],
+  "finalists": [
+    {
+      "name": "Small repository runner over native authenticated host CLIs",
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Yes; both hosts ran the same ten cases against zero injection and the portable kernel.", "unnecessary_features": "No provider abstraction, dashboard, task database, or model judge." },
+        "project_fit": { "compatible_with_current_stack": "Uses existing Codex, Antigravity, AGENTS.md, GEMINI.md, and generated rules.", "integration_surface": "One case file, one runner, one deterministic result checker.", "architecture_alignment": "Host-native execution remains authoritative." },
+        "maturity": { "release_recency": "Codex 0.145.0 and Antigravity 1.1.13 were probed on 2026-08-14.", "maintenance_activity": "Both host CLIs are actively maintained.", "issue_health": "Official host issue trackers are available.", "documentation_quality": "Local help and official Antigravity CLI documentation cover the invoked flags.", "tests": "Ten same-case canaries plus A0→V0 subagent smoke.", "production_usage_signal": "Runs only in temporary repositories and sandboxed/read-only modes." },
+        "security": { "security_history": "No bypass flags are used.", "permissions_required": "Read-only Codex sandbox and Antigravity sandboxed plan mode.", "secret_handling": "Uses existing authenticated sessions without reading credentials.", "network_access": "Only the existing host inference services.", "supply_chain_risk": "No new dependency." },
+        "ownership": { "license": "Repository-owned runner around installed tools.", "maintainer_bus_factor": "Same ownership as the host compiler.", "dependency_depth": "Zero new npm dependencies.", "upgrade_cost": "Revalidate CLI flags and output envelopes on version change.", "lock_in": "Each host adapter is narrow and explicit.", "exit_strategy": "Replace one adapter or wrap it with a future accepted evaluation runner." },
+        "operations": { "runtime_cost": "Two inference calls per host for a full live comparison.", "infrastructure_required": "Temporary Git repositories only.", "hosted_service_required": "Existing Codex and Antigravity accounts.", "production_effects": "None.", "observability": "JSON results include versions, exact SHA, case grades, latency, and Antigravity usage." },
+        "engineering_cost": { "install_cost": "None.", "adaptation_cost": "Small cross-platform launcher resolution and host envelope parsing.", "custom_build_cost": "Bounded; no generic evaluation framework.", "long_term_maintenance_cost": "Low if kept to native host canaries." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Not required; local help and official host docs are authoritative.", "machine_verifiable": "Yes; schema output and deterministic grading.", "deterministic_testability": "Grading is deterministic; model behavior is recorded as the evaluated subject." }
+      }
+    }
+  ],
+  "recommended_decision": "ADAPT",
+  "research_status": "COMPLETE",
+  "selected_candidate": {
+    "name": "Native Codex and Antigravity canary runner",
+    "source": "scripts/evals/run-host-canaries.mjs",
+    "version_or_ref": "1.1.0",
+    "license": "repository-owned",
+    "maintenance_status": "live-piloted on both installed hosts",
+    "reason": ["no new paid provider", "same protected cases across both hosts", "causal zero-injection comparison", "native sandbox and schema surfaces", "measured token and latency evidence"]
+  },
+  "rejected_candidates": [
+    { "name": "Configuration-presence claim", "reason": "cannot prove causal instruction adherence" },
+    { "name": "Custom inference provider", "reason": "violates the no-new-paid-provider constraint and would not test the installed hosts" },
+    { "name": "Dangerous bypass runner", "reason": "unnecessary because both hosts support sandboxed or read-only execution" }
+  ],
+  "risks": ["live model results can vary and must be rerun for final exact-SHA evidence", "Antigravity 1.1.13 omitted structured_output after a multi-turn A0→V0 stream-json flow", "desktop screenshot capture remains blocked by Windows UI Automation error 0x80004002"],
+  "proof_required_before_adoption": ["Codex candidate 10/10 with causal lift and zero regression", "Antigravity candidate 10/10 with causal lift and zero regression", "Antigravity discovers only A0 as workspace root", "A0 invokes V0 with no write tool calls"],
+  "rollback_or_exit_strategy": ["remove the native canary runner and result checker", "retain semantic host adapters", "adopt a later OSS evaluation runner only after its isolated pilot outperforms this baseline"],
+  "rounds": [
+    { "round": 1, "scope": "existing project and installed hosts", "material_gain": "found reusable native CLIs, generated adapters, and a safe subprocess pattern" },
+    { "round": 2, "scope": "official Antigravity CLI documentation and live pilots", "material_gain": "verified current agent paths, project-scoped discovery, JSON Schema, stream-json, and A0→V0 invocation" }
+  ]
+}
