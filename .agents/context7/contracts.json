@@ -14,7 +14,8 @@
     "github_actions": { "package": null, "installed": null, "library_id": "/websites/github_en_actions", "source_reputation": "High" },
     "shadcn": { "package": null, "installed": null, "library_id": "/shadcn-ui/ui", "source_reputation": "High" },
     "radix": { "package": null, "installed": null, "library_id": "/websites/radix-ui_primitives", "source_reputation": "High" },
-    "playwright": { "package": null, "installed": null, "library_id": "/microsoft/playwright", "source_reputation": "High" },
+    "playwright": { "package": "@playwright/test", "installed": "1.62.1", "library_id": "/microsoft/playwright", "source_reputation": "High" },
+    "axe_core": { "package": "@axe-core/playwright", "installed": "4.13.0", "library_id": "/dequelabs/axe-core", "source_reputation": "High" },
     "stripe": { "package": null, "installed": null, "library_id": "/websites/stripe", "source_reputation": "High" },
     "resend": { "package": null, "installed": null, "library_id": "/websites/resend", "source_reputation": "High" },
     "posthog": { "package": null, "installed": null, "library_id": "/posthog/posthog.com", "source_reputation": "High" }
@@ -72,9 +73,25 @@
       "id": "vitest-4-default-exclusions",
       "library_id": "/vitest-dev/vitest/v4.1.6",
       "question": "In Vitest 4 configuration, how do custom test.exclude patterns preserve the default exclusions while excluding a Node-native test file?",
-      "contract": "Vitest 4 matches .test.mjs by default. A custom exclude replaces the defaults, so extend configDefaults.exclude before adding tests/agent-team.test.mjs, which is executed by node --test instead.",
+      "contract": "Vitest 4 matches .test.mjs and .spec.ts by default. A custom exclude replaces the defaults, so extend configDefaults.exclude before adding the Node-native agent test and Playwright-owned tests/e2e suite.",
       "source": "https://github.com/vitest-dev/vitest/blob/v4.1.6/docs/config/exclude.md",
-      "applies_to": ["vitest.config.mts", "tests/agent-team.test.mjs"]
+      "applies_to": ["vitest.config.mts", "tests/agent-team.test.mjs", "tests/e2e/**"]
+    },
+    {
+      "id": "playwright-axe-browser-proof",
+      "library_id": "/microsoft/playwright",
+      "question": "What is the current Playwright Test contract for a local webServer, Chromium-only CI installation, trace capture, and axe-based accessibility checks?",
+      "contract": "Use Playwright Test webServer for the isolated local application, install only Chromium in CI, keep retries at zero so flakiness remains visible, retain traces on failure, and run @axe-core/playwright AxeBuilder against WCAG-tagged rules.",
+      "source": "https://github.com/microsoft/playwright/blob/main/docs/src/best-practices-js.md",
+      "applies_to": ["playwright.config.ts", "tests/e2e/**", ".github/workflows/**"]
+    },
+    {
+      "id": "github-actions-untrusted-input",
+      "library_id": "/websites/github_en_actions",
+      "question": "What is the current GitHub Actions contract for least-privilege checkout and using untrusted event values in shell steps?",
+      "contract": "Keep workflow and job permissions least-privilege, disable checkout credential persistence when pushes are unnecessary, and pass event values through step env instead of interpolating attacker-controlled contexts directly into shell scripts.",
+      "source": "https://docs.github.com/en/actions/reference/security/secure-use",
+      "applies_to": [".github/workflows/**"]
     }
   ]
 }

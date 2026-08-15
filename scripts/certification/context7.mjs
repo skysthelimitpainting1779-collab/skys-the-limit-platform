@@ -8,7 +8,7 @@ const contracts = read(".agents/context7/contracts.json");
 const routing = read(".agents/context7/routing.json");
 const packageJson = read("package.json");
 const failures = [];
-const required = ["next", "react", "convex", "workos_authkit", "tailwind", "motion", "zod", "vitest", "vercel", "github_actions", "shadcn", "radix", "playwright", "stripe", "resend", "posthog"];
+const required = ["next", "react", "convex", "workos_authkit", "tailwind", "motion", "zod", "vitest", "vercel", "github_actions", "shadcn", "radix", "playwright", "axe_core", "stripe", "resend", "posthog"];
 
 for (const name of required) {
   const entry = contracts.libraries[name];

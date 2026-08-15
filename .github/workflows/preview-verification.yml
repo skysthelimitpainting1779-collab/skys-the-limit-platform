@@ -17,18 +17,21 @@ jobs:
       github.event.deployment.environment != 'Production'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Verify Preview belongs to correct project
         env:
           PREVIEW_URL: ${{ github.event.deployment_status.target_url }}
           DEPLOY_SHA: ${{ github.event.deployment.sha }}
+          DEPLOY_ENVIRONMENT: ${{ github.event.deployment.environment }}
         run: |
           echo "Preview URL: $PREVIEW_URL"
           echo "Expected SHA: $DEPLOY_SHA"
-          echo "Environment: ${{ github.event.deployment.environment }}"
+          echo "Environment: $DEPLOY_ENVIRONMENT"
 
           # Verify it's not Production
-          if [[ "${{ github.event.deployment.environment }}" == "Production" ]]; then
+          if [[ "$DEPLOY_ENVIRONMENT" == "Production" ]]; then
             echo "✗ BLOCKED: This check must not run on Production deployments"
             exit 1
           fi

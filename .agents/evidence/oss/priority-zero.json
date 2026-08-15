@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0.0",
+  "evaluated_at": "2026-08-14",
+  "baseline_sha": "ff6c787176bac1fd4635c5a7d7b1c421b1002952",
+  "policy": "Adopt only when a seeded defect is detected with acceptable noise, runtime, ownership, and non-overlapping value; numeric aggregate scores are prohibited.",
+  "candidates": [
+    {
+      "name": "actionlint",
+      "source": "https://github.com/rhysd/actionlint",
+      "version_or_ref": "1.7.12",
+      "decision": "ADOPT",
+      "reason": ["detected the seeded invalid step", "found a real unsafe expression in release verification", "syntax and expression checks complement security analysis"],
+      "pilot": { "seeded_defect": "invalid `runs` key and mutable action", "detected": true, "initial_real_findings": 1, "post_remediation_findings": 0, "seed_runtime_ms": 1687, "cached_real_runtime_ms": 165, "false_positive_assessment": "No false positives in the five real workflows." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Validates GitHub Actions syntax, expressions, and common shell contracts.", "unnecessary_features": "Single-purpose static analyzer." },
+        "project_fit": { "compatible_with_current_stack": "Directly audits the existing GitHub workflow suite.", "integration_surface": "One digest-pinned binary and one wrapper.", "architecture_alignment": "Hardens current CI rather than replacing it." },
+        "maturity": { "release_recency": "Released 2026-03-30.", "maintenance_activity": "Active upstream releases.", "issue_health": "Public active issue tracker.", "documentation_quality": "Official install and usage documentation.", "tests": "Seed plus all five project workflows.", "production_usage_signal": "Widely used dedicated Actions linter." },
+        "security": { "security_history": "No pilot issue; release digest is verified.", "permissions_required": "Read-only workflow files.", "secret_handling": "No secrets.", "network_access": "Only first download; analysis is offline.", "supply_chain_risk": "Single upstream binary pinned by SHA-256." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Focused upstream maintainer with contributor activity.", "dependency_depth": "Standalone binary.", "upgrade_cost": "Refresh version, asset digests, and seed.", "lock_in": "Low.", "exit_strategy": "Remove wrapper/manifest entry and retain valid workflows." },
+        "operations": { "runtime_cost": "Sub-second cached real scan.", "infrastructure_required": "None.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "Line-level deterministic diagnostics." },
+        "engineering_cost": { "install_cost": "Cached release download.", "adaptation_cost": "Small cross-platform wrapper.", "custom_build_cost": "A custom Actions parser would be unjustified.", "long_term_maintenance_cost": "Low." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Not needed; upstream CLI docs are authoritative.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes." }
+      }
+    },
+    {
+      "name": "zizmor",
+      "source": "https://github.com/zizmorcore/zizmor",
+      "version_or_ref": "1.29.0",
+      "decision": "ADOPT",
+      "reason": ["detected dangerous trigger, template injection, mutable action, and credential persistence in the seed", "found four real template-injection paths and checkout hardening gaps", "security findings do not duplicate actionlint's syntax focus"],
+      "pilot": { "seeded_defect": "pull_request_target plus attacker-controlled interpolation", "detected": true, "initial_real_findings": 11, "post_remediation_findings": 0, "seed_runtime_ms": 111, "cached_real_runtime_ms": 210, "false_positive_assessment": "Low-confidence findings are suppressed by the adopted medium-confidence gate." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Static security analysis for GitHub Actions.", "unnecessary_features": "Auto-fix exists but is not enabled." },
+        "project_fit": { "compatible_with_current_stack": "Audits current workflows offline.", "integration_surface": "One digest-pinned binary and wrapper.", "architecture_alignment": "Adds security evidence to existing CI." },
+        "maturity": { "release_recency": "Released 2026-08-01.", "maintenance_activity": "Active organization and releases.", "issue_health": "Active public tracker.", "documentation_quality": "Detailed audit documentation.", "tests": "Adversarial seed and complete workflow scan.", "production_usage_signal": "Sponsored security tool with broad CI use." },
+        "security": { "security_history": "Security analyzer; release digest is verified.", "permissions_required": "Read-only repository input.", "secret_handling": "Offline mode needs no token.", "network_access": "Only first download.", "supply_chain_risk": "Standalone Rust binary pinned by SHA-256." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Organization ownership and multiple contributors.", "dependency_depth": "Standalone binary.", "upgrade_cost": "Refresh exact release and rerun seed/noise checks.", "lock_in": "Low.", "exit_strategy": "Remove tool entry while preserving remediated workflows." },
+        "operations": { "runtime_cost": "Sub-second cached scan.", "infrastructure_required": "None.", "hosted_service_required": "None in offline mode.", "production_effects": "None.", "observability": "Audit IDs, confidence, severity, and exact lines." },
+        "engineering_cost": { "install_cost": "Cached release download.", "adaptation_cost": "Small wrapper and confidence threshold.", "custom_build_cost": "Custom security rules would miss upstream audits.", "long_term_maintenance_cost": "Low." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Not required for the CLI contract.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes in offline mode." }
+      }
+    },
+    {
+      "name": "pinact",
+      "source": "https://github.com/suzuki-shunsuke/pinact",
+      "version_or_ref": "4.1.1",
+      "decision": "REJECT",
+      "reason": ["detected the seeded mutable ref", "all five real workflows already passed", "zizmor already enforces unpinned uses and the existing workflows require reviewable manual pin changes"],
+      "pilot": { "seeded_defect": "actions/checkout@v7", "detected": true, "initial_real_findings": 0, "post_remediation_findings": 0, "seed_runtime_ms": 97, "cached_real_runtime_ms": 22, "false_positive_assessment": "No false positives, but insufficient non-overlapping value." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Checks and can update immutable Action references.", "unnecessary_features": "Networked update/autofix is outside the required gate." },
+        "project_fit": { "compatible_with_current_stack": "Compatible.", "integration_surface": "Another binary and optional GitHub API access.", "architecture_alignment": "The check overlaps adopted zizmor." },
+        "maturity": { "release_recency": "Released 2026-07-30.", "maintenance_activity": "Active.", "issue_health": "Public tracker.", "documentation_quality": "Detailed official docs.", "tests": "Seed and all workflows.", "production_usage_signal": "Established pinning tool." },
+        "security": { "security_history": "No pilot issue.", "permissions_required": "Read-only offline; API token for update features.", "secret_handling": "Offline pilot used no token.", "network_access": "Not needed for check-only pilot.", "supply_chain_risk": "Standalone binary, but redundant." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Active maintainer ecosystem.", "dependency_depth": "Standalone binary.", "upgrade_cost": "Additional version/digest maintenance.", "lock_in": "Low.", "exit_strategy": "No adoption; rerun a future pilot if annotation/update needs emerge." },
+        "operations": { "runtime_cost": "Very low.", "infrastructure_required": "None.", "hosted_service_required": "None for offline checks.", "production_effects": "None.", "observability": "File and line diagnostics." },
+        "engineering_cost": { "install_cost": "Small but redundant.", "adaptation_cost": "Low.", "custom_build_cost": "No custom replacement needed.", "long_term_maintenance_cost": "Unjustified overlap." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Not needed.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes." }
+      }
+    },
+    {
+      "name": "dependency-cruiser",
+      "source": "https://github.com/sverweij/dependency-cruiser",
+      "version_or_ref": "18.2.0",
+      "decision": "ADOPT",
+      "reason": ["detected the seeded frontend-to-private-backend import", "enforces architecture boundaries that Graphify explains but does not deny", "real graph passed after rules distinguished project-local Convex modules from the Convex client package"],
+      "pilot": { "seeded_defect": "local frontend import of a private backend module", "detected": true, "initial_real_findings": 11, "post_remediation_findings": 0, "seed_runtime_ms": 8404, "cached_real_runtime_ms": 5900, "false_positive_assessment": "Initial false positives revealed package/local distinction; the refined local-only rule scans 147 modules and 428 dependencies cleanly." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Deterministically denies dependency boundaries and cycles.", "unnecessary_features": "Visualization reporters are unused." },
+        "project_fit": { "compatible_with_current_stack": "Current Node and TypeScript are supported.", "integration_surface": "Pinned dev dependency and one config.", "architecture_alignment": "Enforces the canonical Convex and legacy-stack boundary." },
+        "maturity": { "release_recency": "Released 2026-08-10.", "maintenance_activity": "Active.", "issue_health": "Public active tracker.", "documentation_quality": "Comprehensive rules reference.", "tests": "Seed plus entire src/convex graph.", "production_usage_signal": "Established JavaScript architecture tool." },
+        "security": { "security_history": "No npm audit finding.", "permissions_required": "Read-only source graph.", "secret_handling": "No secrets.", "network_access": "None after npm install.", "supply_chain_risk": "18 direct development dependencies; npm audit clean." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Long-lived project with active contributors.", "dependency_depth": "Moderate dev-only tree.", "upgrade_cost": "Re-run seeded and real graph checks.", "lock_in": "Rules are simple regex contracts.", "exit_strategy": "Remove dependency/config and retain Graphify evidence." },
+        "operations": { "runtime_cost": "About six seconds for the real graph.", "infrastructure_required": "None.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "Named rule and import path diagnostics." },
+        "engineering_cost": { "install_cost": "Pinned npm dev dependency.", "adaptation_cost": "Four bounded rules.", "custom_build_cost": "A custom TypeScript import resolver would be costly and weaker.", "long_term_maintenance_cost": "Moderate but justified." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Official upstream docs were sufficient.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes." }
+      }
+    },
+    {
+      "name": "Promptfoo",
+      "source": "https://github.com/promptfoo/promptfoo",
+      "version_or_ref": "0.122.0",
+      "decision": "REJECT",
+      "reason": ["single deterministic exec-provider case timed out after 244 seconds on cold start", "29 MB unpacked package with 80 direct dependencies", "no native Antigravity provider, so the existing wrapper remains necessary", "native repository runner already proves zero-injection controls and exact host behavior"],
+      "pilot": { "seeded_defect": "deterministic exec-provider equality assertion", "detected": false, "initial_real_findings": 0, "post_remediation_findings": 0, "seed_runtime_ms": 244075, "cached_real_runtime_ms": null, "false_positive_assessment": "No result before the bounded timeout; no second round justified." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Can express deterministic assertions and shell providers.", "unnecessary_features": "Large provider/dashboard/red-team surface is unnecessary for ten native canaries." },
+        "project_fit": { "compatible_with_current_stack": "Node version is compatible.", "integration_surface": "Would still require custom Codex and Antigravity wrappers.", "architecture_alignment": "Duplicates the working repository runner." },
+        "maturity": { "release_recency": "Released 2026-08-04.", "maintenance_activity": "Active.", "issue_health": "Active public tracker.", "documentation_quality": "Good provider/assertion docs.", "tests": "Bounded exec-provider pilot timed out.", "production_usage_signal": "Popular general eval platform." },
+        "security": { "security_history": "Not investigated further after fit/runtime rejection.", "permissions_required": "Exec providers inherit local command permissions.", "secret_handling": "Could use authenticated host sessions but adds another command surface.", "network_access": "Package install and optional providers.", "supply_chain_risk": "80 direct dependencies." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Active company/project.", "dependency_depth": "High.", "upgrade_cost": "Frequent broad releases and wrapper compatibility.", "lock_in": "Moderate config/runtime coupling.", "exit_strategy": "Keep the current zero-dependency native runner." },
+        "operations": { "runtime_cost": "Exceeded four-minute command budget on one echo case.", "infrastructure_required": "None required, but substantial local package surface.", "hosted_service_required": "None for exec provider.", "production_effects": "None.", "observability": "Rich when it runs; no output in bounded pilot." },
+        "engineering_cost": { "install_cost": "29 MB unpacked and 80 direct dependencies.", "adaptation_cost": "Two host wrappers plus config migration.", "custom_build_cost": "Already paid as a narrow, working runner.", "long_term_maintenance_cost": "Higher than demonstrated value." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Not required.", "machine_verifiable": "Potentially.", "deterministic_testability": "Assertions are deterministic, but the bounded runner did not complete." }
+      }
+    },
+    {
+      "name": "MCP Inspector",
+      "source": "https://github.com/modelcontextprotocol/inspector",
+      "version_or_ref": "2.2.0",
+      "decision": "ADOPT",
+      "reason": ["official protocol client", "caught the missing Graphify MCP runtime extra", "proved inventories, schemas, calls, and deterministic failure behavior"],
+      "pilot": { "seeded_defect": "unknown MCP tool", "detected": true, "initial_real_findings": 1, "post_remediation_findings": 0, "seed_runtime_ms": null, "cached_real_runtime_ms": 27000, "false_positive_assessment": "Protocol results were valid; Windows Context7 teardown warning is retained." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Protocol-level MCP certification.", "unnecessary_features": "Web UI is unused." },
+        "project_fit": { "compatible_with_current_stack": "Works with existing stdio servers.", "integration_surface": "Pinned dev dependency and one certifier.", "architecture_alignment": "Tests current MCPs instead of creating a server." },
+        "maturity": { "release_recency": "Published 2026-08-12.", "maintenance_activity": "Official active project.", "issue_health": "Public tracker.", "documentation_quality": "Official CLI docs.", "tests": "Graphify, Context7, and invalid tool.", "production_usage_signal": "Reference MCP tooling." },
+        "security": { "security_history": "No audit finding.", "permissions_required": "Selected server permissions only.", "secret_handling": "No secrets supplied.", "network_access": "Context7's existing docs API.", "supply_chain_risk": "Non-trivial dev tree with a deprecated legacy transport warning." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Official organization and multiple maintainers.", "dependency_depth": "High but development-only.", "upgrade_cost": "Rerun protocol seeds.", "lock_in": "Low standard-protocol lock-in.", "exit_strategy": "Replace with another standard MCP client." },
+        "operations": { "runtime_cost": "Nine to twenty-seven seconds per server on the pilot host.", "infrastructure_required": "Local processes.", "hosted_service_required": "Existing Context7 only.", "production_effects": "None.", "observability": "Structured inventories, durations, warnings, failures." },
+        "engineering_cost": { "install_cost": "Pinned dev dependency.", "adaptation_cost": "Small wrapper.", "custom_build_cost": "Custom JSON-RPC ownership is worse.", "long_term_maintenance_cost": "Bounded." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Not needed.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes except explicit network availability." }
+      }
+    },
+    {
+      "name": "Playwright plus axe-core",
+      "source": "https://github.com/microsoft/playwright",
+      "version_or_ref": "Playwright 1.62.1 / @axe-core/playwright 4.13.0",
+      "decision": "ADOPT",
+      "reason": ["seeded unnamed button was detected", "real home and estimate routes passed serious/critical WCAG and console checks", "supplies browser behavior evidence that unit tests cannot"],
+      "pilot": { "seeded_defect": "button without an accessible name", "detected": true, "initial_real_findings": 0, "post_remediation_findings": 0, "seed_runtime_ms": 6400, "cached_real_runtime_ms": 46000, "false_positive_assessment": "No blocking findings on two real routes; the first harness run correctly failed closed until inert WorkOS test values were supplied." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Real browser, console, interaction, and accessibility proof.", "unnecessary_features": "Only Chromium is installed for the initial gate." },
+        "project_fit": { "compatible_with_current_stack": "Official Next.js-compatible browser runner.", "integration_surface": "Three pinned dev packages/config/test.", "architecture_alignment": "Extends existing verification without replacing Vitest." },
+        "maturity": { "release_recency": "Playwright 1.62.1 released 2026-07-30.", "maintenance_activity": "Active Microsoft and Deque projects.", "issue_health": "Active public trackers.", "documentation_quality": "High-quality official docs.", "tests": "Seed and two project routes.", "production_usage_signal": "Widely used browser and accessibility tooling." },
+        "security": { "security_history": "No npm audit finding.", "permissions_required": "Local test server and browser only.", "secret_handling": "Inert fail-closed values; no live tenant.", "network_access": "Browser binary download; tests run locally.", "supply_chain_risk": "Pinned dev dependencies and official browser artifact." },
+        "ownership": { "license": "Apache-2.0 (Playwright) and MPL-2.0 (axe-core package family).", "maintainer_bus_factor": "Large maintained upstream teams.", "dependency_depth": "Moderate dev-only tree plus browser cache.", "upgrade_cost": "Browser download and rerun seed/real routes.", "lock_in": "Low; tests use standard DOM expectations.", "exit_strategy": "Remove config/tests/dependencies and keep unit suite." },
+        "operations": { "runtime_cost": "About 46 seconds for three local tests after browser install.", "infrastructure_required": "Local Next.js server and cached Chromium.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "Traces/screenshots on failure plus rule details." },
+        "engineering_cost": { "install_cost": "Browser download plus three dev packages.", "adaptation_cost": "Small config and bounded route matrix.", "custom_build_cost": "Custom browser/accessibility engines are irrational.", "long_term_maintenance_cost": "Moderate and justified by unique proof." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Playwright and axe contracts recorded.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes; retries remain zero so flakiness is visible." }
+      }
+    }
+  ]
+}
