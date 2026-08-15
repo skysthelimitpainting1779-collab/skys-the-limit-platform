@@ -1,9 +1,10 @@
 # Canonical architecture decision
 
 - Decision status: **ACCEPTED**
-- Verification state: **PENDING clean-context V0 review**
+- Verification state: **PASS — clean-context V0 review**
 - Decision date: 2026-08-14
-- Decision commit: recorded after the candidate commit is created
+- Decision commit: `6a9cbfbb93dbcc0cd6d008a737a092c87ba3cf65`
+- V0 verdict: `PASS` for the exact decision commit above; no blocking issues
 
 ## Repository and branch authority
 
@@ -77,4 +78,4 @@ Detailed artifact classification: [AGENT_SYSTEM_MIGRATION.md](AGENT_SYSTEM_MIGRA
 
 ## Gate
 
-Major agent specialization and host compilation may begin only after a clean-context, read-only V0 reviewer evaluates the exact decision commit and returns `PASS`. `FAIL` or `UNCERTAIN` blocks the next phase.
+Major agent specialization and host compilation were gated on a clean-context, read-only V0 review. V0 evaluated the exact decision commit above and returned `PASS`; specialization may proceed. Any material decision change requires a new exact-SHA review.
