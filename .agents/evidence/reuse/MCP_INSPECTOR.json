@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0.0",
+  "research_id": "R0-MCP-INSPECTOR-2026-08-14",
+  "task": "Certify project MCP servers at protocol level",
+  "date": "2026-08-14",
+  "current_sha": "90c270f0b375d6db2b88d83e436c8e80fb27b929",
+  "problem": "Prove that Graphify and Context7 start, expose valid read-only tools, execute real calls, and fail safely without trusting configuration presence.",
+  "required_capabilities": ["MCP stdio startup", "tools/list schema inspection", "real tools/call execution", "deterministic failure probe", "production mutation inventory"],
+  "existing_project_solution": {
+    "found": false,
+    "evidence": ["Graphify certification tested the CLI but not the MCP transport", "Context7 certification validated evidence contracts but not the live MCP protocol", "no repository MCP Inspector or protocol test harness existed"]
+  },
+  "native_options": [
+    { "name": "Host connection status", "source": "Codex and Antigravity host UI", "fit": "insufficient for deterministic CI" },
+    { "name": "Graphify MCP optional extra", "source": "graphifyy[mcp] 0.9.43", "fit": "required native server runtime" }
+  ],
+  "official_ecosystem_options": [
+    { "name": "MCP Inspector CLI", "source": "modelcontextprotocol/inspector", "fit": "complete protocol-level read-only probe" }
+  ],
+  "oss_candidates": [
+    { "name": "@modelcontextprotocol/inspector", "version": "2.2.0", "license": "MIT", "maintenance": "official MCP project; published 2026-08-12" }
+  ],
+  "finalists": [
+    {
+      "name": "Official MCP Inspector CLI",
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Yes; startup, inventory, schema, call, and negative-control probes passed.", "unnecessary_features": "The package includes a web UI, but certification invokes only its CLI." },
+        "project_fit": { "compatible_with_current_stack": "Supports Node 24 and existing stdio MCP configuration.", "integration_surface": "One pinned development dependency and one certification script.", "architecture_alignment": "Tests existing servers without becoming a runtime control plane." },
+        "maturity": { "release_recency": "2.2.0 published 2026-08-12.", "maintenance_activity": "Official modelcontextprotocol organization with multiple maintainers.", "issue_health": "Public upstream issue tracker.", "documentation_quality": "Official CLI documentation covers read-only config and tools/list/tools/call.", "tests": "Pilot exercised Graphify and Context7 plus an invalid tool.", "production_usage_signal": "Protocol reference tool; used only in development/CI." },
+        "security": { "security_history": "No pilot finding; dependency audit remains required.", "permissions_required": "Only the permissions exposed by the selected MCP server.", "secret_handling": "No secrets supplied in this certification.", "network_access": "Context7 makes its existing documentation request; Graphify remains local.", "supply_chain_risk": "Pinned package has a substantial transitive tree including a deprecated legacy transport package." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Seven npm maintainers and official organization ownership.", "dependency_depth": "Non-trivial development-only dependency tree.", "upgrade_cost": "Version upgrades require rerunning seeded probes.", "lock_in": "Low; invokes standard MCP methods.", "exit_strategy": "Remove the dev dependency and certification script or replace with another protocol-level standard client." },
+        "operations": { "runtime_cost": "Approximately 9-27 seconds per server probe on the Windows pilot.", "infrastructure_required": "Existing local processes only.", "hosted_service_required": "None beyond the already-used Context7 API.", "production_effects": "None.", "observability": "Structured JSON report with durations, inventories, warnings, and failures." },
+        "engineering_cost": { "install_cost": "Pinned development dependency plus Graphify's version-matched MCP extra.", "adaptation_cost": "Small deterministic Node wrapper.", "custom_build_cost": "Higher and would duplicate protocol client/error handling.", "long_term_maintenance_cost": "Bounded to the certification script and version refresh." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Not needed for the protocol client itself.", "machine_verifiable": "Yes; JSON CLI output.", "deterministic_testability": "Yes, except Context7 network availability is an explicit service dependency." }
+      }
+    }
+  ],
+  "recommended_decision": "ADOPT",
+  "research_status": "COMPLETE",
+  "selected_candidate": {
+    "name": "@modelcontextprotocol/inspector",
+    "source": "https://github.com/modelcontextprotocol/inspector",
+    "version_or_ref": "2.2.0",
+    "license": "MIT",
+    "maintenance_status": "official and current as of 2026-08-14",
+    "reason": ["caught the missing Graphify MCP optional runtime", "proved real tool inventory and calls", "provides structured deterministic failure output", "avoids a custom protocol harness"]
+  },
+  "rejected_candidates": [
+    { "name": "Configuration-presence check", "reason": "would have falsely passed while graphify-mcp was unable to import its MCP runtime" },
+    { "name": "Custom JSON-RPC client", "reason": "duplicates a maintained official protocol tool and increases test-harness ownership" }
+  ],
+  "risks": ["Context7 4.0.2 emits a Windows libuv teardown assertion after valid output", "Inspector includes a deprecated legacy transport dependency", "live Context7 certification depends on network availability"],
+  "proof_required_before_adoption": ["exact-version install", "Graphify tools/list and graph_stats pass", "Context7 tools/list and resolve-library-id pass", "invalid tool returns tool_not_found", "npm audit review"],
+  "rollback_or_exit_strategy": ["remove @modelcontextprotocol/inspector from devDependencies", "remove scripts/certification/mcp.mjs and mcp:certify", "retain host MCP configuration and use an equivalent standard protocol client"],
+  "rounds": [
+    { "round": 1, "scope": "existing project and native MCP capability", "material_gain": "proved no protocol harness existed and exposed Graphify's missing optional MCP runtime" },
+    { "round": 2, "scope": "official MCP ecosystem", "material_gain": "official Inspector passed real inventories, calls, and deterministic negative control" }
+  ]
+}

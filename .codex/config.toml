@@ -17,7 +17,7 @@ tool_timeout_sec = 60
 
 [mcp_servers.context7]
 command = "npx"
-args = ["-y", "@upstash/context7-mcp"]
+args = ["-y", "@upstash/context7-mcp@4.0.2"]
 required = true
 startup_timeout_sec = 30
 tool_timeout_sec = 60

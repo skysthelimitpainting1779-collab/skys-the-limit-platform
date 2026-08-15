@@ -67,6 +67,14 @@
       "contract": "shadcn registries can distribute components, hooks, pages, utilities, configuration, documentation, templates, workflows, rules, project conventions, agent instructions, tests, CI, codemods, and migration kits; registry availability is not approval.",
       "source": "https://github.com/shadcn-ui/ui/blob/main/apps/v4/content/docs/registry/github.mdx",
       "applies_to": [".agents/skills/research-reuse-scout/**", "src/components/**", ".agents/**", ".github/**"]
+    },
+    {
+      "id": "vitest-4-default-exclusions",
+      "library_id": "/vitest-dev/vitest/v4.1.6",
+      "question": "In Vitest 4 configuration, how do custom test.exclude patterns preserve the default exclusions while excluding a Node-native test file?",
+      "contract": "Vitest 4 matches .test.mjs by default. A custom exclude replaces the defaults, so extend configDefaults.exclude before adding tests/agent-team.test.mjs, which is executed by node --test instead.",
+      "source": "https://github.com/vitest-dev/vitest/blob/v4.1.6/docs/config/exclude.md",
+      "applies_to": ["vitest.config.mts", "tests/agent-team.test.mjs"]
     }
   ]
 }
