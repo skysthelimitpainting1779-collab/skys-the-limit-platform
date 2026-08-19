@@ -16,7 +16,7 @@ jobs:
       github.event.deployment_status.state == 'success' &&
       github.event.deployment.environment != 'Production'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Verify Preview belongs to correct project
         env:
