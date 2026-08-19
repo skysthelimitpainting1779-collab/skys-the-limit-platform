@@ -1,0 +1,207 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-19T00:00:00-07:00",
+  "repositories": {
+    "skysthelimit-website": {
+      "head": "92a2bee8ecacc3a803767b5cd36ca25f3fd9a4dd",
+      "entries": [
+        {
+          "path": "src/app/**, src/components/**, public/**",
+          "classification": "PRODUCT",
+          "importRelationships": "Next.js route and component graph; public assets are referenced by the marketing application.",
+          "packageScriptReferences": ["dev", "build", "test", "smoke:site"],
+          "workflowReferences": [".github/workflows/ci.yml", ".github/workflows/deploy-verification.yml"],
+          "currentPurpose": "Public production marketing, conversion, and portal experience.",
+          "targetDestination": "Platform public, marketing, forms, customer, and shared asset layers after parity validation.",
+          "migrationMethod": "Route-by-route rendered-product reconstruction; preserve verified content and behavior, not legacy adapters.",
+          "testRequirement": "Visual, responsive, accessibility, SEO, behavior, and critical-route tests.",
+          "deleteCondition": "Platform parity, production cutover, rollback window elapsed, and archival approval.",
+          "confidence": "high",
+          "ownerWorkstream": "frontend-migration"
+        },
+        {
+          "path": "src/app/manage/**",
+          "classification": "LEGACY",
+          "importRelationships": "Legacy client-side Supabase administrative console.",
+          "packageScriptReferences": ["build", "test"],
+          "workflowReferences": [".github/workflows/ci.yml"],
+          "currentPurpose": "Legacy operations UI with public owner-bootstrap behavior.",
+          "targetDestination": "None; replace with authenticated platform operations UI.",
+          "migrationMethod": "Contain, remove public initialization, then retire after secure replacement.",
+          "testRequirement": "P0 route and configuration regression tests; production unauthenticated verification.",
+          "deleteCondition": "Platform operations functionality is authenticated, authorized, and cut over.",
+          "confidence": "high",
+          "ownerWorkstream": "website-security"
+        },
+        {
+          "path": "src/payload/**, src/payload.config.ts, migrations/payload/**, src/collections/payload/**, src/globals/payload/**",
+          "classification": "LEGACY",
+          "importRelationships": "Payload CMS and database adapter; legacy public-data views connect to Supabase/Postgres.",
+          "packageScriptReferences": ["build", "lint", "test"],
+          "workflowReferences": [".github/workflows/ci.yml"],
+          "currentPurpose": "Legacy CMS/admin stack.",
+          "targetDestination": "Structured Convex CMS plus secure platform admin UI.",
+          "migrationMethod": "Inventory published content and admin data, migrate verified records, then retire paths.",
+          "testRequirement": "Clean migration replay, view security test, content parity, and authorization test.",
+          "deleteCondition": "Convex CMS parity, content migration verification, and rollback plan approval.",
+          "confidence": "high",
+          "ownerWorkstream": "cms-migration"
+        },
+        {
+          "path": "src/supabase/**, supabase/**",
+          "classification": "LEGACY",
+          "importRelationships": "Website auth, public intake, portal data access, migrations, and RLS policies.",
+          "packageScriptReferences": ["build", "test"],
+          "workflowReferences": [".github/workflows/ci.yml", ".github/workflows/security.yml"],
+          "currentPurpose": "Production website backend and portal.",
+          "targetDestination": "Temporary protected production system only; data migration source for Convex.",
+          "migrationMethod": "Immediate P0 hardening, then bounded data export/migration with reconciliation.",
+          "testRequirement": "RLS policy tests, migration replay, portal regression, secret-fail-closed test.",
+          "deleteCondition": "Production cutover and reconciled data migration.",
+          "confidence": "high",
+          "ownerWorkstream": "website-security"
+        },
+        {
+          "path": ".github/**, scripts/ci-contract.mjs, scripts/enforce-git.js, tests/**, .husky/**",
+          "classification": "PRODUCT_GOVERNANCE",
+          "importRelationships": "Invoked by package scripts and GitHub Actions.",
+          "packageScriptReferences": ["ci", "ci:contract", "lint", "lint:ci", "lint:md", "test"],
+          "workflowReferences": [".github/workflows/ci.yml", ".github/workflows/security.yml"],
+          "currentPurpose": "Repository quality, security, test, and deployment controls.",
+          "targetDestination": "Remain in website; selectively port verified invariants to platform.",
+          "migrationMethod": "Copy contracts by capability after platform adapts paths and commands.",
+          "testRequirement": "Hosted workflow checks and contract-test coverage.",
+          "deleteCondition": "Never delete without replacement governance control.",
+          "confidence": "high",
+          "ownerWorkstream": "governance"
+        },
+        {
+          "path": ".agents/**, .cursor/**, .claude/**, .codex/**, .gemini/**, .entire/**, .qoder/**, .learnings/**",
+          "classification": "AGENT_CONTROL_PLANE",
+          "importRelationships": "Referenced by optional harness and automation scripts; many paths are not product-runtime imports.",
+          "packageScriptReferences": ["ops:harness", "ops:cron", "memory:query", "arch:sweep"],
+          "workflowReferences": [],
+          "currentPurpose": "Reusable skills, orchestration guidance, historical handoffs, and automation machinery mixed with product source.",
+          "targetDestination": "Separate `skys-agent-control-plane` repository; product retains thin policy and adapter only.",
+          "migrationMethod": "Deduplicate source definitions, identify active harness contracts, then move reusable definitions without dynamic state.",
+          "testRequirement": "Control-plane unit/contract tests and product script-existence checks.",
+          "deleteCondition": "All referenced functions are moved, retired, or replaced and product commands no longer depend on them.",
+          "confidence": "medium",
+          "ownerWorkstream": "control-plane"
+        },
+        {
+          "path": "test-results*.txt",
+          "classification": "GENERATED_STATE",
+          "importRelationships": "No product import relationship identified.",
+          "packageScriptReferences": [],
+          "workflowReferences": [],
+          "currentPurpose": "Historical local test output.",
+          "targetDestination": "Untracked diagnostics or CI artifacts.",
+          "migrationMethod": "Remove after confirming no documentation or automation consumes them.",
+          "testRequirement": "Repository search and CI artifact substitution.",
+          "deleteCondition": "No references remain.",
+          "confidence": "high",
+          "ownerWorkstream": "control-plane"
+        }
+      ]
+    },
+    "skys-the-limit-platform": {
+      "head": "77c76ae1441f3e22a04b9f08306f98b1d502bf4b",
+      "entries": [
+        {
+          "path": "src/app/**, src/components/**, src/design/**, src/lib/**",
+          "classification": "PRODUCT",
+          "importRelationships": "Next.js application, UI, environment contract, and estimate-intake application graph.",
+          "packageScriptReferences": ["dev", "build", "lint", "typecheck", "test"],
+          "workflowReferences": [".github/workflows/ci.yml"],
+          "currentPurpose": "Destination Next.js application and initial public/portal surfaces.",
+          "targetDestination": "Remain and expand as unified application.",
+          "migrationMethod": "Consolidate primitives and rebuild verified public experience in bounded route slices.",
+          "testRequirement": "Unit, route, visual, accessibility, SEO, and end-to-end coverage.",
+          "deleteCondition": "Only when duplicate or superseded by verified canonical components.",
+          "confidence": "high",
+          "ownerWorkstream": "frontend-migration"
+        },
+        {
+          "path": "convex/schema.ts, convex/users.ts, convex/leads.ts, convex/estimates.ts, convex/jobs.ts, convex/auditEvents.ts, convex/lib/**",
+          "classification": "PRODUCT",
+          "importRelationships": "Convex data model and public function layer.",
+          "packageScriptReferences": ["test", "test:lead", "verify"],
+          "workflowReferences": [".github/workflows/ci.yml"],
+          "currentPurpose": "Initial business data and public intake capability.",
+          "targetDestination": "Canonical Convex backend.",
+          "migrationMethod": "Add auth/configuration, authorization kernel, tests, and additive domain slices.",
+          "testRequirement": "Convex code generation, authorization, organization-isolation, customer-ownership, and mutation audit tests.",
+          "deleteCondition": "No deletion until a replacement domain implementation and data-migration plan exist.",
+          "confidence": "high",
+          "ownerWorkstream": "convex-auth-business-graph"
+        },
+        {
+          "path": "convex/_generated/**",
+          "classification": "GENERATED_STATE",
+          "importRelationships": "Generated imports used by Convex functions.",
+          "packageScriptReferences": ["verify"],
+          "workflowReferences": [".github/workflows/ci.yml"],
+          "currentPurpose": "Convex generated type and API state.",
+          "targetDestination": "Retain only according to Convex generator policy.",
+          "migrationMethod": "Confirm official generation and CI reproducibility before changing tracking policy.",
+          "testRequirement": "Fresh `convex codegen` diff check.",
+          "deleteCondition": "Only if official generator workflow proves these are regenerated and ignored safely.",
+          "confidence": "medium",
+          "ownerWorkstream": "convex-auth-business-graph"
+        },
+        {
+          "path": ".github/**, scripts/**, .husky/**, .codex/hooks.json, AGENTS.md",
+          "classification": "PRODUCT_GOVERNANCE",
+          "importRelationships": "Invoked by npm scripts, GitHub Actions, and repository contributors.",
+          "packageScriptReferences": ["verify", "verify:branch", "verify:skills", "verify:env", "verify:assets"],
+          "workflowReferences": [".github/workflows/ci.yml", ".github/workflows/security.yml"],
+          "currentPurpose": "Repository policy, validation, and automation contracts.",
+          "targetDestination": "Remain in platform after policy simplification; retain only product-specific instructions.",
+          "migrationMethod": "Harden actions, package install, authorization gates, and rulesets; link to external control plane.",
+          "testRequirement": "CI contract and hosted required-check verification.",
+          "deleteCondition": "Never delete a control without a tested replacement.",
+          "confidence": "high",
+          "ownerWorkstream": "governance"
+        },
+        {
+          "path": ".agent/graph/**, .agent/state/**, .agents/**, .claude/skills/**, graphify-out/graph.json",
+          "classification": "AGENT_CONTROL_PLANE",
+          "importRelationships": "Automation state, historic worker handoffs, duplicate reusable skills, and graph outputs. Product runtime imports are not established.",
+          "packageScriptReferences": ["verify:skills"],
+          "workflowReferences": [".github/workflows/eve-factory-dispatch.yml"],
+          "currentPurpose": "Agent orchestration support and dynamic execution residue in product source.",
+          "targetDestination": "Separate `skys-agent-control-plane` repository; platform keeps a concise `AGENTS.md` and any required adapter.",
+          "migrationMethod": "Classify definitions versus history/state, deduplicate skills, migrate active definitions, then ignore/remove dynamic state.",
+          "testRequirement": "Reference graph, package-script integrity, and control-plane contract tests.",
+          "deleteCondition": "No active workflow, script, policy, or product command references the path.",
+          "confidence": "high",
+          "ownerWorkstream": "control-plane"
+        },
+        {
+          "path": "docs/context/**, docs/decisions/**, docs/runbooks/**, docs/implementation/**",
+          "classification": "UNKNOWN",
+          "importRelationships": "Documentation and historical architecture claims.",
+          "packageScriptReferences": [],
+          "workflowReferences": [],
+          "currentPurpose": "Context and decision record.",
+          "targetDestination": "Keep current ADRs; supersede stale claims with migration documentation and updated ADRs.",
+          "migrationMethod": "Cross-check each design claim against live code before retaining or updating it.",
+          "testRequirement": "Documentation link and consistency review.",
+          "deleteCondition": "Explicit supersession by a current ADR or verified migration record.",
+          "confidence": "medium",
+          "ownerWorkstream": "architecture"
+        }
+      ]
+    }
+  },
+  "classificationRules": {
+    "PRODUCT": "Runtime application code, canonical product assets, and required business behavior.",
+    "PRODUCT_GOVERNANCE": "Repository-specific policies and validation mechanisms that protect product delivery.",
+    "AGENT_CONTROL_PLANE": "Reusable orchestration definitions, skills, evaluators, provider adapters, and harness material that belong outside product runtime.",
+    "GENERATED_STATE": "Generator output, run state, historical results, or artifacts whose tracking policy requires reproducibility proof.",
+    "LEGACY": "A currently used but non-target system scheduled for containment, migration, or retirement.",
+    "DEAD": "A verified unreferenced path with no product or governance purpose; none are marked DEAD before reference analysis.",
+    "UNKNOWN": "Insufficiently proven purpose or dependency; cannot be deleted."
+  }
+}
