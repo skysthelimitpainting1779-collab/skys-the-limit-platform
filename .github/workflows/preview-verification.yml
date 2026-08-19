@@ -27,7 +27,6 @@ jobs:
           echo "Expected SHA: $DEPLOY_SHA"
           echo "Environment: ${{ github.event.deployment.environment }}"
 
-          # Verify it's not Production
           if [[ "${{ github.event.deployment.environment }}" == "Production" ]]; then
             echo "✗ BLOCKED: This check must not run on Production deployments"
             exit 1
@@ -42,9 +41,6 @@ jobs:
           check_route() {
             local route=$1
             local url="${PREVIEW_URL}${route}"
-            # Follow up to 5 redirects; capture the final HTTP status.
-            # Vercel SSO-protected previews return 302 for unauthenticated requests —
-            # any 2xx or 3xx proves the route compiled and is reachable.
             local status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 --max-redirs 5 "$url")
             if [[ "$status" =~ ^(2|3)[0-9]{2}$ ]]; then
               echo "✓ $route → $status"

@@ -24,7 +24,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
+
+      - name: Validate workflow integrity
+        run: npm run verify:ci-contract
 
       - name: Validate skills schema
         run: npm run verify:skills
@@ -64,7 +67,7 @@ jobs:
           if [[ "$BRANCH" =~ ^(main|dev|infra/|feature/|fix/|docs/|agent/|hotfix/|release/) ]]; then
             echo "✓ Branch name follows convention"
           else
-            echo "✗ Branch '$BRANCH' does not follow naming convention"
+            echo "✗ Branch '$BRANCH' does not follow convention"
             echo "  Allowed prefixes: main, dev, infra/, feature/, fix/, docs/, agent/, hotfix/, release/"
             exit 1
           fi
