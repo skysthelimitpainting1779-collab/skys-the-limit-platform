@@ -44,10 +44,11 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Full verification suite
         run: |
+          npm run verify:ci-contract
           npm run verify:skills
           npm run typecheck
           npm test
