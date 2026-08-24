@@ -380,9 +380,18 @@ test("universal MCP adapters are portable and Supabase is withheld", () => {
   const codex = readFileSync(join(root, ".codex", "config.toml"), "utf8");
   const antigravity = JSON.parse(readFileSync(join(root, ".agents", "mcp_config.json"), "utf8"));
   assert.match(codex, /\[mcp_servers\.graphify\]/);
+  assert.match(codex, /command = "graphify-mcp"/);
+  assert.match(codex, /args = \["--graph", "graphify-out\/graph\.json"\]/);
+  assert.doesNotMatch(codex, /graphify-server\.mjs/);
   assert.match(codex, /\[mcp_servers\.context7\]/);
   assert.match(codex, /\[mcp_servers\.supabase\][\s\S]*enabled = false/);
   assert.deepEqual(Object.keys(antigravity.mcpServers).sort(), ["context7", "graphify"]);
+  assert.deepEqual(antigravity.mcpServers.graphify, {
+    command: "graphify-mcp",
+    args: ["--graph", "graphify-out/graph.json"],
+    cwd: ".",
+  });
+  assert.doesNotMatch(JSON.stringify(antigravity), /graphify-server\.mjs/);
   assert.doesNotMatch(JSON.stringify(antigravity), /C:\\Users\\/i);
 });
 

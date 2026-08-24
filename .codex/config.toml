@@ -9,8 +9,8 @@ multi_agent = true
 max_concurrent_threads_per_session = 3
 
 [mcp_servers.graphify]
-command = "node"
-args = ["scripts/mcp/graphify-server.mjs"]
+command = "graphify-mcp"
+args = ["--graph", "graphify-out/graph.json"]
 required = true
 startup_timeout_sec = 20
 tool_timeout_sec = 60
