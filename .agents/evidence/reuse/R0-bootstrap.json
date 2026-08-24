@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "research_id": "R0-BOOTSTRAP-2026-08-14",
+  "task": "Add a mandatory research and reuse gate to the cross-host agent team",
+  "date": "2026-08-14",
+  "current_sha": "9553e920a54d3fc29be6a64e7bf1c5d4602e666e",
+  "problem": "Prevent agents from custom-building non-trivial capabilities before proving an existing, native, official, or maintained solution is unsuitable.",
+  "required_capabilities": ["Graphify-first existing-project search", "Context7 official-platform research", "bounded candidate comparison", "read-only recommendation", "Codex and Antigravity parity"],
+  "existing_project_solution": {
+    "found": true,
+    "evidence": ["project-discovery skill covers structural baseline discovery", "context7-provider-research skill covers current vendor documentation", "semantic host compiler already generates read-only specialist adapters"]
+  },
+  "native_options": [
+    { "name": "Extend A1/A2 prompts only", "source": "existing semantic manifests", "fit": "partial" },
+    { "name": "Shared R0 specialist plus repository skill", "source": "existing semantic compiler and shared skill store", "fit": "complete" }
+  ],
+  "official_ecosystem_options": [
+    { "name": "Unrestricted host-native research writer", "source": "host custom-agent mechanisms", "fit": "excess authority" }
+  ],
+  "oss_candidates": [],
+  "finalists": [
+    {
+      "name": "Shared read-only R0 specialist and research-reuse-scout skill",
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Yes; it gates custom architecture and returns one decision packet.", "unnecessary_features": "No task database, installer, or writer." },
+        "project_fit": { "compatible_with_current_stack": "Uses existing manifests, Graphify, Context7, and host compiler.", "integration_surface": "One semantic specialist, one shared skill, one packet validator.", "architecture_alignment": "A0/A2 sponsored and read-only." },
+        "maturity": { "release_recency": "Built on current repository compiler.", "maintenance_activity": "Owned with existing agent infrastructure.", "issue_health": "No external issue tracker dependency.", "documentation_quality": "Skill has bounded ordered procedure.", "tests": "Structural, ACL, packet, host parity, and held-out cases required.", "production_usage_signal": "No runtime or Production effect." },
+        "security": { "security_history": "No new executable dependency.", "permissions_required": "Read-only repository, Graphify, Context7, and GitHub read.", "secret_handling": "No secrets required.", "network_access": "Read-only official and OSS research only.", "supply_chain_risk": "No package installed." },
+        "ownership": { "license": "Repository-owned policy and skill.", "maintainer_bus_factor": "Same ownership as host compiler.", "dependency_depth": "Zero new runtime dependencies.", "upgrade_cost": "Update one semantic manifest and skill.", "lock_in": "Host-neutral source compiles to both hosts.", "exit_strategy": "Remove R0 manifest/skill and regenerate adapters." },
+        "operations": { "runtime_cost": "Invoked only for non-trivial new capability decisions.", "infrastructure_required": "Existing tools only.", "hosted_service_required": "None beyond current authenticated services.", "production_effects": "None.", "observability": "Research packet and certification output." },
+        "engineering_cost": { "install_cost": "None.", "adaptation_cost": "Small semantic compiler extension.", "custom_build_cost": "Small deterministic packet validator.", "long_term_maintenance_cost": "Bounded with existing compiler and test suite." },
+        "agent_fit": { "official_docs_available": "Yes for platform capability research.", "context7_support": "Universal Context7 MCP.", "machine_verifiable": "Packet, ACL, budgets, and host parity are deterministic.", "deterministic_testability": "Yes." }
+      }
+    }
+  ],
+  "recommended_decision": "ADAPT",
+  "research_status": "COMPLETE",
+  "selected_candidate": {
+    "name": "Shared read-only R0 specialist and research-reuse-scout skill",
+    "source": ".agents/manifests/specialists/R0.json",
+    "version_or_ref": "1.0.0",
+    "license": "repository-owned",
+    "maintenance_status": "compiled and certified with the existing agent harness",
+    "reason": ["reuses the semantic compiler", "keeps research read-only", "adds no runtime dependency", "works in both hosts"]
+  },
+  "rejected_candidates": [
+    { "name": "Prompt-only A1/A2 reminder", "reason": "lacks a bounded reusable packet contract and cannot be measured independently" },
+    { "name": "Unrestricted standing research writer", "reason": "adds write authority and swarm complexity without value" }
+  ],
+  "risks": ["research can become ceremony if invoked for tiny changes", "maintenance/security status is time-sensitive"],
+  "proof_required_before_adoption": ["skill validation", "host compile and semantic parity", "read-only ACL certification", "R0 public and held-out behavioral cases"],
+  "rollback_or_exit_strategy": ["remove R0 semantic manifest and shared skill", "remove R0 from A0/A2 specialist lists", "run host:compile and host:check"],
+  "rounds": [
+    { "round": 1, "scope": "existing project", "material_gain": "found reusable discovery, Context7, compiler, and policy primitives" },
+    { "round": 2, "scope": "official ecosystem", "material_gain": "verified Convex Components, Vercel discovery surfaces, and shadcn registry breadth as concrete R0 targets" }
+  ]
+}

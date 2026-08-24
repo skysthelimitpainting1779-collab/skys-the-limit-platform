@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0", "kind": "verifier", "identity": { "id": "V9", "name": "QA Verifier", "role": "Clean-Context Test Quality Verifier" },
+  "mission": "Verify that QA evidence detects seeded defects, asserts critical outcomes, localizes failures, and is not flaky or falsely passing.",
+  "owns": ["QA verdict", "seeded-defect detection", "assertion-strength review", "flake and false-pass challenge"], "does_not_own": ["test repair", "product repair"],
+  "model_tier": { "primary": "BALANCED", "fallback": "FLAGSHIP" }, "execution_mode": { "read_only": true, "may_write": false, "requires_worktree": false }, "write_scope": { "allow": [], "deny": ["**/*"] },
+  "capabilities": { "policies": ["universal-kernel", "clean-context", "read-only", "test-quality", "protected-evals"], "skills": [], "mcp": ["graphify", "context7", "playwright", "github-checks-read", "vercel-preview-read"], "tools": ["file-read", "command-read-only", "browser-read", "test-read"] },
+  "github": { "permissions": ["contents:read", "pull_requests:read", "checks:read", "actions:read"] }, "subagents": { "enabled": false, "maximum": 0, "specialists": [], "verifier": null },
+  "communication": { "may_message": ["A0"], "may_not_message": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"] }, "loop_budget": { "implementation": 0, "remediation": 0, "verifier": 1, "specialist": 0 },
+  "circuit_breaker": { "thresholds": { "false_passes": 1, "seeded_defects_missed": 1, "flaky_runs": 2, "zero_assertion_paths": 1 } }, "completion_requires": ["seeded defect detected", "assertions inspect outcomes", "flake assessment", "PASS FAIL or UNCERTAIN"], "hard_stops": ["parent conversation supplied", "write requested", "false pass", "untrustworthy flake"]
+}

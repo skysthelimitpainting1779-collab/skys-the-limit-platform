@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "numeric_total_score_prohibited": true,
+  "sections": {
+    "functional_fit": ["solves_required_problem", "unnecessary_features"],
+    "project_fit": ["compatible_with_current_stack", "integration_surface", "architecture_alignment"],
+    "maturity": ["release_recency", "maintenance_activity", "issue_health", "documentation_quality", "tests", "production_usage_signal"],
+    "security": ["security_history", "permissions_required", "secret_handling", "network_access", "supply_chain_risk"],
+    "ownership": ["license", "maintainer_bus_factor", "dependency_depth", "upgrade_cost", "lock_in", "exit_strategy"],
+    "operations": ["runtime_cost", "infrastructure_required", "hosted_service_required", "production_effects", "observability"],
+    "engineering_cost": ["install_cost", "adaptation_cost", "custom_build_cost", "long_term_maintenance_cost"],
+    "agent_fit": ["official_docs_available", "context7_support", "machine_verifiable", "deterministic_testability"]
+  }
+}

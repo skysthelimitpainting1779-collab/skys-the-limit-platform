@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [dev]
   push:
-    branches: ["feature/**", "fix/**", "infra/**"]
+    branches: ["feature/**", "feat/**", "fix/**", "infra/**"]
 
 permissions:
   contents: read
@@ -30,6 +30,8 @@ jobs:
       LEAD_INTAKE_SECRET: local_ci_lead_intake_proof_key_32_chars_minimum
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -127,5 +129,9 @@ jobs:
         if: always()
         shell: bash
         run: |
-          [[ -f /tmp/next.pid ]] && kill "$(cat /tmp/next.pid)" 2>/dev/null || true
-          [[ -f /tmp/convex.pid ]] && kill "$(cat /tmp/convex.pid)" 2>/dev/null || true
+          if [[ -f /tmp/next.pid ]]; then
+            kill "$(cat /tmp/next.pid)" 2>/dev/null || true
+          fi
+          if [[ -f /tmp/convex.pid ]]; then
+            kill "$(cat /tmp/convex.pid)" 2>/dev/null || true
+          fi

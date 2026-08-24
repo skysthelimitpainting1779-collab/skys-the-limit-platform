@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0.0",
+  "tools": {
+    "actionlint": {
+      "version": "1.7.12",
+      "tag": "v1.7.12",
+      "repository": "rhysd/actionlint",
+      "license": "MIT",
+      "binary": {
+        "win32-x64": "actionlint.exe",
+        "linux-x64": "actionlint"
+      },
+      "assets": {
+        "win32-x64": {
+          "name": "actionlint_1.7.12_windows_amd64.zip",
+          "sha256": "6e7241b51e6817ea6a047693d8e6fed13b31819c9a0dd6c5a726e1592d22f6e9"
+        },
+        "linux-x64": {
+          "name": "actionlint_1.7.12_linux_amd64.tar.gz",
+          "sha256": "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        }
+      }
+    },
+    "zizmor": {
+      "version": "1.29.0",
+      "tag": "v1.29.0",
+      "repository": "zizmorcore/zizmor",
+      "license": "MIT",
+      "binary": {
+        "win32-x64": "zizmor.exe",
+        "linux-x64": "zizmor"
+      },
+      "assets": {
+        "win32-x64": {
+          "name": "zizmor-x86_64-pc-windows-msvc.zip",
+          "sha256": "68a6bc6888f10bf0d53658c75885e7c1b7a0588d4c1fbc3f0ca280ad7324bf06"
+        },
+        "linux-x64": {
+          "name": "zizmor-x86_64-unknown-linux-gnu.tar.gz",
+          "sha256": "dd96df044a6e8538d5f423790f453bdd03d49e5b2bcc38214acc41a2f1297839"
+        }
+      }
+    },
+    "osv-scanner": {
+      "version": "2.5.0",
+      "tag": "v2.5.0",
+      "repository": "google/osv-scanner",
+      "license": "Apache-2.0",
+      "binary": {
+        "win32-x64": "osv-scanner.exe",
+        "linux-x64": "osv-scanner"
+      },
+      "assets": {
+        "win32-x64": {
+          "name": "osv-scanner_windows_amd64.exe",
+          "sha256": "4342285bd8be36b9f113468f3eea86e7900befbcd19ca8dc6ac4f0f6cbe7c362",
+          "archive": "raw"
+        },
+        "linux-x64": {
+          "name": "osv-scanner_linux_amd64",
+          "sha256": "edcfc41d257db36148f065055655fe3fcfc434b0b423ea67468a84c207524e0c",
+          "archive": "raw"
+        }
+      }
+    },
+    "gitleaks": {
+      "version": "8.30.1",
+      "tag": "v8.30.1",
+      "repository": "gitleaks/gitleaks",
+      "license": "MIT",
+      "binary": {
+        "win32-x64": "gitleaks.exe",
+        "linux-x64": "gitleaks"
+      },
+      "assets": {
+        "win32-x64": {
+          "name": "gitleaks_8.30.1_windows_x64.zip",
+          "sha256": "d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e"
+        },
+        "linux-x64": {
+          "name": "gitleaks_8.30.1_linux_x64.tar.gz",
+          "sha256": "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        }
+      }
+    },
+    "k6": {
+      "version": "2.2.0",
+      "tag": "v2.2.0",
+      "repository": "grafana/k6",
+      "license": "AGPL-3.0-only",
+      "binary": {
+        "win32-x64": "k6-v2.2.0-windows-amd64/k6.exe",
+        "linux-x64": "k6-v2.2.0-linux-amd64/k6"
+      },
+      "assets": {
+        "win32-x64": {
+          "name": "k6-v2.2.0-windows-amd64.zip",
+          "sha256": "ceb2b1e1cf9dbe1303c6c33ec83ffda86dda5c610b4def92064d3c7ebae8d9f4"
+        },
+        "linux-x64": {
+          "name": "k6-v2.2.0-linux-amd64.tar.gz",
+          "sha256": "b5a8003c86f35f5cd5ceef1490312c48e587696c94d998cefc6d7b3b4cb1597d"
+        }
+      }
+    },
+    "lychee": {
+      "version": "0.24.2",
+      "tag": "lychee-v0.24.2",
+      "repository": "lycheeverse/lychee",
+      "license": "Apache-2.0 OR MIT",
+      "binary": {
+        "win32-x64": "lychee-x86_64-pc-windows-msvc/lychee.exe",
+        "linux-x64": "lychee-x86_64-unknown-linux-gnu/lychee"
+      },
+      "assets": {
+        "win32-x64": {
+          "name": "lychee-x86_64-pc-windows-msvc.zip",
+          "sha256": "32975d1493ee1a975d6bb41e4fb56fe419cb442ded628bb772ba2e614acfacad"
+        },
+        "linux-x64": {
+          "name": "lychee-x86_64-unknown-linux-gnu.tar.gz",
+          "sha256": "1f4e0ef7f6554a6ed33dd7ac144fb2e1bbed98598e7af973042fc5cd43951c9a"
+        }
+      }
+    }
+  }
+}

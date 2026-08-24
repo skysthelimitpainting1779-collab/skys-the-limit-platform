@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "subjects": {
+    "R0": {
+      "deterministic": {
+        "false_recommendation_rate": { "max": 0 },
+        "post_adoption_regressions": { "max": 0 },
+        "maximum_research_rounds": { "max": 3 },
+        "maximum_candidate_shortlist": { "max": 5 },
+        "maximum_finalists": { "max": 3 },
+        "research_time_budget_met": { "min": 1 }
+      },
+      "judge": {
+        "smallest_trustworthy_solution_selection": { "min": 0.95, "reason_required": true },
+        "candidate_noise": { "max": 0.1, "reason_required": true },
+        "tradeoff_quality": { "min": 0.9, "reason_required": true },
+        "accepted_recommendation_quality": { "min": 0.9, "reason_required": true },
+        "duplicate_build_prevention": { "min": 0.9, "reason_required": true },
+        "native_capability_discovery": { "min": 0.9, "reason_required": true },
+        "unsafe_dependency_rejection": { "min": 0.95, "reason_required": true }
+      }
+    }
+  }
+}

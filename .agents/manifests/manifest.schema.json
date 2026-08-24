@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skysthelimitpaintingllc.com/schemas/agent-manifest.v1.json",
+  "title": "Sky's the Limit host-neutral agent manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "identity", "mission", "owns", "does_not_own", "model_tier", "execution_mode", "write_scope", "capabilities", "github", "subagents", "communication", "loop_budget", "circuit_breaker", "completion_requires", "hard_stops"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "kind": { "enum": ["standing_agent", "verifier", "specialist"] },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "role"],
+      "properties": {
+        "id": { "pattern": "^(?:[AVS](?:[0-9]|10)|R0)$" },
+        "name": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 }
+      }
+    },
+    "mission": { "type": "string", "minLength": 1 },
+    "owns": { "$ref": "#/$defs/strings" },
+    "does_not_own": { "$ref": "#/$defs/strings" },
+    "model_tier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "fallback"],
+      "properties": {
+        "primary": { "enum": ["FLAGSHIP", "BALANCED", "EFFICIENT"] },
+        "fallback": { "enum": ["FLAGSHIP", "BALANCED", "EFFICIENT"] }
+      }
+    },
+    "execution_mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_only", "may_write", "requires_worktree"],
+      "properties": {
+        "read_only": { "type": "boolean" },
+        "may_write": { "type": "boolean" },
+        "requires_worktree": { "type": "boolean" }
+      }
+    },
+    "write_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allow", "deny"],
+      "properties": { "allow": { "$ref": "#/$defs/strings" }, "deny": { "$ref": "#/$defs/strings" } }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policies", "skills", "mcp", "tools"],
+      "properties": {
+        "policies": { "$ref": "#/$defs/strings" },
+        "skills": { "$ref": "#/$defs/strings" },
+        "mcp": { "$ref": "#/$defs/strings" },
+        "tools": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "github": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["permissions"],
+      "properties": { "permissions": { "$ref": "#/$defs/strings" } }
+    },
+    "subagents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "maximum", "specialists", "verifier"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "maximum": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "specialists": { "$ref": "#/$defs/strings" },
+        "verifier": { "type": ["string", "null"] }
+      }
+    },
+    "communication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["may_message", "may_not_message"],
+      "properties": { "may_message": { "$ref": "#/$defs/strings" }, "may_not_message": { "$ref": "#/$defs/strings" } }
+    },
+    "loop_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation", "remediation", "verifier", "specialist"],
+      "properties": {
+        "implementation": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "remediation": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "verifier": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "specialist": { "type": "integer", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "circuit_breaker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["thresholds"],
+      "properties": { "thresholds": { "type": "object", "minProperties": 1 } }
+    },
+    "completion_requires": { "$ref": "#/$defs/strings" },
+    "hard_stops": { "$ref": "#/$defs/strings" },
+    "parent": { "type": "string" },
+    "parents": { "$ref": "#/$defs/strings" }
+  },
+  "$defs": {
+    "strings": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+  }
+}

@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, dev]
   push:
-    branches: [dev, 'infra/**', 'feature/**', 'fix/**', 'docs/**', 'agent/**']
+    branches: [dev, 'infra/**', 'feature/**', 'feat/**', 'fix/**', 'docs/**', 'agent/**']
 
 permissions:
   contents: read
@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -56,15 +58,69 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Verify branch naming convention
         run: |
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
           echo "Branch: $BRANCH"
-          if [[ "$BRANCH" =~ ^(main|dev|infra/|feature/|fix/|docs/|agent/|hotfix/|release/) ]]; then
+          if [[ "$BRANCH" =~ ^(main|dev|infra/|feature/|feat/|fix/|docs/|agent/|hotfix/|release/) ]]; then
             echo "✓ Branch name follows convention"
           else
             echo "✗ Branch '$BRANCH' does not follow naming convention"
-            echo "  Allowed prefixes: main, dev, infra/, feature/, fix/, docs/, agent/, hotfix/, release/"
+            echo "  Allowed prefixes: main, dev, infra/, feature/, feat/, fix/, docs/, agent/, hotfix/, release/"
             exit 1
           fi
+
+  agent-system:
+    name: Agent System & Deterministic Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Setup uv for pinned Graphify
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.11.32"
+
+      - name: Install deterministic toolchain
+        run: |
+          npm ci
+          uv tool install "graphifyy[mcp]==0.9.43"
+          npx playwright install chromium --with-deps
+
+      - name: Validate host-neutral definitions and generated parity
+        run: |
+          npm run agents:validate
+          npm run host:check
+          npm run agents:parity
+          npm run reuse:certify
+          npm run agents:eval:validate
+          npm run agents:eval:integrity
+          npm run agents:canary:check
+          npm run agents:certify
+
+      - name: Certify Graphify, Context7, and MCP transports
+        run: |
+          npm run graph:certify
+          npm run context7:certify
+          npm run mcp:certify
+
+      - name: Run adopted deterministic OSS gates
+        run: |
+          npm run oss:certify
+          npm run oss:advanced:certify
+          npm run docs:links
+
+      - name: Run Chromium and axe critical-route proof
+        run: npm run test:browser

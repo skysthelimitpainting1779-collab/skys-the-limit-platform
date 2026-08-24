@@ -1,312 +1,192 @@
-# AGENTS.md — Sky's the Limit Platform | Agent Governance Kernel
+# Sky's the Limit engineering constitution
 
-> Portable across: Codex, Claude Code, Cursor, Gemini/Antigravity, GitHub Copilot
+Portable authority for every coding host. Host-neutral role semantics live in
+`.agents/manifests/`; generated Codex and Antigravity adapters must not weaken
+this file. Product architecture authority is
+`.agents/decisions/CANONICAL_ARCHITECTURE.md`.
 
----
+## Commands
 
-## 0. MANDATORY PEER REVIEW — ZERO EXCEPTIONS
-
-**Every agent that implements a work node MUST have a separate, independent evaluator agent review its output before the node may advance.**
-
-The implementing agent is never the final authority on its own work.
-
-### Peer Review Protocol
-
-```text
-IMPLEMENT (Agent A)
-       ↓
-SUBMIT EVIDENCE (code, tests, verification output, commit SHA)
-       ↓
-INDEPENDENTLY EVALUATE (Agent B — no instruction to preserve A's work)
-       ↓
-EVALUATOR VERDICT:
-  pass           → advance to next node
-  remediate      → Agent A fixes, re-evaluates
-  human_review   → escalate to owner
-  rollback       → revert, re-implement from contract
+```bash
+npm run graph:query -- "<structural question>"
+npm run host:compile
+npm run host:check
+npm run agents:parity
+npm run agents:certify
+npm run lint
+npm run typecheck
+npm test
+npm run build
 ```
 
-Evaluator must inspect:
-- Contract compliance
-- Architecture violations
-- Security risks (secrets, exposed credentials, environment leakage)
-- Missing or weakened tests
-- False completion claims
-- Unnecessary complexity
-- Legacy contamination
-- Unsafe production-effect boundaries
-
-Record evaluator verdict to: `.agent/state/nodes/<node-id>.json` under `"evidence"`.
-
-A node with `remediate`, `human_review`, or `rollback` verdict **may not advance**.
-
----
-
-## 1. MANDATORY CONTEXT7 PROTOCOL
-
-**Every subagent MUST use Context7 MCP for third-party library documentation. Training data is considered stale and unreliable.**
-
-Steps:
-1. `resolve-library-id` — resolve the exact library ID (never guess format `/org/project`).
-2. `query-docs` — fetch authoritative, versioned API documentation.
-3. Base all implementation decisions on fetched documentation, not memorized patterns.
-
-**No exceptions.** If Context7 is unavailable, stop and report the blocker.
-
-Context docs are cached in: `docs/context/*.md`
-
----
-
-## 1.5. MANDATORY GRAPHIFY KNOWLEDGE GRAPH PROTOCOL — STRICT TOKEN REDUCTION
-
-**Every subagent MUST query Graphify knowledge graph (`graphify-out/graph.json`) before reading or scanning raw files.**
-
-To drastically reduce token usage and avoid blind file scanning:
-1. **Query Graph First**: Always use `query_graph`, `get_node`, or `shortest_path` (via MCP or CLI `graphify query`) to traverse component relationships before making changes.
-2. **GREP & GLOB ARE STRICT LAST RESORTS**: Do NOT use broad `grep`, `grep_search`, `glob`, or directory scanning unless Graphify tools completely fail to return context or when searching raw unindexed text configs.
-3. **Graph Maintenance**: Automatic updates are handled via Git hooks (`.husky/post-commit`, `.husky/post-checkout`). Ensure `graphify-out/graph.json` is kept current.
-
----
-
-## 1.6. MANDATORY ANTIGRAVITY SKILL MANDATE
-
-**Every agent MUST leverage the `antigravity-guide` skill whenever operating, configuring, or resolving issues within Google Antigravity (AGY).**
-
-1. Read `antigravity_guide/SKILL.md` before executing or altering Antigravity CLI commands, slash commands, customizations, or sidecars.
-2. Do not attempt unguided configuration changes without checking official Antigravity patterns.
-
----
-
-## 1.7. MANDATORY SEQUENTIAL THINKING PROTOCOL
-
-**For complex architectural decisions, multi-file refactors, or debugging ambiguous errors, agents MUST use Sequential Thinking (`sequentialthinking`).**
-
-1. Deconstruct complex problems into step-by-step hypothesis testing.
-2. Validate assumptions explicitly before mutating codebase state.
-3. Revise intermediate reasoning when new evidence or error tracebacks emerge.
-
----
-
-## 1.8. MANDATORY CONTINUOUS LEARNING & ERROR MEMORY SYSTEM
-
-**Agents MUST record corrected tool errors, tool misuse, and dead ends to `graphify-out/memory/` and check `graphify-out/reflections/LESSONS.md` to avoid repeating mistakes.**
-
-1. **Check Lessons First**: Read `graphify-out/reflections/LESSONS.md` during discovery to learn from past session errors.
-2. **Record Mistakes**: When a tool call or implementation strategy fails (e.g. invalid artifact path in `write_to_file`, trigger strings in pre-commit hooks, syntax mismatches), record it using `graphify save-result --outcome corrected`.
-3. **Compile Reflections**: Run `graphify reflect` to update `graphify-out/reflections/LESSONS.md`.
-4. **Local Tracking**: Learning memory is stored in `graphify-out/memory/` (unpushed local workspace memory) so it persists locally without polluting git commits.
-
----
-
-## 1.9. TOOL USAGE & PRE-COMMIT INVARIANTS
-
-1. **Artifact Path Scoping**: Only pass `ArtifactMetadata` to `write_to_file` when creating user-facing artifact files in `<appDataDir>\brain\<conversation-id>\`. For project workspace files (e.g. `.agents/`, `src/`), use `write_to_file` without `ArtifactMetadata`.
-2. **Secret Regex Avoidance in Source Code**: Never hardcode literal secret pattern strings (e.g. `"sk_live_"`, `"pk_live_"`, `"ghp_"`) in source code or schema files. Use dynamic concatenation, character codes, or environment variables to avoid false-positive Husky pre-commit secret regex triggers.
-3. **Track `.env.example` Contract**: Ensure `.gitignore` explicitly includes `!.env.example` so environment contracts remain tracked in Git while real `.env` files remain ignored.
-
----
-
-## 1.10. AUTOMATED DISCOVERY & EXECUTION ENGINE (`/autoloop`)
-
-**When `/autoloop` or "discover and fix" is invoked, agents MUST run the multi-source task discovery workflow and automatically pipe items through the closed-loop execution engine.**
-
-1. **Multi-Source Discovery**:
-   - Query Graphify knowledge graph (`graphify god-nodes` & `LESSONS.md`) for structural friction & unhandled errors.
-   - Scan codebase for `TODO:`, `FIXME:`, `HACK:`, and `OPTIMIZE:` annotations.
-   - Query open GitHub issues (`gh issue list`) and security alerts (`gh api repos/:owner/:repo/dependabot/alerts`).
-   - Check pending spec requirements in `docs/decisions/` and `.agents/ORIGINAL_REQUEST.md`.
-2. **Compile Work Graph**: Aggregate all discovered items into `.agent/graph/foundation.graph.json` with bounded node contracts.
-3. **Automated Closed-Loop Execution**: Execute each node through the exact 13-step lifecycle:
-   `DISCOVER → CONTRACT → FAIL_TEST → IMPLEMENT → VERIFY → REGRESSION_TEST → DUAL_AGENT_EVALUATE → RECORD_EVIDENCE → COMMIT → PUSH → VERIFY_CI → VERIFY_VERCEL → ADVANCE`.
-
----
-
-## 1.11. MANDATORY MAKE-NO-MISTAKES (M-STACK) PROTOCOL
-
-**Every subagent MUST activate `make-no-mistakes-max` for enterprise stakeholder alignment, zero-mistake technical execution, and risk de-risking.**
-
-1. **Alignment Loop**: Before substantive execution, state the single-sentence North Star, scope hygiene, dependencies, and green metrics.
-2. **Zero-Mistake Invariant**: Verify all system assumptions empirically before mutating files. No cargo-culting or silent unverified changes.
-3. **Repeatable Narrative**: Provide outcome-first summaries with clear "what happens next" milestones.
-
----
-
-## 1.12. LEAN SKILL ROUTING & VERCEL PLUGIN MANDATE
-
-**Agents MUST use the lean `gstack` skill suite + `vercel-plugin` ecosystem for Vercel platform operations and QA workflows.**
-
-1. **Vercel Platform Stack (`vercel-plugin`)**:
-   - **`nextjs`**: App Router architecture, Server Actions, PPR.
-   - **`workflow`**: Vercel Workflow DevKit for crash-safe background jobs.
-   - **`shadcn`**: UI component composition with Tailwind CSS.
-   - **`deployments-cicd`**: Preview URL verification, promotions, and environment sync.
-2. **Lean `gstack` Skill Routing**:
-   - **`/qa`**: Browser page verification & visual layout smoke tests.
-   - **`/ship`**: Pre-landing code reviews, changelogs, and branch promotions.
-   - **`/cso`**: OWASP security audits & environment isolation checks.
-   - **`/investigate`**: Deep root-cause debugging for unhandled errors.
-
----
-
-## 2. Architecture Authority
-
-| System | Owner |
-|--------|-------|
-| Operational business state | Convex |
-| Identity & session tokens | WorkOS AuthKit |
-| App authorization & resource grants | Convex |
-| UI rendering & HTTP API boundaries | Next.js App Router |
-| Durable multi-step external effects | Vercel Workflow |
-| Transactional email | Resend |
-| Payment processing | Stripe |
-| File storage (public/private) | Vercel Blob |
-| AI model routing | Vercel AI Gateway |
-
-Do NOT create a second database, parallel auth system, or generic Express backend.
-
----
-
-## 3. Required Discovery Before Any Edit — Token-Efficient Flow
-
-1. Read `AGENTS.md` (this file).
-2. **Query Graphify First**: Run `query_graph` or `graphify query` to map relevant components. Do NOT read raw files broadly.
-3. Check `docs/context/` for relevant research contracts if third-party libraries are involved.
-4. Run `npm run verify:branch` from a clean checkout if running tests.
-5. Only read specific target files surfaced by Graphify.
-6. Write surgical, minimal code edits.
-
----
-
-## 4. Branch & Worktree Isolation
-
-```
-feature/* / fix/* / infra/* / docs/* / agent/*
-         ↓ PR
-        dev        (Preview only — never Production credentials)
-         ↓ Release PR (requires owner approval)
-        main       (Vercel Production)
-```
-
-- **Never develop directly on `main` or `dev`.**
-- One branch per feature/node. Isolated worktrees for parallel work.
-- Never force-push shared branches.
-- Merging `dev → main` requires explicit owner approval.
-
----
-
-## 5. Test-First Work Sequence
-
-```
-1. Write failing test / contract
-2. Implement minimum change
-3. Run focused verification
-4. Run broader regression suite
-5. Peer evaluator review (separate agent)
-6. Record evidence + commit SHA
-7. Commit with Conventional Commit message
-8. Push + verify CI
-```
-
-Conventional Commit types: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `perf:`, `build:`, `ci:`, `chore:`, `revert:`
-
----
-
-## 6. Production-Effect Boundaries
-
-**STOP at `human_approval_required` before any of:**
-- Attaching or moving the production domain
-- Deploying to Production environment
-- Enabling live Stripe charges
-- Sending real customer email or SMS
-- Mutating production Convex data
-- Creating billable infrastructure
-- Changing DNS
-- Rotating credentials
-- Deleting repositories, branches, or data
-- Merging `dev → main`
-
----
-
-## 7. Secrets & Credentials Policy
-
-- **Never commit secrets, tokens, or credentials to the repository.**
-- Server-only credentials must never appear in client bundles.
-- Browser-exposed variables must use `NEXT_PUBLIC_` prefix and contain no sensitive data.
-- Preview must never use Production credentials. Use separate isolated Preview environments.
-- `.env.example` lists all required variable names with placeholder values only.
-
----
-
-## 8. Drive Source Policy
-
-All assets imported from Google Drive must:
-1. Appear in `docs/sources/DRIVE_SOURCE_INDEX.md` with Drive file ID, classification, and approved uses.
-2. Be classified before use: `public-approved`, `private-business`, `customer-confidential`, `migration-reference`, or `legacy-do-not-use`.
-3. Only `public-approved` assets may be copied to `public/brand/` or `public/images/`.
-4. Provenance recorded in `public/assets-manifest.json`.
-5. Never commit customer data, insurance docs, pricing, or personal info to the public directory.
-
----
-
-## 9. UI & Design Routing
-
-- All design changes must reference `DESIGN.md` and `docs/design/FOUNDATIONS.md`.
-- Motion: import from `"motion/react"` only. Never `framer-motion`.
-- Respect `useReducedMotion()` in all animation components.
-- No animation may block content availability, delay conversion, or hijack scroll.
-- WCAG 2.2 AA contrast required on all interactive elements.
-- Keyboard operability required on all interactive elements.
-
----
-
-## 10. Stop Conditions
-
-**Stop immediately and escalate to owner if:**
-- A secret or credential is detected in the working tree.
-- CI fails with a security-class error.
-- A production domain is at risk of attachment.
-- The peer evaluator returns `rollback` on a committed node.
-- The working tree becomes dirty with unknown changes.
-- Any required check (CI, Security, Vercel Preview) fails and cannot be remediated within retry limits.
-
----
-
-## 11. Rollback Protocol
-
-Every work node must document:
-- The last known-good commit SHA
-- The rollback command (`git revert <sha>` or `git reset`)
-- Whether the rollback requires human approval (production effects)
-
-Never delete rollback references.
-
----
-
-*See thin host adapters: `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/00-agents-kernel.mdc`*
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
-
-<!-- convex-ai-start -->
-
-This project uses [Convex](https://convex.dev) as its backend.
-
-When working on Convex code, **always read
-`convex/_generated/ai/guidelines.md` first** for important guidelines on
-how to correctly use Convex APIs and patterns. The file contains rules that
-override what you may have learned about Convex from training data.
-
-Convex agent skills for common tasks can be installed by running
-`npx convex ai-files install`.
-
-<!-- convex-ai-end -->
+## 1. Engineering-work authority
+
+- GitHub Issues are durable goals or problems. Sub-issues are independently
+  executable work only when decomposition materially helps.
+- A Draft PR is an active workstream; its head SHA is the only candidate truth.
+- Prefer one coherent vertical slice and one primary writer. Reviews, CI,
+  Preview, and ordinary QA are checks unless they require substantive new work.
+- Only A0 is the root orchestrator. A0 decisions are `DISPATCH`, `WAIT`,
+  `REMEDIATE`, `ESCALATE`, or `COMPLETE`.
+- Do not create a parallel issue tracker, task database, CI system, orchestration
+  service, or software-factory backend.
+
+## 2. Graphify-first structural intelligence
+
+- Before locating code, dependencies, owners, failures, blast radius, callers,
+  callees, or affected tests, query Graphify.
+- Use node inspection, neighbors, paths, communities, and reverse impact before
+  reading source. Once Graphify surfaces an exact file or symbol, read it
+  directly.
+- Use the canonical repository's worktree-local graph for ordinary work. Never
+  let parallel worktrees write one shared mutable graph.
+- Broad `grep`, `rg`, recursive globbing, or filename discovery for code is
+  denied unless Graphify is unavailable or exhausted and a task-scoped
+  `.agents/evidence/graphify-exhaustion/<task>.json` record identifies the
+  failed query, reason, permitted path, literal/pattern, and expiry.
+- Save only useful, dead-end, or corrected investigation outcomes through
+  Graphify's native work memory. Validated lessons additionally require proving
+  tests, a clean verifier PASS, and an exact SHA.
+
+## 3. Context7 current external truth
+
+- Use Context7 when correctness depends on current external behavior: Next.js,
+  React, Convex, WorkOS, Vercel, GitHub Actions, Motion, Playwright, UI
+  primitives, Stripe, Resend, PostHog, or an unfamiliar/security-sensitive API.
+- Record the resolved library ID, exact question, and implementation-affecting
+  contract in the evidence packet.
+- Skip Context7 for copy, internal naming, proprietary logic, or local refactors
+  unaffected by vendor behavior.
+
+## 4. Research and reuse before custom architecture
+
+- Before a non-trivial new subsystem, integration, workflow, component,
+  security/test/developer tool, agent capability, or MCP is custom-built, A0 or
+  A2 invokes the read-only R0 Research & Reuse Scout.
+- Search in order: existing project through Graphify; native current platform
+  capability through Context7; official components/templates/registries;
+  maintained open source; reference implementation; then custom code.
+- Research is bounded to three rounds, five candidates, and three finalists.
+  R0 recommends but never installs, writes, approves, or creates resources. A
+  new dependency requires an isolated pilot, deterministic proof, security and
+  license review, and an A0/A2 decision.
+- Skip R0 for tiny fixes, copy, obvious local refactors, or an exact
+  implementation already fixed by approved architecture. Research is a gate,
+  not ceremony.
+
+## 5. Git and worktree discipline
+
+- One active writer maps to one bounded work item, branch, and isolated
+  worktree. Do not implement directly on `main` or `dev`.
+- Denied: `git add .`, `git add -A`, `git commit -a`, force-push,
+  `git reset --hard`, `git clean -fd`, unscoped restore, `--no-verify`, and hook
+  bypass. Stage explicit files and preserve repository hooks.
+- Every verification packet names the base and candidate 40-character SHAs.
+  Any edit invalidates evidence for the earlier SHA.
+
+## 6. Entire provenance
+
+- Preserve Entire CLI checkpointing and its Husky/host integrations. Entire is
+  execution provenance and Git-linked recovery—not task, acceptance, project,
+  or verification truth.
+- Never remove or bypass Entire hooks without explicit human approval. Keep
+  setup and maintenance procedure in a task-selected skill, not this kernel.
+
+## 7. Scope, capabilities, and communication
+
+- Role manifests are default-deny. A role writes only allowed paths and uses
+  only declared skills, MCPs, tools, and GitHub capabilities.
+- A0 may coordinate A1–A10, V0, and R0. A primary agent may report to A0, call its
+  registered read-only specialist, and submit to its designated verifier.
+- Standing workers do not direct one another. Specialists message only their
+  declared sponsor or sponsors. Verifiers return structured results to A0 and never collaborate with
+  implementers.
+- Load progressively: this kernel, one domain capability, the matching skill,
+  and at most one narrow specialist. Do not bulk-load skills, graph reports,
+  histories, or unrelated evidence.
+
+## 8. Independent exact-SHA verification
+
+- Substantive candidates require the designated clean-context, read-only
+  verifier. Verifier input is limited to the task contract, acceptance criteria,
+  base/candidate SHAs, exact diff, Graphify evidence, relevant Context7 evidence,
+  and reproducible test/Preview evidence.
+- Parent conversation, parent reasoning, desired verdict, confidence statements,
+  and provisional success claims are prohibited verifier inputs.
+- Verdicts are `PASS`, `FAIL`, or `UNCERTAIN`. `FAIL` and `UNCERTAIN` block
+  advancement. Verifiers never repair findings.
+
+## 9. Bounded remediation and circuit breakers
+
+- Defaults: three implementation cycles, three remediation cycles, two verifier
+  cycles, and one specialist call.
+- A retry must materially change the implementation, test, hypothesis,
+  Graphify/Context7 evidence, dependency, or environment. Unchanged reruns are
+  denied.
+- Circuits are `CLOSED`, `OPEN`, or `HALF_OPEN`. Open on repeated/no-progress
+  failure, exhausted budget, two verifier rejections, repeated MCP failure,
+  scope/secret/production violation, critical security finding, held-out
+  regression, metric tampering, false-PASS regression, or untrustworthy flake.
+- An OPEN worker stops and preserves evidence. Only A0 may authorize one
+  HALF_OPEN probe after materially new evidence.
+
+## 10. Protected definition of good
+
+- `.agents/evals/` defines versioned metrics, thresholds, public cases,
+  protected held-out cases, fixtures, and verifier rubrics.
+- A proposer may not change its own metrics, thresholds, weights, expected
+  behavior, held-out cases, fixtures, or verifier rubric. Protected changes need
+  separate human-governor authority and review.
+- Prefer deterministic assertions. Judges are reserved for genuinely
+  qualitative dimensions and must return a score plus reason.
+- Accept an agent-system improvement only when its target improves, visible
+  regressions do not materially regress, held-out behavior does not regress,
+  protected artifacts are unchanged, and cost/latency remains inside budget.
+  Public gain with held-out regression is `EVAL_OVERFIT`.
+
+## 11. Production hard stops
+
+- Agents never merge to `main`, promote/deploy Production, mutate Production
+  Convex data, alter Production WorkOS, activate live Stripe, send real customer
+  email/SMS, modify DNS/domains, rotate credentials, change visibility, bypass
+  protection, or run destructive migrations.
+- Preview and Production credentials and environments remain isolated. Sensitive
+  authorization derives from authenticated server context, never caller-supplied
+  organization, role, customer, or ownership.
+- Human approval remains the release boundary.
+
+## 12. Project architecture authority
+
+- Canonical target: Next.js 16, React 19, TypeScript, Tailwind 4, Motion, Zod,
+  Convex, WorkOS AuthKit, Vercel, GitHub Actions, Vitest/Node tests, and Playwright.
+- The reusable product core plus customer configuration deploys to isolated
+  Vercel projects, Convex deployments, credentials, and domains. Do not introduce
+  runtime SaaS multi-tenancy without approval.
+- Supabase, Payload, Directus, libSQL, Express, and duplicate persistence are
+  legacy migration sources, not canonical platform dependencies.
+- Preserve industrial UI conventions unless a redesign contract says otherwise:
+  radius 0, `#FF5A00` on charcoal, no emoji in product source, reduced motion,
+  keyboard support, and a WCAG 2.2 AA target.
+
+## 13. Evidence and efficiency
+
+- Always load the task contract, exact SHA, relevant Graphify result, and current
+  circuit state. Load exact files, skills, external contracts, and specialist
+  context only when needed.
+- Measure tokens, tool calls, unnecessary context/dispatches, task latency,
+  verifier latency, and eval runtime. Correctness outranks cost; noise without
+  correctness value is waste.
+- Test facts with code when code can prove them. Never certify capabilities from
+  file presence or self-report alone.
+
+## 14. Zero theater and stop conditions
+
+- Every persistent agent artifact needs an executable consumer: compiler,
+  validator, policy adapter, evaluator, query, or CI gate. Remove dead labels,
+  mirrors, registries, status files, and governance prose.
+- Stop and escalate instead of improvising when repository authority, official
+  host behavior, MCP identity, worktree safety, secrets, verifier isolation,
+  protected eval separation, exact SHA, or Graphify safety cannot be proven.
+- Never declare completion because files parse, agents appear, a tool installs,
+  or one smoke test passes. Completion requires cross-host behavioral evidence
+  and the human production boundary intact.

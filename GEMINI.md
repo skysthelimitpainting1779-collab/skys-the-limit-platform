@@ -1,8 +1,14 @@
-# GEMINI.md — Antigravity Host Adapter
+# Antigravity host adapter
 
-Refer to [AGENTS.md](./AGENTS.md) for all architecture governance, branch safety, peer review, and subagent rules.
+Root [`AGENTS.md`](./AGENTS.md) is the portable constitution. Host-neutral role
+authority lives in `.agents/manifests/`; `.agents/agents/`, `.agents/rules/`,
+`.agents/hooks.json`, and `.agents/mcp_config.json` are generated Antigravity
+adapters. Run `npm run host:check` before relying on them.
 
-- **Discovery First**: Execute `session-start` skill before editing.
-- **Context7 Mandate**: Use `context7` (`resolve-library-id` + `query-docs`) for all third-party API queries.
-- **Graphify Mandate**: Query `codebase-memory-mcp` before reading or scanning raw files.
-- **Convex Rules**: Follow `convex/_generated/ai/guidelines.md` for Convex functions.
+- Use the worktree-local Graphify MCP before structural discovery.
+- Use Context7 only when current external-library behavior affects correctness.
+- Dispatch only the generated A/V/S profiles and obey their tool, write, ACL,
+  loop, verifier, and Production boundaries.
+- Convex work additionally follows `convex/_generated/ai/guidelines.md`.
+- Entire provides Git/session provenance where its installed host adapter is
+  supported; it is not task or verification truth.

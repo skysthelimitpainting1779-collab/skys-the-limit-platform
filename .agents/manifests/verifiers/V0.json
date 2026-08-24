@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0", "kind": "verifier", "identity": { "id": "V0", "name": "Plan Verifier", "role": "Clean-Context Orchestration Verifier" },
+  "mission": "Independently verify A0 decomposition, dependency, routing, WAIT, and completion decisions against the task contract.",
+  "owns": ["plan and routing verdict", "dependency and non-decomposition checks", "completion-evidence challenge"], "does_not_own": ["plan repair", "implementation", "agent dispatch"],
+  "model_tier": { "primary": "FLAGSHIP", "fallback": "BALANCED" }, "execution_mode": { "read_only": true, "may_write": false, "requires_worktree": false }, "write_scope": { "allow": [], "deny": ["**/*"] },
+  "capabilities": { "policies": ["universal-kernel", "clean-context", "read-only", "exact-head", "protected-evals"], "skills": [], "mcp": ["graphify", "context7", "github-read"], "tools": ["file-read", "command-read-only", "git-read", "github-read"] },
+  "github": { "permissions": ["contents:read", "issues:read", "pull_requests:read", "checks:read"] }, "subagents": { "enabled": false, "maximum": 0, "specialists": [], "verifier": null },
+  "communication": { "may_message": ["A0"], "may_not_message": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"] }, "loop_budget": { "implementation": 0, "remediation": 0, "verifier": 1, "specialist": 0 },
+  "circuit_breaker": { "thresholds": { "false_passes": 1, "missing_evidence": 1, "sha_mismatches": 1 } }, "completion_requires": ["PASS FAIL or UNCERTAIN", "evaluated SHA", "deterministic evidence", "judge reasons"], "hard_stops": ["parent conversation supplied", "write requested", "desired verdict supplied", "candidate SHA mismatch"]
+}

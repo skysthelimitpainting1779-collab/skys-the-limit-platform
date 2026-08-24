@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0.0",
+  "verified_at": "2026-08-14",
+  "libraries": {
+    "next": { "package": "next", "installed": "16.2.12", "library_id": "/vercel/next.js/v16.2.9", "source_reputation": "High" },
+    "react": { "package": "react", "installed": "19.2.4", "library_id": "/react/react/v19.2.7", "source_reputation": "High" },
+    "convex": { "package": "convex", "installed": "1.43.0", "library_id": "/get-convex/convex-backend", "source_reputation": "High" },
+    "workos_authkit": { "package": "@workos-inc/authkit-nextjs", "installed": "4.3.1", "library_id": "/workos/authkit-nextjs", "source_reputation": "High" },
+    "tailwind": { "package": "tailwindcss", "installed": "4", "library_id": "/tailwindlabs/tailwindcss.com", "source_reputation": "High" },
+    "motion": { "package": "motion", "installed": "12.43.0", "library_id": "/websites/motion_dev", "source_reputation": "High" },
+    "zod": { "package": "zod", "installed": "4.4.3", "library_id": "/colinhacks/zod/v4.0.1", "source_reputation": "High" },
+    "vitest": { "package": "vitest", "installed": "4.1.10", "library_id": "/vitest-dev/vitest/v4.1.6", "source_reputation": "High" },
+    "vercel": { "package": null, "installed": null, "library_id": "/websites/vercel", "source_reputation": "High" },
+    "github_actions": { "package": null, "installed": null, "library_id": "/websites/github_en_actions", "source_reputation": "High" },
+    "shadcn": { "package": null, "installed": null, "library_id": "/shadcn-ui/ui", "source_reputation": "High" },
+    "radix": { "package": null, "installed": null, "library_id": "/websites/radix-ui_primitives", "source_reputation": "High" },
+    "playwright": { "package": "@playwright/test", "installed": "1.62.1", "library_id": "/microsoft/playwright", "source_reputation": "High" },
+    "axe_core": { "package": "@axe-core/playwright", "installed": "4.13.0", "library_id": "/dequelabs/axe-core", "source_reputation": "High" },
+    "fast_check": { "package": "fast-check", "installed": "4.9.0", "library_id": "/dubzzz/fast-check", "source_reputation": "High" },
+    "stryker": { "package": "@stryker-mutator/core", "installed": "10.0.0", "library_id": "/stryker-mutator/stryker-js", "source_reputation": "High" },
+    "semgrep": { "package": null, "installed": "1.173.0", "library_id": "/semgrep/semgrep-docs", "source_reputation": "High" },
+    "k6": { "package": null, "installed": "2.2.0", "library_id": "/websites/grafana_k6", "source_reputation": "High" },
+    "stripe": { "package": null, "installed": null, "library_id": "/websites/stripe", "source_reputation": "High" },
+    "resend": { "package": null, "installed": null, "library_id": "/websites/resend", "source_reputation": "High" },
+    "posthog": { "package": null, "installed": null, "library_id": "/posthog/posthog.com", "source_reputation": "High" }
+  },
+  "evidence": [
+    {
+      "id": "next-16-proxy",
+      "library_id": "/vercel/next.js/v16.2.9",
+      "question": "In Next.js 16 App Router, what is the current proxy file convention, what was renamed from middleware, and what runtime limitations apply?",
+      "contract": "Next.js 16 renamed middleware.ts and the middleware export to proxy.ts and proxy. Proxy uses the Node.js runtime and does not support the Edge runtime.",
+      "source": "https://github.com/vercel/next.js/blob/v16.2.9/docs/01-app/03-api-reference/03-file-conventions/proxy.mdx",
+      "applies_to": ["src/proxy.ts", "next.config.ts"]
+    },
+    {
+      "id": "workos-authkit-server-session",
+      "library_id": "/workos/authkit-nextjs",
+      "question": "For current AuthKit Next.js App Router support, how should the proxy helper and server session APIs be configured, and where must authorization identity come from?",
+      "contract": "Use authkit with handleAuthkitProxy or handleAuthkitHeaders in proxy.ts. Authorization identity and organization claims come from the validated sealed server session/access token, never caller input.",
+      "source": "https://github.com/workos/authkit-nextjs/blob/main/_autodocs/02-middleware-and-callbacks.md",
+      "applies_to": ["src/proxy.ts", "src/app/api/**", "convex/auth.config.ts"]
+    },
+    {
+      "id": "convex-server-auth-indexes",
+      "library_id": "/get-convex/convex-backend",
+      "question": "What are the current Convex server-side authentication and authorization contracts for queries and mutations, including identity lookup and index use?",
+      "contract": "Server functions obtain identity with ctx.auth.getUserIdentity(), fail closed when identity is absent, and use declared indexes for membership and resource lookup. Caller-supplied identity is not authorization evidence.",
+      "source": "https://github.com/get-convex/convex-backend/blob/main/npm-packages/docs/docs/auth/database-auth.mdx",
+      "applies_to": ["convex/**"]
+    },
+    {
+      "id": "convex-components-reuse",
+      "library_id": "/websites/convex_dev",
+      "question": "How do Convex Components package reusable backend functions, schemas, and persistent data, and which official maintained components exist for workflows or migrations?",
+      "contract": "Convex Components are self-contained sandboxed backends with isolated functions and database tables; inspect the official component ecosystem before custom stateful backend infrastructure.",
+      "source": "https://docs.convex.dev/components/overview",
+      "applies_to": [".agents/skills/research-reuse-scout/**", "convex/**"]
+    },
+    {
+      "id": "vercel-official-reuse-surfaces",
+      "library_id": "/websites/vercel",
+      "question": "What official Vercel discovery surfaces exist for reusable templates and integrations before building custom infrastructure?",
+      "contract": "Inspect Vercel's integration discovery/Marketplace and pre-built templates before adding another infrastructure capability; discovery does not authorize provisioning.",
+      "source": "https://vercel.com/docs/integrations/install-an-integration",
+      "applies_to": [".agents/skills/research-reuse-scout/**", "vercel.json", ".github/workflows/**"]
+    },
+    {
+      "id": "shadcn-registry-reuse",
+      "library_id": "/shadcn-ui/ui",
+      "question": "What can current shadcn registries distribute beyond UI components, including hooks, libraries, configuration, rules, workflows, testing, CI, MCP, or agent files?",
+      "contract": "shadcn registries can distribute components, hooks, pages, utilities, configuration, documentation, templates, workflows, rules, project conventions, agent instructions, tests, CI, codemods, and migration kits; registry availability is not approval.",
+      "source": "https://github.com/shadcn-ui/ui/blob/main/apps/v4/content/docs/registry/github.mdx",
+      "applies_to": [".agents/skills/research-reuse-scout/**", "src/components/**", ".agents/**", ".github/**"]
+    },
+    {
+      "id": "vitest-4-default-exclusions",
+      "library_id": "/vitest-dev/vitest/v4.1.6",
+      "question": "In Vitest 4 configuration, how do custom test.exclude patterns preserve the default exclusions while excluding a Node-native test file?",
+      "contract": "Vitest 4 matches .test.mjs and .spec.ts by default. A custom exclude replaces the defaults, so extend configDefaults.exclude before adding the Node-native agent test and Playwright-owned tests/e2e suite.",
+      "source": "https://github.com/vitest-dev/vitest/blob/v4.1.6/docs/config/exclude.md",
+      "applies_to": ["vitest.config.mts", "tests/agent-team.test.mjs", "tests/e2e/**"]
+    },
+    {
+      "id": "playwright-axe-browser-proof",
+      "library_id": "/microsoft/playwright",
+      "question": "What is the current Playwright Test contract for a local webServer, Chromium-only CI installation, trace capture, and axe-based accessibility checks?",
+      "contract": "Use Playwright Test webServer for the isolated local application, install only Chromium in CI, keep retries at zero so flakiness remains visible, retain traces on failure, and run @axe-core/playwright AxeBuilder against WCAG-tagged rules.",
+      "source": "https://github.com/microsoft/playwright/blob/main/docs/src/best-practices-js.md",
+      "applies_to": ["playwright.config.ts", "tests/e2e/**", ".github/workflows/**"]
+    },
+    {
+      "id": "github-actions-untrusted-input",
+      "library_id": "/websites/github_en_actions",
+      "question": "What is the current GitHub Actions contract for least-privilege checkout and using untrusted event values in shell steps?",
+      "contract": "Keep workflow and job permissions least-privilege, disable checkout credential persistence when pushes are unnecessary, and pass event values through step env instead of interpolating attacker-controlled contexts directly into shell scripts.",
+      "source": "https://docs.github.com/en/actions/reference/security/secure-use",
+      "applies_to": [".github/workflows/**"]
+    },
+    {
+      "id": "fast-check-deterministic-properties",
+      "library_id": "/dubzzz/fast-check",
+      "question": "How should asynchronous properties run deterministically under Vitest with explicit run counts and seeds?",
+      "contract": "Await fc.assert around fc.asyncProperty and set explicit numRuns and seed values so failures are reproducible and shrinking evidence is stable.",
+      "source": "https://github.com/dubzzz/fast-check/blob/main/website/docs/tutorials/setting-up-your-test-environment/property-based-testing-manual-setup.md",
+      "applies_to": ["src/__tests__/*.property.test.ts"]
+    },
+    {
+      "id": "stryker-targeted-vitest-mutation",
+      "library_id": "/stryker-mutator/stryker-js",
+      "question": "How should a targeted StrykerJS mutation pilot use Vitest when related-test discovery cannot resolve aliased imports?",
+      "contract": "Use the official Vitest runner plugin, set vitest.related=false when related discovery finds no tests, target exact mutate globs, and configure JSON output in the config file.",
+      "source": "https://github.com/stryker-mutator/stryker-js/blob/master/packages/vitest-runner/schema/vitest-runner-options.json",
+      "applies_to": ["stryker.pilot.config.mjs", "src/lib/leads/intakeProof.ts"]
+    },
+    {
+      "id": "semgrep-local-security-rules",
+      "library_id": "/semgrep/semgrep-docs",
+      "question": "How should local Semgrep rules produce machine-readable blocking results without a hosted account?",
+      "contract": "Run semgrep scan against a local YAML config with --metrics=off, --json, and --error; findings return exit 1 and scan errors remain visible in structured output.",
+      "source": "https://github.com/semgrep/semgrep-docs/blob/main/docs/customize-semgrep-ce.mdx",
+      "applies_to": [".semgrep.yml", "scripts/oss/semgrep.mjs"]
+    },
+    {
+      "id": "k6-expected-validation-response",
+      "library_id": "/websites/grafana_k6",
+      "question": "How should a local k6 validation-path test classify an intentional HTTP 400 while retaining http_req_failed thresholds?",
+      "contract": "Use http.setResponseCallback(http.expectedStatuses(400)) so the intentional validation rejection is an expected response, then gate checks, failure rate, and p95 duration.",
+      "source": "https://grafana.com/docs/k6/latest/javascript-api/k6-http/expected-statuses/",
+      "applies_to": ["tests/load/estimate-validation.js", "scripts/oss/k6-local.mjs"]
+    }
+  ]
+}

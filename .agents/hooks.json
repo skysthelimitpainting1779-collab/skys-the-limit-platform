@@ -1,0 +1,17 @@
+{
+  "shared-policy": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command|replace_file_content|write_to_file|grep_search|find_by_name|send_message|invoke_subagent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/policy/host-adapter.mjs\" --host antigravity --event PreToolUse",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

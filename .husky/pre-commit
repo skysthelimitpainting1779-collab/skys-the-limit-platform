@@ -39,11 +39,17 @@ if git diff --cached --name-only | grep -qE '^public/(brand|images)/'; then
   fi
 fi
 
-# 5. Reject large binaries (> 5MB)
+# 5. Reject large files (> 5MB). The already-tracked canonical Graphify JSON is
+# generated structural data, not a deployable asset; admit only that exact path
+# after deterministic shape, size, SHA, and dangling-edge validation.
 git diff --cached --name-only | while read file; do
   if [ -f "$file" ]; then
     SIZE=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null || echo 0)
     if [ "$SIZE" -gt 5242880 ]; then
+      if [ "$file" = "graphify-out/graph.json" ]; then
+        node scripts/certification/validate-graph-file.mjs "$file"
+        continue
+      fi
       echo "✗ BLOCKED: File $file is larger than 5MB ($SIZE bytes)."
       echo "  Store large assets in Vercel Blob, not in the repository."
       exit 1

@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "graphify-mcp",
+      "args": [
+        "--graph",
+        "graphify-out/graph.json"
+      ],
+      "cwd": "."
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@4.0.2"
+      ],
+      "cwd": "."
+    }
+  }
+}

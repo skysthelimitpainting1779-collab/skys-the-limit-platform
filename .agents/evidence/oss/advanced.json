@@ -1,0 +1,206 @@
+{
+  "schema_version": "1.0.0",
+  "evaluated_at": "2026-08-14",
+  "baseline_sha": "9a6e840de4afc898c31bbc30d430242d7ab3dd09",
+  "policy": "Run a bounded seed and real-project pilot, reject overlap and unsafe supply chains, and keep heavy tools opt-in; numeric aggregate scores are prohibited.",
+  "candidates": [
+    {
+      "name": "Knip",
+      "source": "https://github.com/webpro-nl/knip",
+      "version_or_ref": "6.32.2",
+      "decision": "DEFER",
+      "reason": ["unused-file seed was detected", "default project scan reported 246 issue-bearing files and 219 unused files", "agent skills, generated adapters, CLI entrypoints, and Vitest/Vite configuration produced excessive unreviewed noise"],
+      "pilot": { "seeded_defect": "unused JavaScript file", "detected": true, "seed_runtime_ms": 6062, "real_runtime_ms": 7001, "real_findings": { "issue_files": 246, "unused_files": 219, "unused_dev_dependencies": 2, "unlisted_dependencies": 10, "unused_exports": 13, "unused_types": 7 }, "false_positive_assessment": "Too noisy for a safe gate; no files may be deleted from this output alone." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Finds unused files, dependencies, exports, and types.", "unnecessary_features": "Whole-repository entrypoint inference exceeds the current targeted need." },
+        "project_fit": { "compatible_with_current_stack": "Supports TypeScript and Next.js.", "integration_surface": "Would require extensive entrypoint and ignore maintenance.", "architecture_alignment": "Must be reconciled with Graphify and generated-host ownership before enforcement." },
+        "maturity": { "release_recency": "6.32.2 was current at pilot time.", "maintenance_activity": "Active upstream.", "issue_health": "Active public tracker.", "documentation_quality": "Strong official documentation.", "tests": "Seed and default real scan completed.", "production_usage_signal": "Widely used TypeScript maintenance tool." },
+        "security": { "security_history": "No pilot advisory was found.", "permissions_required": "Read-only source and package metadata.", "secret_handling": "No secrets required.", "network_access": "Only package acquisition.", "supply_chain_risk": "Thirteen direct dependencies and a dev-only tree." },
+        "ownership": { "license": "ISC.", "maintainer_bus_factor": "Established maintainer and contributors.", "dependency_depth": "Moderate.", "upgrade_cost": "High until project entrypoints stabilize.", "lock_in": "Low.", "exit_strategy": "Remain deferred and revisit with a Graphify-derived entrypoint contract." },
+        "operations": { "runtime_cost": "About seven seconds.", "infrastructure_required": "None.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "Machine-readable issue categories." },
+        "engineering_cost": { "install_cost": "Small npm tool.", "adaptation_cost": "Currently high due 246 noisy files.", "custom_build_cost": "No custom unused-code engine is justified.", "long_term_maintenance_cost": "Unclear until entrypoint policy is canonical." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Yes; /websites/knip_dev was consulted.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes, after configuration is trustworthy." }
+      }
+    },
+    {
+      "name": "fast-check",
+      "source": "https://github.com/dubzzz/fast-check",
+      "version_or_ref": "4.9.0",
+      "decision": "ADOPT",
+      "reason": ["200 deterministic property runs exercise exact-payload integrity and proof-age boundaries", "a one-dependency package adds security-relevant cases ordinary examples miss", "seed and shrink behavior are reproducible"],
+      "pilot": { "seeded_defect": "tampered signed payload and max-age off-by-one", "detected": true, "seed_runtime_ms": 949, "property_runs": 200, "false_positive_assessment": "No false positives; fixed seed makes failures reproducible." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Generates and shrinks authorization, idempotency, and state-boundary cases.", "unnecessary_features": "Only the core runner is used." },
+        "project_fit": { "compatible_with_current_stack": "Works directly with Vitest and TypeScript.", "integration_surface": "One exact dev dependency and one property test.", "architecture_alignment": "Strengthens existing tests without a new framework." },
+        "maturity": { "release_recency": "4.9.0 was current at pilot time.", "maintenance_activity": "Active upstream.", "issue_health": "Active public tracker.", "documentation_quality": "Strong official docs and Context7 coverage.", "tests": "Two asynchronous properties, 100 runs each.", "production_usage_signal": "Established JavaScript property-testing library." },
+        "security": { "security_history": "npm audit remained clean.", "permissions_required": "Test process only.", "secret_handling": "Uses inert test-only values.", "network_access": "None after install.", "supply_chain_risk": "One direct dependency." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Active maintainer and contributors.", "dependency_depth": "One direct dependency.", "upgrade_cost": "Rerun fixed-seed and regression suites.", "lock_in": "Low; properties are plain Vitest tests.", "exit_strategy": "Replace generated cases with equivalent deterministic fixtures." },
+        "operations": { "runtime_cost": "Under one second for 200 runs.", "infrastructure_required": "None.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "Seed, counterexample, and shrink path on failure." },
+        "engineering_cost": { "install_cost": "One exact dev dependency.", "adaptation_cost": "Small property definitions.", "custom_build_cost": "Custom generators and shrinkers would be worse.", "long_term_maintenance_cost": "Low." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Yes; /dubzzz/fast-check.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes with explicit seed and numRuns." }
+      }
+    },
+    {
+      "name": "StrykerJS",
+      "source": "https://github.com/stryker-mutator/stryker-js",
+      "version_or_ref": "10.0.0",
+      "decision": "ADOPT",
+      "reason": ["83 targeted mutants exposed 23 surviving and two uncovered proof-path mutations", "69.88 percent all-mutant score revealed test weakness hidden by passing coverage", "retained only as a selective critical-module command, never every commit"],
+      "pilot": { "seeded_defect": "mutations in signed lead-intake proof logic", "detected": true, "mutants": { "total": 83, "killed": 57, "survived": 23, "timeout": 1, "no_coverage": 2, "score_all_percent": 69.88, "score_covered_percent": 71.6 }, "runtime_ms": null, "false_positive_assessment": "Survivors are concrete test gaps; multi-minute runtime limits use to selected critical modules." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Measures whether tests kill plausible code faults.", "unnecessary_features": "Dashboard and broad mutation modes are disabled." },
+        "project_fit": { "compatible_with_current_stack": "Official Vitest runner supports the repository.", "integration_surface": "Two exact dev dependencies, one targeted config, one opt-in command.", "architecture_alignment": "Grades test strength rather than test count." },
+        "maturity": { "release_recency": "10.0.0 was current at pilot time.", "maintenance_activity": "Active upstream.", "issue_health": "Active public tracker.", "documentation_quality": "Official config schema and troubleshooting docs.", "tests": "Full dry run plus 83 targeted mutants.", "production_usage_signal": "Established mutation-testing ecosystem." },
+        "security": { "security_history": "Nested qs advisory was removed with a compatible 6.15.3 override; npm audit is clean.", "permissions_required": "Local source instrumentation and test execution.", "secret_handling": "No live secrets.", "network_access": "None after install.", "supply_chain_risk": "Large dev-only dependency tree, bounded by selective use and audit." },
+        "ownership": { "license": "Apache-2.0.", "maintainer_bus_factor": "Organization with multiple maintainers.", "dependency_depth": "High: roughly 145 packages added in the pilot.", "upgrade_cost": "High; rerun the critical-module pilot and audit.", "lock_in": "Low report-schema lock-in, moderate runner config coupling.", "exit_strategy": "Remove packages/config while retaining discovered regression tests." },
+        "operations": { "runtime_cost": "Multi-minute targeted run.", "infrastructure_required": "Local test workers only.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "Per-mutant status, location, killing test, and JSON report." },
+        "engineering_cost": { "install_cost": "High dev dependency count.", "adaptation_cost": "Small config; alias discovery required vitest.related=false.", "custom_build_cost": "A custom mutation engine is irrational.", "long_term_maintenance_cost": "Moderate to high; justified only on critical modules." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Yes; /stryker-mutator/stryker-js.", "machine_verifiable": "Yes.", "deterministic_testability": "Mostly; mutants and exact config are fixed." }
+      }
+    },
+    {
+      "name": "ast-grep",
+      "source": "https://github.com/ast-grep/ast-grep",
+      "version_or_ref": "0.45.1",
+      "decision": "ADOPT",
+      "reason": ["AST pattern matched all four nullish-coalescing normalization sites without regex", "only two packages were added and npm audit remained clean", "kept as an on-demand structural query/codemod tool after Graphify identifies scope"],
+      "pilot": { "seeded_defect": "structural nullish-coalescing pattern", "detected": true, "real_matches": 4, "false_positive_assessment": "Exact TypeScript AST matches only; no repository-wide gate is added." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Deterministic AST-aware matching and rewrites.", "unnecessary_features": "No permanent broad rule pack." },
+        "project_fit": { "compatible_with_current_stack": "Native TypeScript/TSX support.", "integration_surface": "One exact dev dependency and command.", "architecture_alignment": "Graphify locates blast radius; ast-grep performs exact structural work." },
+        "maturity": { "release_recency": "0.45.1 was current at pilot time.", "maintenance_activity": "Active upstream.", "issue_health": "Active public tracker.", "documentation_quality": "Official scan and rule guides.", "tests": "Seed plus four real AST matches.", "production_usage_signal": "Established Rust structural-search tool." },
+        "security": { "security_history": "npm audit remained clean.", "permissions_required": "Read-only unless an explicit rewrite is requested.", "secret_handling": "No secrets.", "network_access": "None after install.", "supply_chain_risk": "Two packages; install script remains explicitly denied because the platform binary works without it." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Active project with contributors.", "dependency_depth": "Very low.", "upgrade_cost": "Rerun AST seed and exact match.", "lock_in": "Low.", "exit_strategy": "Remove dependency and keep source unchanged." },
+        "operations": { "runtime_cost": "Seconds including npm command startup.", "infrastructure_required": "None.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "JSON ranges and metavariable bindings." },
+        "engineering_cost": { "install_cost": "Two packages.", "adaptation_cost": "Low for bounded patterns.", "custom_build_cost": "Custom TypeScript AST rewrites cost more.", "long_term_maintenance_cost": "Low when task-selected." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Official upstream docs were used.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes." }
+      }
+    },
+    {
+      "name": "Semgrep Community",
+      "source": "https://github.com/semgrep/semgrep",
+      "version_or_ref": "1.173.0",
+      "decision": "ADOPT",
+      "reason": ["two caller-controlled identity rules caught both seeded violations", "115 real TypeScript files produced zero findings and zero scan errors", "scheduled/security-PR use justifies its higher startup cost"],
+      "pilot": { "seeded_defect": "organization and role destructured from request JSON", "detected": true, "seed_findings": 2, "real_files": 115, "real_findings": 0, "seed_runtime_ms": 5349, "real_runtime_ms": 61473, "false_positive_assessment": "Zero findings on the current application and Convex source." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Project-specific semantic security rules.", "unnecessary_features": "Cloud platform and Pro engine are unused." },
+        "project_fit": { "compatible_with_current_stack": "Current CLI supports TypeScript on Windows and CI Linux.", "integration_surface": "Pinned uvx environment, one YAML config, one wrapper.", "architecture_alignment": "Enforces server-context identity invariants without replacing tests." },
+        "maturity": { "release_recency": "1.173.0 released 2026-08-13.", "maintenance_activity": "Active upstream.", "issue_health": "Active public tracker.", "documentation_quality": "Official rule and CLI docs with Context7 coverage.", "tests": "Two-rule seed and 115-file scan.", "production_usage_signal": "Widely used SAST engine." },
+        "security": { "security_history": "No project audit dependency because uvx isolates the pinned CLI.", "permissions_required": "Read-only source scan.", "secret_handling": "No account or token; metrics disabled.", "network_access": "Package acquisition on cold start only.", "supply_chain_risk": "Sixty-seven isolated Python packages and a 54.8 MB CLI package." },
+        "ownership": { "license": "LGPL-2.1 for the open engine; rules are project-owned.", "maintainer_bus_factor": "Company-backed, multi-maintainer project.", "dependency_depth": "High but isolated outside npm runtime.", "upgrade_cost": "Rerun seed, real scan, and review rule semantics.", "lock_in": "Low YAML-rule lock-in.", "exit_strategy": "Remove wrapper/config and retain equivalent deterministic tests." },
+        "operations": { "runtime_cost": "About 61.5 seconds on Windows real scan.", "infrastructure_required": "uvx cache only.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "JSON findings, errors, scanned paths, and skipped rules." },
+        "engineering_cost": { "install_cost": "High cold-start download, isolated cache.", "adaptation_cost": "Low for two precise rules.", "custom_build_cost": "Custom semantic parsing would be weaker.", "long_term_maintenance_cost": "Moderate; run in security workflow, not every edit." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Yes; /semgrep/semgrep-docs.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes for local rules." }
+      }
+    },
+    {
+      "name": "Lighthouse CI",
+      "source": "https://github.com/GoogleChrome/lighthouse-ci",
+      "version_or_ref": "0.15.1",
+      "decision": "REJECT",
+      "reason": ["exact install added 251 packages", "npm audit immediately reported 10 vulnerabilities including seven high-severity paths", "Playwright plus axe already supplies safer browser, console, and accessibility evidence"],
+      "pilot": { "seeded_defect": "supply-chain security gate", "detected": true, "packages_added": 251, "audit_findings": { "low": 2, "moderate": 1, "high": 7 }, "runtime_test_skipped": "Security hard stop tripped before browser execution.", "false_positive_assessment": "Audit paths were concrete vulnerable transitive dependencies." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Can assert Lighthouse audits and categories.", "unnecessary_features": "Upload/server/dashboard capabilities are unnecessary." },
+        "project_fit": { "compatible_with_current_stack": "Could drive local Chrome.", "integration_surface": "Very large dependency tree and duplicate browser orchestration.", "architecture_alignment": "Overlaps adopted Playwright/axe and violates the clean-audit bar." },
+        "maturity": { "release_recency": "0.15.1 was current at pilot time.", "maintenance_activity": "Maintained but dependency fixes lag current advisories.", "issue_health": "Public tracker.", "documentation_quality": "Comprehensive official configuration docs.", "tests": "Install/audit hard-stop pilot only.", "production_usage_signal": "Established Lighthouse automation project." },
+        "security": { "security_history": "Seven high, one moderate, and two low audit findings in the exact release tree.", "permissions_required": "Browser and local server.", "secret_handling": "No secrets required for local mode.", "network_access": "Package/browser acquisition; uploads are unused.", "supply_chain_risk": "Unacceptable for this goal." },
+        "ownership": { "license": "Apache-2.0.", "maintainer_bus_factor": "GoogleChrome organization.", "dependency_depth": "Very high: 251 added packages.", "upgrade_cost": "High and currently cannot clear audit without incompatible changes.", "lock_in": "Moderate assertion config coupling.", "exit_strategy": "Already uninstalled; keep Playwright/axe." },
+        "operations": { "runtime_cost": "Not measured after the hard stop.", "infrastructure_required": "Browser and server.", "hosted_service_required": "None for local mode.", "production_effects": "None.", "observability": "Rich reports, but not enough to outweigh risk." },
+        "engineering_cost": { "install_cost": "251 packages.", "adaptation_cost": "Duplicate server/browser configuration.", "custom_build_cost": "No custom Lighthouse replacement is planned.", "long_term_maintenance_cost": "High." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Official upstream docs were sufficient.", "machine_verifiable": "Yes in principle.", "deterministic_testability": "Category scores are environment-sensitive." }
+      }
+    },
+    {
+      "name": "OSV-Scanner",
+      "source": "https://github.com/google/osv-scanner",
+      "version_or_ref": "2.5.0",
+      "decision": "ADOPT",
+      "reason": ["detected three vulnerability groups in a seeded lodash lockfile", "scanned 909 real packages with zero findings in two seconds", "independent OSV intelligence complements npm audit"],
+      "pilot": { "seeded_defect": "lodash 4.17.20 lockfile", "detected": true, "seed_vulnerability_groups": 3, "real_packages": 909, "real_findings": 0, "seed_runtime_ms": 914, "real_runtime_ms": 1997, "false_positive_assessment": "Seed advisories map to authoritative OSV/GHSA records; real lockfile was clean." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Independent lockfile vulnerability intelligence.", "unnecessary_features": "Container, remediation, and license modes are unused." },
+        "project_fit": { "compatible_with_current_stack": "Supports package-lock.json directly.", "integration_surface": "One digest-pinned standalone binary and wrapper.", "architecture_alignment": "Complements existing npm audit without replacing it." },
+        "maturity": { "release_recency": "2.5.0 released 2026-08-07.", "maintenance_activity": "Active Google project.", "issue_health": "Active public tracker.", "documentation_quality": "Official usage, output, and supported-artifact docs.", "tests": "Vulnerable seed and full real lockfile.", "production_usage_signal": "Official OSV frontend." },
+        "security": { "security_history": "Release digest verified; upstream publishes SLSA provenance.", "permissions_required": "Read-only lockfile.", "secret_handling": "No secrets.", "network_access": "Advisory lookup plus first binary download.", "supply_chain_risk": "Standalone binary pinned by SHA-256." },
+        "ownership": { "license": "Apache-2.0.", "maintainer_bus_factor": "Google-owned with contributors.", "dependency_depth": "Standalone binary.", "upgrade_cost": "Refresh asset digests and rerun seed/real scan.", "lock_in": "Low, standard OSV data.", "exit_strategy": "Remove wrapper/manifest and retain npm audit." },
+        "operations": { "runtime_cost": "About two seconds on the real lockfile.", "infrastructure_required": "None.", "hosted_service_required": "OSV advisory service unless offline database mode is selected.", "production_effects": "None.", "observability": "Structured package, group, alias, severity, and source output." },
+        "engineering_cost": { "install_cost": "One cached binary.", "adaptation_cost": "Small wrapper.", "custom_build_cost": "Custom advisory matching is unjustified.", "long_term_maintenance_cost": "Low." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Official OSV docs were used.", "machine_verifiable": "Yes.", "deterministic_testability": "Seed is deterministic; online advisories are time-sensitive by design." }
+      }
+    },
+    {
+      "name": "Gitleaks",
+      "source": "https://github.com/gitleaks/gitleaks",
+      "version_or_ref": "8.30.1",
+      "decision": "ADOPT",
+      "reason": ["synthetic generic API-key canary was detected and redacted", "origin/dev-to-HEAD branch scan found zero leaks across 13 commits", "scope avoids 102 ignored-artifact findings and five historical test-placeholder findings"],
+      "pilot": { "seeded_defect": "synthetic generic API key over stdin", "detected": true, "branch_commits": 13, "branch_findings": 0, "seed_runtime_ms": 827, "branch_runtime_ms": 8292, "naive_directory_findings": 102, "full_history_placeholder_findings": 5, "false_positive_assessment": "Branch-range mode eliminates ignored dependency artifacts and pre-existing test placeholders while still scanning every candidate commit." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Detects secret-like material in candidate commits.", "unnecessary_features": "Full filesystem and all-history scans are intentionally not gated." },
+        "project_fit": { "compatible_with_current_stack": "Git-native and cross-platform.", "integration_surface": "One digest-pinned binary and exact branch-range wrapper.", "architecture_alignment": "Strengthens current hooks without contacting credential providers." },
+        "maturity": { "release_recency": "8.30.1 released 2026-03-21.", "maintenance_activity": "Feature-complete with security maintenance; upstream development is shifting to Betterleaks.", "issue_health": "Public tracker.", "documentation_quality": "Official command and report docs.", "tests": "Redacted stdin seed, branch range, naive directory, and full history comparison.", "production_usage_signal": "Widely used secret scanner." },
+        "security": { "security_history": "No pilot issue; release digest verified.", "permissions_required": "Read-only Git history.", "secret_handling": "Reports are forced to 100 percent redaction.", "network_access": "Only first binary download.", "supply_chain_risk": "Standalone binary pinned by SHA-256." },
+        "ownership": { "license": "MIT.", "maintainer_bus_factor": "Established project, now security-maintenance focused.", "dependency_depth": "Standalone binary.", "upgrade_cost": "Refresh digest and rerun scope/noise tests.", "lock_in": "Low.", "exit_strategy": "Replace with a proven Betterleaks pilot if it materially improves signal." },
+        "operations": { "runtime_cost": "About 8.3 seconds for 13 commits.", "infrastructure_required": "Full Git history checkout.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "Rule, file, line, fingerprint, commit, and redacted match." },
+        "engineering_cost": { "install_cost": "One cached binary.", "adaptation_cost": "Small merge-base wrapper.", "custom_build_cost": "Current homemade patterns cannot match the maintained rule corpus.", "long_term_maintenance_cost": "Low." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Official upstream docs were used.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes for fixed commits and stdin seeds." }
+      }
+    },
+    {
+      "name": "k6",
+      "source": "https://github.com/grafana/k6",
+      "version_or_ref": "2.2.0",
+      "decision": "ADOPT",
+      "reason": ["local-only five-VU pilot completed 160 invalid lead submissions with 100 percent checks", "p95 was 159.35 ms and no request was classified failed after current expected-status semantics were applied", "non-local base URLs are denied before any request"],
+      "pilot": { "seeded_defect": "external target plus intentional 400 response classification", "detected": true, "requests": 160, "requests_per_second": 31.399649, "checks_passed_percent": 100, "p95_ms": 159.35, "runtime_ms": 5373, "external_denial_exit": 107, "false_positive_assessment": "First run exposed harness semantics; current Context7-grounded expectedStatuses contract is stable." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Concurrent API and validation-path load checks.", "unnecessary_features": "Cloud output and heavy load profiles are disabled." },
+        "project_fit": { "compatible_with_current_stack": "Tests local Next.js HTTP endpoints.", "integration_surface": "One digest-pinned binary, local server wrapper, and script.", "architecture_alignment": "Opt-in pre-release evidence; not an every-commit service." },
+        "maturity": { "release_recency": "2.2.0 released 2026-08-10.", "maintenance_activity": "Active Grafana project.", "issue_health": "Active public tracker.", "documentation_quality": "Official docs and Context7 coverage.", "tests": "Local validation load and external-target denial.", "production_usage_signal": "Widely used load-testing engine." },
+        "security": { "security_history": "No pilot issue; release digest verified.", "permissions_required": "Local HTTP only in the committed script.", "secret_handling": "Inert fail-closed environment values.", "network_access": "Loopback only; code rejects other origins.", "supply_chain_risk": "Standalone binary pinned by SHA-256." },
+        "ownership": { "license": "AGPL-3.0-only for the CLI.", "maintainer_bus_factor": "Grafana-backed team.", "dependency_depth": "Standalone binary.", "upgrade_cost": "Refresh digest and rerun safe-local and denial tests.", "lock_in": "Low test-script coupling.", "exit_strategy": "Remove binary/script and retain integration tests." },
+        "operations": { "runtime_cost": "About 16 seconds including local server startup; 5.4-second load window.", "infrastructure_required": "Local Next.js process only.", "hosted_service_required": "None.", "production_effects": "Mechanically denied.", "observability": "Rates, percentiles, checks, iterations, and threshold status." },
+        "engineering_cost": { "install_cost": "One cached binary.", "adaptation_cost": "Small local-only script.", "custom_build_cost": "Custom load generation/metrics would be weaker.", "long_term_maintenance_cost": "Low when kept opt-in." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Yes; /websites/grafana_k6.", "machine_verifiable": "Yes.", "deterministic_testability": "Thresholds are deterministic; timing remains environment-sensitive and deliberately reported." }
+      }
+    },
+    {
+      "name": "schema-dts",
+      "source": "https://github.com/google/schema-dts",
+      "version_or_ref": "2.0.0",
+      "decision": "DEFER",
+      "reason": ["Graphify found no current application JSON-LD generator to type", "adding a dependency before the structured-data feature exists would be speculative", "re-evaluate when A8 owns an approved LocalBusiness implementation"],
+      "pilot": { "seeded_defect": "missing current structured-data implementation", "detected": true, "graphify_matches": 0, "runtime_test_skipped": "No target exists; no-install gate applied.", "false_positive_assessment": "No dependency was added for a future-only capability." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Provides Schema.org JSON-LD TypeScript types.", "unnecessary_features": "All vocabulary types are unnecessary until JSON-LD exists." },
+        "project_fit": { "compatible_with_current_stack": "Compatible with TypeScript.", "integration_surface": "One dev dependency when justified.", "architecture_alignment": "A8 should add it with the actual structured-data slice, not preinstall it." },
+        "maturity": { "release_recency": "2.0.0 published four months before evaluation.", "maintenance_activity": "Google-maintained.", "issue_health": "Public tracker.", "documentation_quality": "Clear official examples.", "tests": "No target to test.", "production_usage_signal": "Large npm dependent base." },
+        "security": { "security_history": "No pilot issue.", "permissions_required": "Types only.", "secret_handling": "None.", "network_access": "None after install.", "supply_chain_risk": "One dependency, but still unjustified now." },
+        "ownership": { "license": "Apache-2.0.", "maintainer_bus_factor": "Google project.", "dependency_depth": "One dependency.", "upgrade_cost": "Low.", "lock_in": "Low.", "exit_strategy": "Remain deferred until a real schema exists." },
+        "operations": { "runtime_cost": "Typecheck only.", "infrastructure_required": "None.", "hosted_service_required": "None.", "production_effects": "None.", "observability": "TypeScript diagnostics once adopted." },
+        "engineering_cost": { "install_cost": "Low but premature.", "adaptation_cost": "Low with an actual JSON-LD object.", "custom_build_cost": "Handwritten Schema.org unions are unjustified.", "long_term_maintenance_cost": "Low." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Official npm/GitHub docs are available.", "machine_verifiable": "Yes through typecheck and JSON-LD validation.", "deterministic_testability": "Yes once a target exists." }
+      }
+    },
+    {
+      "name": "lychee",
+      "source": "https://github.com/lycheeverse/lychee",
+      "version_or_ref": "0.24.2",
+      "decision": "ADOPT",
+      "reason": ["broken local-link seed failed deterministically", "37 canonical tracked documents had 22 unique local links and zero errors in 131 ms", "scope excludes dependency/vendor Markdown and external-network flakiness"],
+      "pilot": { "seeded_defect": "missing local Markdown target", "detected": true, "canonical_documents": 37, "unique_local_links": 22, "real_findings": 0, "seed_runtime_ms": 125, "real_runtime_ms": 131, "naive_glob_errors": 3227, "false_positive_assessment": "Canonical git-tracked scope is clean; dependency Markdown glob is explicitly rejected." },
+      "assessment": {
+        "functional_fit": { "solves_required_problem": "Checks local Markdown and HTML link integrity.", "unnecessary_features": "Email and live external availability checks are not in the PR gate." },
+        "project_fit": { "compatible_with_current_stack": "Cross-platform standalone binary.", "integration_surface": "Digest-pinned binary and git-tracked scope wrapper.", "architecture_alignment": "Protects canonical docs without scanning generated/vendor packs." },
+        "maturity": { "release_recency": "0.24.2 was current at pilot time.", "maintenance_activity": "Active upstream.", "issue_health": "Active public tracker.", "documentation_quality": "Official CLI docs.", "tests": "Broken local seed, noisy glob comparison, and canonical real scan.", "production_usage_signal": "Used by prominent open-source documentation projects." },
+        "security": { "security_history": "No pilot issue; release digest verified.", "permissions_required": "Read-only documents.", "secret_handling": "No secrets.", "network_access": "Offline mode blocks network requests.", "supply_chain_risk": "Standalone Rust binary pinned by SHA-256." },
+        "ownership": { "license": "Apache-2.0 OR MIT.", "maintainer_bus_factor": "Active organization and contributors.", "dependency_depth": "Standalone binary.", "upgrade_cost": "Refresh digest and rerun seed/scoped scan.", "lock_in": "Low.", "exit_strategy": "Remove wrapper and keep documentation unchanged." },
+        "operations": { "runtime_cost": "About 131 ms cached.", "infrastructure_required": "None.", "hosted_service_required": "None in offline mode.", "production_effects": "None.", "observability": "File, line, target, and failure class." },
+        "engineering_cost": { "install_cost": "One cached binary.", "adaptation_cost": "Small tracked-file wrapper.", "custom_build_cost": "Custom Markdown link parsing is unjustified.", "long_term_maintenance_cost": "Low." },
+        "agent_fit": { "official_docs_available": "Yes.", "context7_support": "Official upstream docs were used.", "machine_verifiable": "Yes.", "deterministic_testability": "Yes in offline local-link mode." }
+      }
+    }
+  ]
+}
